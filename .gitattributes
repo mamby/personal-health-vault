@@ -1,0 +1,12 @@
+*.cs text eol=crlf
+*.xaml text eol=crlf
+*.xml text eol=crlf
+*.csproj text eol=crlf
+*.props text eol=crlf
+*.targets text eol=crlf
+*.resx text eol=crlf
+*.plist text eol=crlf
+*.xcprivacy text eol=crlf
+*.svg text eol=crlf
+*.md text eol=crlf
+*.sln text eol=crlf
