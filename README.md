@@ -1,9 +1,9 @@
 # Personal Health Vault
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
-![.NET](https://img.shields.io/badge/.NET-11%20preview-purple.svg)
-![C%23](https://img.shields.io/badge/C%23-preview-blue.svg)
-![.NET MAUI](https://img.shields.io/badge/.NET%20MAUI-cross--platform-purple.svg)
+![.NET](https://img.shields.io/badge/.NET-purple)
+![C#](https://img.shields.io/badge/C%23-blue)
+![.NET MAUI](https://img.shields.io/badge/.NET%20MAUI-purple)
 
 Cross-platform personal health vault. Local-first, encrypted, and fully user-controlled. No backend, no tracking, no cloud required.
 
