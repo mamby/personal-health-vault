@@ -1,16 +1,14 @@
 # Personal Health Vault
 
-![Android](https://img.shields.io/badge/Android-native-green.svg)
+![Android](https://img.shields.io/badge/Android-green.svg)
 ![Kotlin](https://img.shields.io/badge/Kotlin-purple.svg)
 ![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-UI-blue.svg)
-
-![iOS](https://img.shields.io/badge/iOS-native-black.svg)
-![macOS](https://img.shields.io/badge/macOS-native-black.svg)
+![iOS](https://img.shields.io/badge/iOS-black.svg)
+![macOS](https://img.shields.io/badge/macOS-black.svg)
 ![Swift](https://img.shields.io/badge/Swift-orange.svg)
 ![SwiftUI](https://img.shields.io/badge/SwiftUI-UI-blue.svg)
-
-![Windows](https://img.shields.io/badge/Windows-native-blue.svg)
-![WinUI](https://img.shields.io/badge/WinUI-blue.svg)
+![Windows](https://img.shields.io/badge/Windows-blue.svg)
+![WinUI](https://img.shields.io/badge/WinUI-UI-blue.svg)
 
 Personal health vault. Local-first, encrypted, and fully user-controlled. No backend, no tracking, no cloud required.
 
