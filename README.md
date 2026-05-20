@@ -1,5 +1,6 @@
 # Personal Health Vault
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 ![Android](https://img.shields.io/badge/Android-green.svg)
 ![Kotlin](https://img.shields.io/badge/Kotlin-purple.svg)
 ![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-UI-blue.svg)
