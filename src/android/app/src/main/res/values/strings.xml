@@ -623,7 +623,7 @@
     <string name="editor_section_contact_channels">Contact channels</string>
     <string name="editor_section_location_online">Location and online</string>
     <string name="settings_general">General</string>
-    <string name="settings_floating_opacity">Floating surface opacity</string>
+    <string name="settings_floating_opacity">Transparency</string>
     <string name="settings_min">Min</string>
     <string name="settings_max">Max</string>
     <string name="settings_search_languages">Search languages</string>
