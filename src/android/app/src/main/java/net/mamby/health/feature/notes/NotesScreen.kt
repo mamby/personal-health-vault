@@ -12,7 +12,6 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,7 +20,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import java.time.Instant
 import java.time.ZoneId
@@ -35,12 +33,12 @@ import net.mamby.health.ui.components.detailTitleBarActions
 import net.mamby.health.ui.components.DetailSection
 import net.mamby.health.ui.components.EditorSection
 import net.mamby.health.ui.components.EmptyState
-import net.mamby.health.ui.components.FloatingAddButton
 import net.mamby.health.ui.components.ListCard
 import net.mamby.health.ui.components.rememberEditorState
 import net.mamby.health.ui.components.withPagePadding
 import net.mamby.health.ui.format.localizedDateTime
 import net.mamby.health.ui.theme.UiTokens
+import net.mamby.health.ui.components.floatingAddAction
 
 @Composable
 fun NotesScreen(
@@ -54,12 +52,10 @@ fun NotesScreen(
     }
     AndroidKitPage(
         title = stringResource(R.string.health_notes_title),
-        floatingActionButton = {
-            FloatingAddButton(
-                label = stringResource(R.string.add_health_note),
-                onClick = onAdd,
-            )
-        },
+        floatingActionButton = floatingAddAction(
+            label = stringResource(R.string.add_health_note),
+            onClick = onAdd,
+        ),
     ) { padding ->
         LazyVerticalGrid(
             columns = GridCells.Adaptive(UiTokens.CardMinWidth),

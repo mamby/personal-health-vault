@@ -14,7 +14,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenu
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
-import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -24,7 +23,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import java.time.Instant
 import java.util.UUID
@@ -36,7 +34,6 @@ import net.mamby.health.core.model.DocumentCategoryRef
 import net.mamby.health.core.model.ProfileRecord
 import net.mamby.health.core.model.asReference
 import net.mamby.androidkit.compose.layout.AndroidKitPage
-import net.mamby.health.ui.components.FloatingAddButton
 import net.mamby.health.ui.components.ConfirmDeleteDialog
 import net.mamby.health.ui.components.FormDialog
 import net.mamby.health.ui.components.DropdownTrailingIcon
@@ -46,6 +43,7 @@ import net.mamby.health.ui.components.SwitchField
 import net.mamby.health.ui.components.withPagePadding
 import net.mamby.health.ui.format.localizedLabel
 import net.mamby.health.ui.theme.UiTokens
+import net.mamby.health.ui.components.floatingAddAction
 
 @Composable
 fun ManageDocumentCategoriesScreen(
@@ -61,12 +59,10 @@ fun ManageDocumentCategoriesScreen(
     AndroidKitPage(
         title = stringResource(R.string.manage_document_categories),
         onBack = onBack,
-        floatingActionButton = {
-            FloatingAddButton(
-                label = stringResource(R.string.add_document_category),
-                onClick = { adding = true },
-            )
-        },
+        floatingActionButton = floatingAddAction(
+            label = stringResource(R.string.add_document_category),
+            onClick = { adding = true },
+        ),
     ) { padding ->
         LazyVerticalGrid(
             columns = GridCells.Adaptive(UiTokens.CardMinWidth),

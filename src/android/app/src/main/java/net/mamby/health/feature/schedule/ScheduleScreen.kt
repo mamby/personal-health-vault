@@ -22,7 +22,6 @@ import androidx.compose.material3.ExposedDropdownMenu
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -32,7 +31,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import java.time.DayOfWeek
 import java.time.Duration
@@ -57,7 +55,6 @@ import net.mamby.health.ui.components.detailTitleBarActions
 import net.mamby.health.ui.components.DetailSection
 import net.mamby.health.ui.components.DateField
 import net.mamby.health.ui.components.EmptyState
-import net.mamby.health.ui.components.FloatingAddButton
 import net.mamby.health.ui.components.DropdownTrailingIcon
 import net.mamby.health.ui.components.EditorFieldPair
 import net.mamby.health.ui.components.EditorSection
@@ -72,6 +69,7 @@ import net.mamby.health.ui.format.localizedDate
 import net.mamby.health.ui.format.localizedDateTime
 import net.mamby.health.ui.format.localizedTime
 import net.mamby.health.ui.theme.UiTokens
+import net.mamby.health.ui.components.floatingAddAction
 
 @Composable
 fun ScheduleScreen(
@@ -92,12 +90,10 @@ fun ScheduleScreen(
 
     AndroidKitPage(
         title = stringResource(R.string.schedule_title),
-        floatingActionButton = {
-            FloatingAddButton(
-                label = stringResource(R.string.add_schedule),
-                onClick = onAdd,
-            )
-        },
+        floatingActionButton = floatingAddAction(
+            label = stringResource(R.string.add_schedule),
+            onClick = onAdd,
+        ),
     ) { innerPadding ->
         LazyVerticalGrid(
             columns = GridCells.Adaptive(UiTokens.CardMinWidth),

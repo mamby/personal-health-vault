@@ -43,9 +43,10 @@ fun SectionCard(
 ) {
     AndroidKitCard(
         modifier = modifier.fillMaxWidth(),
-        header = {
-            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-        },
+        title = title,
+        style = AndroidKitThemeTokens.cardStyle.copy(
+            titleTextStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+        ),
         contentPadding = PaddingValues(UiTokens.ScreenPadding),
         contentSpacing = UiTokens.ContentSpacing,
     ) {
@@ -63,11 +64,10 @@ fun ListCard(
     AndroidKitCard(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
-        header = {
-            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-        },
+        title = title,
         style = AndroidKitThemeTokens.cardStyle.copy(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+            titleTextStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
         ),
         contentPadding = PaddingValues(UiTokens.ScreenPadding),
         contentSpacing = UiTokens.ContentSpacing,

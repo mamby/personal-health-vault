@@ -52,12 +52,12 @@ import net.mamby.health.ui.components.DetailSection
 import net.mamby.health.ui.components.EditorFieldPair
 import net.mamby.health.ui.components.EditorSection
 import net.mamby.health.ui.components.EmptyState
-import net.mamby.health.ui.components.FloatingAddButton
 import net.mamby.health.ui.components.LabeledValue
 import net.mamby.health.ui.components.ListCard
 import net.mamby.health.ui.components.rememberEditorState
 import net.mamby.health.ui.components.withPagePadding
 import net.mamby.health.ui.theme.UiTokens
+import net.mamby.health.ui.components.floatingAddAction
 
 @Composable
 fun ContactsScreen(
@@ -74,12 +74,10 @@ fun ContactsScreen(
 
     AndroidKitPage(
         title = stringResource(R.string.contacts_title),
-        floatingActionButton = {
-            FloatingAddButton(
-                label = stringResource(R.string.add_contact),
-                onClick = onAdd,
-            )
-        },
+        floatingActionButton = floatingAddAction(
+            label = stringResource(R.string.add_contact),
+            onClick = onAdd,
+        ),
     ) { padding ->
         LazyVerticalGrid(
             columns = GridCells.Adaptive(UiTokens.CardMinWidth),

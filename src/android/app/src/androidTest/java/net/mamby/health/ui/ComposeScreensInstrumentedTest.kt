@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
@@ -121,6 +120,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import androidx.compose.ui.res.vectorResource
+import net.mamby.androidkit.compose.action.AndroidKitFloatingAction
 
 @OptIn(ExperimentalTestApi::class, ExperimentalMaterial3AdaptiveApi::class)
 @RunWith(AndroidJUnit4::class)
@@ -808,12 +809,11 @@ class ComposeScreensInstrumentedTest {
                     ) {
                         AndroidKitPage(
                             title = "Clearance",
-                            floatingActionButton = {
-                                FloatingActionButton(
-                                    onClick = {},
+                            floatingActionButton = AndroidKitFloatingAction.Button(
+                                    icon = androidx.compose.ui.graphics.vector.ImageVector.vectorResource(R.drawable.ic_lucide_plus),
+                                    label = "Add", onClick = {},
                                     modifier = Modifier.testTag(FLOATING_ACTION_TAG),
-                                ) { Text("+") }
-                            },
+                                ),
                         ) { padding ->
                             LazyColumn(
                                 modifier = Modifier

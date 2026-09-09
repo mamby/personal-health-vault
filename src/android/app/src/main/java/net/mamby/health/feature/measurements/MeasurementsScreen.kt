@@ -56,7 +56,6 @@ import net.mamby.health.ui.components.detailTitleBarActions
 import net.mamby.health.ui.components.DetailSection
 import net.mamby.health.ui.components.DateField
 import net.mamby.health.ui.components.EmptyState
-import net.mamby.health.ui.components.FloatingAddButton
 import net.mamby.health.ui.components.DropdownTrailingIcon
 import net.mamby.health.ui.components.EditorFieldPair
 import net.mamby.health.ui.components.EditorSection
@@ -76,6 +75,7 @@ import net.mamby.health.ui.format.localizedLabel
 import net.mamby.health.ui.format.localizedValue
 import net.mamby.health.ui.format.symbol
 import net.mamby.health.ui.theme.UiTokens
+import net.mamby.health.ui.components.floatingAddAction
 
 @Composable
 fun MeasurementsScreen(
@@ -105,12 +105,10 @@ fun MeasurementsScreen(
                 onClick = { onManageTypes(filterProfileId) },
             ),
         ),
-        floatingActionButton = {
-            FloatingAddButton(
-                label = stringResource(R.string.add_measurement),
-                onClick = { onAdd(filterProfileId ?: records.singleOrNull()?.profile?.id) },
-            )
-        },
+        floatingActionButton = floatingAddAction(
+            label = stringResource(R.string.add_measurement),
+            onClick = { onAdd(filterProfileId ?: records.singleOrNull()?.profile?.id) },
+        ),
     ) { padding ->
         LazyVerticalGrid(
             columns = GridCells.Adaptive(UiTokens.CardMinWidth),
@@ -210,12 +208,10 @@ fun ManageMeasurementTypesScreen(
     AndroidKitPage(
         title = stringResource(R.string.manage_measurement_types),
         onBack = onBack,
-        floatingActionButton = {
-            FloatingAddButton(
-                label = stringResource(R.string.add_measurement_type),
-                onClick = { adding = true },
-            )
-        },
+        floatingActionButton = floatingAddAction(
+            label = stringResource(R.string.add_measurement_type),
+            onClick = { adding = true },
+        ),
     ) { padding ->
         LazyVerticalGrid(
             columns = GridCells.Adaptive(UiTokens.CardMinWidth),

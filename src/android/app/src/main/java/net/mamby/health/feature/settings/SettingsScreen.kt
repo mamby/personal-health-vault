@@ -12,7 +12,6 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -147,53 +146,80 @@ fun SettingsScreen(
     val appLockBody = stringResource(R.string.app_lock_body)
     val lockNowLabel = stringResource(R.string.lock_now)
 
+    val backupLastSuccess = settings.backupStatus.lastSuccess?.let {
+        stringResource(R.string.backup_last_success, it.localizedDateTime(zoneId))
+    }
+    val settingsGeneralText = stringResource(R.string.settings_general)
+    val languageTitleText = stringResource(R.string.language_title)
+    val commonCloseText = stringResource(R.string.common_close)
+    val languageSystemText = stringResource(R.string.language_system)
+    val settingsSearchLanguagesText = stringResource(R.string.settings_search_languages)
+    val settingsNoLanguagesText = stringResource(R.string.settings_no_languages)
+    val themeTitleText = stringResource(R.string.theme_title)
+    val themeSystemText = stringResource(R.string.theme_system)
+    val systemThemeText = stringResource(
+                        if (isSystemInDarkTheme()) R.string.theme_dark else R.string.theme_light,
+                    )
+    val settingsFloatingOpacityText = stringResource(R.string.settings_floating_opacity)
+    val settingsMinText = stringResource(R.string.settings_min)
+    val settingsMaxText = stringResource(R.string.settings_max)
+    val securityTitleText = stringResource(R.string.security_title)
+    val appLockTimeoutText = stringResource(R.string.app_lock_timeout)
+    val backupTitleText = stringResource(R.string.backup_title)
+    val backupBodyText = stringResource(R.string.backup_body)
+    val recoveryTitleText = stringResource(R.string.recovery_title)
+    val recoveryBodyText = stringResource(R.string.recovery_body)
+    val privacyTitleText = stringResource(R.string.privacy_title)
+    val privacyBodyText = stringResource(R.string.privacy_body)
+    val healthDisclaimerText = stringResource(R.string.health_disclaimer)
+    val buildChannelText = stringResource(R.string.build_channel, stringResource(environmentLabelResource()))
+    val dataTitleText = stringResource(R.string.data_title)
+    val deleteVaultText = stringResource(R.string.delete_vault)
     AndroidKitSettingsPage(title = stringResource(R.string.settings_title), onBack = onBack) {
-        message?.let { item(key = "message") { Text(it) } }
+        message?.let { section(key = "message") { info(label = it) } }
         generalSection(
-            label = stringResource(R.string.settings_general),
+            label = settingsGeneralText,
             language = AndroidKitLanguageSetting(
                 selection = AndroidKitSettingsSelection(
-                    label = stringResource(R.string.language_title),
+                    label = languageTitleText,
                     options = languageOptions.map { (tag, label) -> AndroidKitSettingsOption(tag, label) },
                     selectedId = selectedLocaleTag.ifBlank { "system" },
                     onSelected = { tag -> onLocaleChanged(tag.takeUnless { it == "system" }.orEmpty()) },
-                    closeContentDescription = stringResource(R.string.common_close),
+                    closeContentDescription = commonCloseText,
                     systemOption = AndroidKitSettingsSystemOption(
                         id = "system",
-                        label = stringResource(R.string.language_system),
+                        label = languageSystemText,
                         currentValueLabel = languageLabels.getValue(systemLocaleTag),
                     ),
                 ),
-                searchLabel = stringResource(R.string.settings_search_languages),
-                emptyResultsLabel = stringResource(R.string.settings_no_languages),
+                searchLabel = settingsSearchLanguagesText,
+                emptyResultsLabel = settingsNoLanguagesText,
             ),
             theme = AndroidKitSettingsSelection(
-                label = stringResource(R.string.theme_title),
+                label = themeTitleText,
                 options = themeOptions.map { (mode, label) -> AndroidKitSettingsOption(mode.name, label) },
                 selectedId = settings.themeMode.name,
                 onSelected = { onThemeChanged(ThemeMode.valueOf(it)) },
-                closeContentDescription = stringResource(R.string.common_close),
+                closeContentDescription = commonCloseText,
                 systemOption = AndroidKitSettingsSystemOption(
                     id = ThemeMode.SYSTEM.name,
-                    label = stringResource(R.string.theme_system),
-                    currentValueLabel = stringResource(
-                        if (isSystemInDarkTheme()) R.string.theme_dark else R.string.theme_light,
-                    ),
+                    label = themeSystemText,
+                    currentValueLabel = systemThemeText,
                 ),
             ),
             floatingOpacity = AndroidKitFloatingOpacitySetting(
-                label = stringResource(R.string.settings_floating_opacity), value = settings.floatingSurfaceOpacityLevel,
-                minimumLabel = stringResource(R.string.settings_min), maximumLabel = stringResource(R.string.settings_max),
+                label = settingsFloatingOpacityText, value = settings.floatingSurfaceOpacityLevel,
+                minimumLabel = settingsMinText, maximumLabel = settingsMaxText,
                 onValueChange = onOpacityChanged, onValueChangeFinished = onOpacityChangeFinished,
             ),
         )
         securitySection(
-            label = stringResource(R.string.security_title),
+            label = securityTitleText,
             appLock = AndroidKitAppLockSetting(
                 label = appLockLabel, supportingText = appLockBody,
                 checked = settings.appLockEnabled, onCheckedChange = onAppLockChanged,
                 timeout = AndroidKitAppLockTimeoutSetting(
-                    label = stringResource(R.string.app_lock_timeout),
+                    label = appLockTimeoutText,
                     options = lockTimeouts.map { (duration, label) ->
                         AndroidKitSettingsOption(duration.toString(), label)
                     },
@@ -206,23 +232,11 @@ fun SettingsScreen(
         )
         section(
             key = "backup",
-            label = stringResource(R.string.backup_title),
-            description = stringResource(R.string.backup_body),
+            label = backupTitleText,
+            description = backupBodyText,
         ) {
-            item {
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(UiTokens.CompactSpacing),
-                ) {
-                    Text(backupStateLabel, style = MaterialTheme.typography.bodyLarge)
-                    settings.backupStatus.lastSuccess?.let {
-                        Text(
-                            stringResource(R.string.backup_last_success, it.localizedDateTime(zoneId)),
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-                    }
-                }
-            }
+            info(label = backupStateLabel, supportingText = backupLastSuccess)
+
             if (settings.backupConfiguration == null) {
                 button(label = configureBackupLabel, onClick = { backupDialog = true })
             } else {
@@ -243,37 +257,16 @@ fun SettingsScreen(
                 },
             )
         }
-        section(key = "recovery", label = stringResource(R.string.recovery_title)) {
-            item {
-                Text(stringResource(R.string.recovery_body), modifier = Modifier.weight(1f))
-            }
+        section(key = "recovery", label = recoveryTitleText) {
+            info(label = recoveryBodyText)
         }
-        section(key = "privacy", label = stringResource(R.string.privacy_title)) {
-            item {
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(UiTokens.CompactSpacing),
-                ) {
-                    Text(stringResource(R.string.privacy_body))
-                    Text(stringResource(R.string.health_disclaimer))
-                    Text(
-                        stringResource(
-                            R.string.build_channel,
-                            stringResource(environmentLabelResource()),
-                        ),
-                    )
-                }
-            }
+        section(key = "privacy", label = privacyTitleText) {
+            info(label = privacyBodyText)
+            info(label = healthDisclaimerText)
+            info(label = buildChannelText)
         }
-        section(key = "data", label = stringResource(R.string.data_title)) {
-            item {
-                OutlinedButton(
-                    onClick = { deleteDialog = true },
-                    modifier = Modifier.weight(1f),
-                ) {
-                    Text(stringResource(R.string.delete_vault))
-                }
-            }
+        section(key = "data", label = dataTitleText) {
+            button(label = deleteVaultText, onClick = { deleteDialog = true })
         }
     }
 

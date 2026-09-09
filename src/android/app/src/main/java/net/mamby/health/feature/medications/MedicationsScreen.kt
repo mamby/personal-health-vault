@@ -18,7 +18,6 @@ import androidx.compose.material3.ExposedDropdownMenu
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,7 +26,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import java.time.DayOfWeek
 import java.time.Instant
@@ -45,7 +43,6 @@ import net.mamby.health.ui.components.AppEditorScaffold
 import net.mamby.androidkit.compose.layout.AndroidKitPage
 import net.mamby.health.ui.components.DateField
 import net.mamby.health.ui.components.EmptyState
-import net.mamby.health.ui.components.FloatingAddButton
 import net.mamby.health.ui.components.DropdownTrailingIcon
 import net.mamby.health.ui.components.EditorFieldPair
 import net.mamby.health.ui.components.EditorSection
@@ -61,6 +58,7 @@ import net.mamby.health.ui.components.withPagePadding
 import net.mamby.health.ui.format.labelResource
 import net.mamby.health.ui.format.localizedTime
 import net.mamby.health.ui.theme.UiTokens
+import net.mamby.health.ui.components.floatingAddAction
 
 @Composable
 fun MedicationsScreen(
@@ -79,12 +77,10 @@ fun MedicationsScreen(
     }
     AndroidKitPage(
         title = stringResource(R.string.medications_title),
-        floatingActionButton = {
-            FloatingAddButton(
-                label = stringResource(R.string.add_medication),
-                onClick = { onAdd(filterProfileId ?: records.singleOrNull()?.profile?.id) },
-            )
-        },
+        floatingActionButton = floatingAddAction(
+            label = stringResource(R.string.add_medication),
+            onClick = { onAdd(filterProfileId ?: records.singleOrNull()?.profile?.id) },
+        ),
     ) { innerPadding ->
         LazyVerticalGrid(
             columns = GridCells.Adaptive(UiTokens.CardMinWidth),

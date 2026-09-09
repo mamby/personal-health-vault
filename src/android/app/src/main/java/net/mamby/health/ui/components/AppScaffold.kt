@@ -1,49 +1,27 @@
 package net.mamby.health.ui.components
 
 import androidx.annotation.DrawableRes
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.PlainTooltip
-import androidx.compose.material3.Text
-import androidx.compose.material3.TooltipAnchorPosition
-import androidx.compose.material3.TooltipBox
-import androidx.compose.material3.TooltipDefaults
-import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
-import net.mamby.androidkit.compose.action.AndroidKitFloatingActionButton
 import net.mamby.androidkit.compose.layout.AndroidKitPageAction
 import net.mamby.androidkit.compose.layout.AndroidKitPageActionItem
 import net.mamby.androidkit.navigation3.listDetailBackAction
 import net.mamby.health.R
+import net.mamby.androidkit.compose.action.AndroidKitFloatingAction
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FloatingAddButton(
+fun floatingAddAction(
     label: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-) {
-    TooltipBox(
-        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
-            TooltipAnchorPosition.Below,
-        ),
-        tooltip = { PlainTooltip { Text(label) } },
-        state = rememberTooltipState(),
-        modifier = modifier,
-    ) {
-        AndroidKitFloatingActionButton(onClick = onClick) {
-            Icon(
-                painter = painterResource(R.drawable.ic_lucide_plus),
-                contentDescription = label,
-            )
-        }
-    }
-}
+): AndroidKitFloatingAction.Button = AndroidKitFloatingAction.Button(
+    icon = painterResource(R.drawable.ic_lucide_plus), label = label,
+    onClick = onClick, modifier = modifier, tooltip = label,
+)
 
 @Composable
 fun titleBarAction(

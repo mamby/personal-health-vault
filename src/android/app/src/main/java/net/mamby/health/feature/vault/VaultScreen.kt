@@ -28,7 +28,6 @@ import net.mamby.health.feature.ProfileOwned
 import net.mamby.health.feature.ownedItems
 import net.mamby.androidkit.compose.layout.AndroidKitPage
 import net.mamby.health.ui.components.EmptyState
-import net.mamby.health.ui.components.FloatingAddButton
 import net.mamby.health.ui.components.ListCard
 import net.mamby.health.ui.components.ProfileFilterChip
 import net.mamby.health.ui.components.ProfileMarker
@@ -37,6 +36,7 @@ import net.mamby.health.ui.components.withPagePadding
 import net.mamby.health.ui.format.localizedLabel
 import net.mamby.health.ui.format.localizedDate
 import net.mamby.health.ui.theme.UiTokens
+import net.mamby.health.ui.components.floatingAddAction
 
 @Composable
 fun VaultScreen(
@@ -84,14 +84,12 @@ fun VaultScreen(
                 onClick = { onManageCategories(filterProfileId) },
             ),
         ),
-        floatingActionButton = {
-            FloatingAddButton(
-                label = stringResource(R.string.import_document),
-                onClick = {
-                    onImportRequested(filterProfileId ?: records.singleOrNull()?.profile?.id)
-                },
-            )
-        },
+        floatingActionButton = floatingAddAction(
+            label = stringResource(R.string.import_document),
+            onClick = {
+                onImportRequested(filterProfileId ?: records.singleOrNull()?.profile?.id)
+            },
+        ),
     ) { innerPadding ->
         LazyVerticalGrid(
             columns = GridCells.Adaptive(UiTokens.CardMinWidth),
