@@ -80,21 +80,23 @@ fun ProfileFilterChip(
             LazyColumn(Modifier.fillMaxWidth()) {
                 item {
                     ListItem(
-                        headlineContent = { Text(stringResource(R.string.all_profiles)) },
                         modifier = Modifier.clickable {
                             onSelected(null)
                             chooserVisible = false
                         },
-                    )
+                    ) {
+                        Text(stringResource(R.string.all_profiles))
+                    }
                 }
                 items(records, key = { it.profile.id }) { record ->
                     ListItem(
-                        headlineContent = { ProfileMarker(record.profile) },
                         modifier = Modifier.clickable {
                             onSelected(record.profile.id)
                             chooserVisible = false
                         },
-                    )
+                    ) {
+                        ProfileMarker(record.profile)
+                    }
                 }
             }
         }

@@ -77,16 +77,15 @@ fun ProfileOwnerGateScreen(
                 profiles.forEach { record ->
                     item(key = record.profile.id) {
                         ListItem(
-                            headlineContent = {
-                                ProfileMarker(
-                                    profile = record.profile,
-                                    displayLabel = labels[record.profile.id] ?: record.profile.displayName,
-                                )
-                            },
                             modifier = Modifier.clickable {
                                 onProfileSelected(record.profile.id)
                             },
-                        )
+                        ) {
+                            ProfileMarker(
+                                profile = record.profile,
+                                displayLabel = labels[record.profile.id] ?: record.profile.displayName,
+                            )
+                        }
                     }
                 }
                 item {

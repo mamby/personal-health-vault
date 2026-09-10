@@ -11,6 +11,7 @@ plugins {
 android {
     namespace = "net.mamby.health"
     compileSdk = 37
+    ndkVersion = "30.0.16248370"
 
     defaultConfig {
         applicationId = "net.mamby.health"
@@ -84,7 +85,6 @@ android {
     kotlin {
         compilerOptions {
             jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
-            freeCompilerArgs.add("-Xannotation-default-target=param-property")
         }
     }
 
