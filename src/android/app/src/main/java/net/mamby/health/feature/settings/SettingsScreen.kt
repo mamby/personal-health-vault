@@ -27,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -46,6 +47,10 @@ import net.mamby.androidkit.compose.form.AndroidKitSettingsPageConfiguration
 import net.mamby.androidkit.compose.form.AndroidKitSettingsSelection
 import net.mamby.androidkit.compose.form.AndroidKitSettingsOption
 import net.mamby.androidkit.compose.form.AndroidKitSettingsSystemOption
+import net.mamby.androidkit.compose.form.AndroidKitSettingsAction
+import net.mamby.androidkit.compose.form.AndroidKitSettingsAbout
+import net.mamby.androidkit.compose.form.AndroidKitSettingsGetInvolved
+import net.mamby.androidkit.compose.form.AndroidKitSettingsSupport
 import net.mamby.androidkit.compose.form.AndroidKitLanguageSetting
 import net.mamby.androidkit.compose.form.AndroidKitFloatingOpacitySetting
 import net.mamby.androidkit.compose.form.AndroidKitAppLockSetting
@@ -143,29 +148,14 @@ fun SettingsScreen(
     val backupNowLabel = stringResource(R.string.backup_now)
     val removeBackupLabel = stringResource(R.string.remove_backup_configuration)
     val restoreBackupLabel = stringResource(R.string.restore_backup)
-    val appLockLabel = stringResource(R.string.app_lock)
     val appLockBody = stringResource(R.string.app_lock_body)
-    val lockNowLabel = stringResource(R.string.lock_now)
 
     val backupLastSuccess = settings.backupStatus.lastSuccess?.let {
         stringResource(R.string.backup_last_success, it.localizedDateTime(zoneId))
     }
-    val settingsGeneralText = stringResource(R.string.settings_general)
-    val languageTitleText = stringResource(R.string.language_title)
-    val commonCloseText = stringResource(R.string.common_close)
-    val languageSystemText = stringResource(R.string.language_system)
-    val settingsSearchLanguagesText = stringResource(R.string.settings_search_languages)
-    val settingsNoLanguagesText = stringResource(R.string.settings_no_languages)
-    val themeTitleText = stringResource(R.string.theme_title)
-    val themeSystemText = stringResource(R.string.theme_system)
     val systemThemeText = stringResource(
                         if (isSystemInDarkTheme()) R.string.theme_dark else R.string.theme_light,
                     )
-    val settingsFloatingOpacityText = stringResource(R.string.settings_floating_opacity)
-    val settingsMinText = stringResource(R.string.settings_min)
-    val settingsMaxText = stringResource(R.string.settings_max)
-    val securityTitleText = stringResource(R.string.security_title)
-    val appLockTimeoutText = stringResource(R.string.app_lock_timeout)
     val backupTitleText = stringResource(R.string.backup_title)
     val backupBodyText = stringResource(R.string.backup_body)
     val recoveryTitleText = stringResource(R.string.recovery_title)
@@ -176,62 +166,89 @@ fun SettingsScreen(
     val buildChannelText = stringResource(R.string.build_channel, stringResource(environmentLabelResource()))
     val dataTitleText = stringResource(R.string.data_title)
     val deleteVaultText = stringResource(R.string.delete_vault)
+    val uriHandler = LocalUriHandler.current
+    val settingsConfiguration = AndroidKitSettingsPageConfiguration.Main(
+        support = AndroidKitSettingsSupport(
+            action = AndroidKitSettingsAction(
+                label = stringResource(R.string.settings_support),
+                onClick = { uriHandler.openUri("$REPOSITORY_URL/issues") },
+            ),
+        ),
+        getInvolved = AndroidKitSettingsGetInvolved(
+            reportIssue = AndroidKitSettingsAction(
+                label = stringResource(R.string.settings_report_issue),
+                onClick = { uriHandler.openUri("$REPOSITORY_URL/issues/new") },
+            ),
+            suggestImprovement = AndroidKitSettingsAction(
+                label = stringResource(R.string.settings_suggest_improvement),
+                onClick = { uriHandler.openUri("$REPOSITORY_URL/issues/new") },
+            ),
+        ),
+        about = AndroidKitSettingsAbout(
+            appName = stringResource(R.string.app_name),
+            version = BuildConfig.VERSION_NAME,
+            description = privacyBodyText,
+            sourceCode = AndroidKitSettingsAction(
+                label = stringResource(R.string.settings_source_code),
+                onClick = { uriHandler.openUri(REPOSITORY_URL) },
+            ),
+            contributors = AndroidKitSettingsAction(
+                label = stringResource(R.string.settings_contributors),
+                onClick = { uriHandler.openUri("$REPOSITORY_URL/graphs/contributors") },
+            ),
+            license = AndroidKitSettingsAction(
+                label = stringResource(R.string.settings_license),
+                onClick = { uriHandler.openUri("$REPOSITORY_URL/blob/main/LICENSE") },
+            ),
+            privacyPolicy = AndroidKitSettingsAction(
+                label = stringResource(R.string.settings_privacy_policy),
+                onClick = { uriHandler.openUri("$REPOSITORY_URL/blob/main/docs/PRIVACY.md") },
+            ),
+        ),
+    )
     AndroidKitSettingsPage(
-        configuration = AndroidKitSettingsPageConfiguration.Subpage,
+        configuration = settingsConfiguration,
         title = stringResource(R.string.settings_title),
         onBack = onBack,
     ) {
         message?.let { section(key = "message") { info(label = it) } }
         generalSection(
-            label = settingsGeneralText,
             language = AndroidKitLanguageSetting(
                 selection = AndroidKitSettingsSelection(
-                    label = languageTitleText,
                     options = languageOptions.map { (tag, label) -> AndroidKitSettingsOption(tag, label) },
                     selectedId = selectedLocaleTag.ifBlank { "system" },
                     onSelected = { tag -> onLocaleChanged(tag.takeUnless { it == "system" }.orEmpty()) },
-                    closeContentDescription = commonCloseText,
                     systemOption = AndroidKitSettingsSystemOption(
                         id = "system",
-                        label = languageSystemText,
                         currentValueLabel = languageLabels.getValue(systemLocaleTag),
                     ),
                 ),
-                searchLabel = settingsSearchLanguagesText,
-                emptyResultsLabel = settingsNoLanguagesText,
             ),
             theme = AndroidKitSettingsSelection(
-                label = themeTitleText,
                 options = themeOptions.map { (mode, label) -> AndroidKitSettingsOption(mode.name, label) },
                 selectedId = settings.themeMode.name,
                 onSelected = { onThemeChanged(ThemeMode.valueOf(it)) },
-                closeContentDescription = commonCloseText,
                 systemOption = AndroidKitSettingsSystemOption(
                     id = ThemeMode.SYSTEM.name,
-                    label = themeSystemText,
                     currentValueLabel = systemThemeText,
                 ),
             ),
             floatingOpacity = AndroidKitFloatingOpacitySetting(
-                label = settingsFloatingOpacityText, value = settings.floatingSurfaceOpacityLevel,
-                minimumLabel = settingsMinText, maximumLabel = settingsMaxText,
+                value = settings.floatingSurfaceOpacityLevel,
                 onValueChange = onOpacityChanged, onValueChangeFinished = onOpacityChangeFinished,
             ),
         )
         securitySection(
-            label = securityTitleText,
             appLock = AndroidKitAppLockSetting(
-                label = appLockLabel, supportingText = appLockBody,
+                supportingText = appLockBody,
                 checked = settings.appLockEnabled, onCheckedChange = onAppLockChanged,
                 timeout = AndroidKitAppLockTimeoutSetting(
-                    label = appLockTimeoutText,
                     options = lockTimeouts.map { (duration, label) ->
                         AndroidKitSettingsOption(duration.toString(), label)
                     },
                     selectedId = settings.appLockTimeout.toString(),
                     onSelected = { id -> onAppLockTimeoutChanged(lockTimeouts.first { it.first.toString() == id }.first) },
                 ),
-                lockNowLabel = lockNowLabel,
                 onLockNow = onLockNow,
             ),
         )
@@ -350,6 +367,8 @@ fun SettingsScreen(
         )
     }
 }
+
+private const val REPOSITORY_URL = "https://github.com/mamby/personal-health-vault"
 
 @StringRes
 private fun environmentLabelResource(): Int = when (BuildConfig.ENVIRONMENT) {

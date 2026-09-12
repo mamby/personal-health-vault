@@ -628,4 +628,11 @@
     <string name="settings_max">Max</string>
     <string name="settings_search_languages">Search languages</string>
     <string name="settings_no_languages">No matching languages</string>
+    <string name="settings_support">Get help</string>
+    <string name="settings_report_issue">Report an issue</string>
+    <string name="settings_suggest_improvement">Suggest an improvement</string>
+    <string name="settings_source_code">Source code</string>
+    <string name="settings_contributors">Contributors</string>
+    <string name="settings_license">License</string>
+    <string name="settings_privacy_policy">Privacy policy</string>
 </resources>
