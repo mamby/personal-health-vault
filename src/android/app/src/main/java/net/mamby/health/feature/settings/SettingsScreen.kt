@@ -42,6 +42,7 @@ import net.mamby.health.settings.AppSettings
 import net.mamby.health.settings.BackupState
 import net.mamby.health.settings.ThemeMode
 import net.mamby.androidkit.compose.form.AndroidKitSettingsPage
+import net.mamby.androidkit.compose.form.AndroidKitSettingsPageConfiguration
 import net.mamby.androidkit.compose.form.AndroidKitSettingsSelection
 import net.mamby.androidkit.compose.form.AndroidKitSettingsOption
 import net.mamby.androidkit.compose.form.AndroidKitSettingsSystemOption
@@ -175,7 +176,11 @@ fun SettingsScreen(
     val buildChannelText = stringResource(R.string.build_channel, stringResource(environmentLabelResource()))
     val dataTitleText = stringResource(R.string.data_title)
     val deleteVaultText = stringResource(R.string.delete_vault)
-    AndroidKitSettingsPage(title = stringResource(R.string.settings_title), onBack = onBack) {
+    AndroidKitSettingsPage(
+        configuration = AndroidKitSettingsPageConfiguration.Subpage,
+        title = stringResource(R.string.settings_title),
+        onBack = onBack,
+    ) {
         message?.let { section(key = "message") { info(label = it) } }
         generalSection(
             label = settingsGeneralText,
