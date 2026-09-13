@@ -630,11 +630,15 @@
     <string name="settings_max">Max</string>
     <string name="settings_search_languages">Rechercher une langue</string>
     <string name="settings_no_languages">Aucune langue correspondante</string>
-    <string name="settings_support">Obtenir de l’aide</string>
-    <string name="settings_report_issue">Signaler un problème</string>
-    <string name="settings_suggest_improvement">Suggérer une amélioration</string>
     <string name="settings_source_code">Code source</string>
     <string name="settings_contributors">Contributeurs</string>
     <string name="settings_license">Licence</string>
     <string name="settings_privacy_policy">Politique de confidentialité</string>
+    <string name="settings_contact">Contact</string>
+    <string name="settings_app_info">Infos sur l’application</string>
+    <string name="settings_app">Application</string>
+    <string name="settings_terms_of_use">Conditions d’utilisation</string>
+    <string name="settings_third_party_licenses">Licences tierces</string>
+    <string name="settings_version">Version</string>
+    <string name="settings_open_source">Code ouvert</string>
 </resources>

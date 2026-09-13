@@ -73,6 +73,7 @@ import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
@@ -112,6 +113,7 @@ import net.mamby.health.feature.schedule.ScheduleEditorScreen
 import net.mamby.health.feature.search.SearchScreen
 import net.mamby.health.feature.search.SearchFilter
 import net.mamby.health.feature.settings.SettingsScreen
+import net.mamby.health.feature.settings.AppInfoScreen
 import net.mamby.health.feature.summary.SummaryScreen
 import net.mamby.health.feature.summary.CareDirectiveDetailScreen
 import net.mamby.health.feature.summary.CareDirectiveEditorScreen
@@ -170,6 +172,7 @@ import net.mamby.health.navigation.ScheduleDetailRoute
 import net.mamby.health.navigation.ScheduleEditorRoute
 import net.mamby.health.navigation.SearchRoute
 import net.mamby.health.navigation.SettingsRoute
+import net.mamby.health.navigation.AppInfoRoute
 import net.mamby.health.navigation.TopLevelDestination
 import net.mamby.health.navigation.ProfileOwnedCreateTarget
 import net.mamby.health.navigation.ProfileOwnerGateRoute
@@ -377,27 +380,42 @@ private fun RecoverySettings(
     onLocaleChanged: (String) -> Unit,
     onBack: () -> Unit,
 ) {
-    BackHandler(onBack = onBack)
-    SettingsScreen(
-        settings = settings,
-        zoneId = viewModel.zoneId,
-        restorePreview = restorePreview,
-        message = notice?.let { stringResource(it.resourceId) },
-        onBack = onBack,
-        onThemeChanged = viewModel::setThemeMode,
-        onOpacityChanged = viewModel::previewFloatingSurfaceOpacityLevel,
-        onOpacityChangeFinished = { viewModel.saveFloatingSurfaceOpacityLevel() },
-        onLocaleChanged = onLocaleChanged,
-        onAppLockChanged = { enabled -> activity?.let { viewModel.setAppLockEnabled(it, enabled) } },
-        onAppLockTimeoutChanged = viewModel::setAppLockTimeout,
-        onLockNow = viewModel::lockNow,
-        onConfigureBackup = viewModel::configureBackup,
-        onBackupNow = viewModel::backupNow,
-        onClearBackup = viewModel::clearBackup,
-        onPrepareRestore = viewModel::prepareRestore,
-        onCommitRestore = viewModel::commitRestore,
-        onDiscardRestore = viewModel::discardRestore,
-        onDeleteVault = viewModel::deleteVault,
+    val backStack = rememberNavBackStack(SettingsRoute)
+    val goBack: () -> Unit = {
+        if (backStack.size > 1) backStack.removeLastOrNull() else onBack()
+    }
+    BackHandler(onBack = goBack)
+    NavDisplay(
+        backStack = backStack,
+        onBack = goBack,
+        entryDecorators = listOf(rememberSaveableStateHolderNavEntryDecorator()),
+        entryProvider = entryProvider {
+            entry<SettingsRoute> {
+                SettingsScreen(
+                    onAppInfo = { backStack.add(AppInfoRoute) },
+                    settings = settings,
+                    zoneId = viewModel.zoneId,
+                    restorePreview = restorePreview,
+                    message = notice?.let { stringResource(it.resourceId) },
+                    onBack = onBack,
+                    onThemeChanged = viewModel::setThemeMode,
+                    onOpacityChanged = viewModel::previewFloatingSurfaceOpacityLevel,
+                    onOpacityChangeFinished = { viewModel.saveFloatingSurfaceOpacityLevel() },
+                    onLocaleChanged = onLocaleChanged,
+                    onAppLockChanged = { enabled -> activity?.let { viewModel.setAppLockEnabled(it, enabled) } },
+                    onAppLockTimeoutChanged = viewModel::setAppLockTimeout,
+                    onLockNow = viewModel::lockNow,
+                    onConfigureBackup = viewModel::configureBackup,
+                    onBackupNow = viewModel::backupNow,
+                    onClearBackup = viewModel::clearBackup,
+                    onPrepareRestore = viewModel::prepareRestore,
+                    onCommitRestore = viewModel::commitRestore,
+                    onDiscardRestore = viewModel::discardRestore,
+                    onDeleteVault = viewModel::deleteVault,
+                )
+            }
+            entry<AppInfoRoute> { AppInfoScreen(onBack = goBack) }
+        },
     )
 }
 
@@ -1538,8 +1556,10 @@ private fun VaultNavigation(
                             )
                         }
                     }
+                    entry<AppInfoRoute> { AppInfoScreen(onBack = navigation::goBack) }
                     entry<SettingsRoute> {
                         SettingsScreen(
+                            onAppInfo = { navigation.navigate(AppInfoRoute) },
                             settings = settings,
                             zoneId = zoneId,
                             restorePreview = restorePreview,

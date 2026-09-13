@@ -1190,6 +1190,7 @@ class ComposeScreensInstrumentedTest {
         onLockNow: () -> Unit = {},
     ) {
         SettingsScreen(
+            onAppInfo = {},
             settings = settings,
             zoneId = ZoneOffset.UTC,
             restorePreview = null,

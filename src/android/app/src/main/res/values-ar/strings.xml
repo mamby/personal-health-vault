@@ -636,11 +636,15 @@
     <string name="settings_max">الأقصى</string>
     <string name="settings_search_languages">البحث عن لغة</string>
     <string name="settings_no_languages">لا توجد لغات مطابقة</string>
-    <string name="settings_support">الحصول على المساعدة</string>
-    <string name="settings_report_issue">الإبلاغ عن مشكلة</string>
-    <string name="settings_suggest_improvement">اقتراح تحسين</string>
     <string name="settings_source_code">شفرة المصدر</string>
     <string name="settings_contributors">المساهمون</string>
     <string name="settings_license">الترخيص</string>
     <string name="settings_privacy_policy">سياسة الخصوصية</string>
+    <string name="settings_contact">التواصل</string>
+    <string name="settings_app_info">معلومات التطبيق</string>
+    <string name="settings_app">التطبيق</string>
+    <string name="settings_terms_of_use">شروط الاستخدام</string>
+    <string name="settings_third_party_licenses">تراخيص الجهات الخارجية</string>
+    <string name="settings_version">الإصدار</string>
+    <string name="settings_open_source">مفتوح المصدر</string>
 </resources>

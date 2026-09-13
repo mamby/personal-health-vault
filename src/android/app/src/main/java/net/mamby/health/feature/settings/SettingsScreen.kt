@@ -47,10 +47,8 @@ import net.mamby.androidkit.compose.form.AndroidKitSettingsPageConfiguration
 import net.mamby.androidkit.compose.form.AndroidKitSettingsSelection
 import net.mamby.androidkit.compose.form.AndroidKitSettingsOption
 import net.mamby.androidkit.compose.form.AndroidKitSettingsSystemOption
-import net.mamby.androidkit.compose.form.AndroidKitSettingsAction
 import net.mamby.androidkit.compose.form.AndroidKitSettingsAbout
-import net.mamby.androidkit.compose.form.AndroidKitSettingsGetInvolved
-import net.mamby.androidkit.compose.form.AndroidKitSettingsSupport
+import net.mamby.androidkit.compose.form.AndroidKitSettingsLink
 import net.mamby.androidkit.compose.form.AndroidKitLanguageSetting
 import net.mamby.androidkit.compose.form.AndroidKitFloatingOpacitySetting
 import net.mamby.androidkit.compose.form.AndroidKitAppLockSetting
@@ -62,6 +60,7 @@ import net.mamby.health.ui.theme.UiTokens
 
 @Composable
 fun SettingsScreen(
+    onAppInfo: () -> Unit,
     settings: AppSettings,
     zoneId: ZoneId,
     restorePreview: RestorePreview?,
@@ -168,43 +167,8 @@ fun SettingsScreen(
     val deleteVaultText = stringResource(R.string.delete_vault)
     val uriHandler = LocalUriHandler.current
     val settingsConfiguration = AndroidKitSettingsPageConfiguration.Main(
-        support = AndroidKitSettingsSupport(
-            action = AndroidKitSettingsAction(
-                label = stringResource(R.string.settings_support),
-                onClick = { uriHandler.openUri("$REPOSITORY_URL/issues") },
-            ),
-        ),
-        getInvolved = AndroidKitSettingsGetInvolved(
-            reportIssue = AndroidKitSettingsAction(
-                label = stringResource(R.string.settings_report_issue),
-                onClick = { uriHandler.openUri("$REPOSITORY_URL/issues/new") },
-            ),
-            suggestImprovement = AndroidKitSettingsAction(
-                label = stringResource(R.string.settings_suggest_improvement),
-                onClick = { uriHandler.openUri("$REPOSITORY_URL/issues/new") },
-            ),
-        ),
-        about = AndroidKitSettingsAbout(
-            appName = stringResource(R.string.app_name),
-            version = BuildConfig.VERSION_NAME,
-            description = privacyBodyText,
-            sourceCode = AndroidKitSettingsAction(
-                label = stringResource(R.string.settings_source_code),
-                onClick = { uriHandler.openUri(REPOSITORY_URL) },
-            ),
-            contributors = AndroidKitSettingsAction(
-                label = stringResource(R.string.settings_contributors),
-                onClick = { uriHandler.openUri("$REPOSITORY_URL/graphs/contributors") },
-            ),
-            license = AndroidKitSettingsAction(
-                label = stringResource(R.string.settings_license),
-                onClick = { uriHandler.openUri("$REPOSITORY_URL/blob/main/LICENSE") },
-            ),
-            privacyPolicy = AndroidKitSettingsAction(
-                label = stringResource(R.string.settings_privacy_policy),
-                onClick = { uriHandler.openUri("$REPOSITORY_URL/blob/main/docs/PRIVACY.md") },
-            ),
-        ),
+        contact = AndroidKitSettingsLink(onClick = { uriHandler.openUri("https://github.com/mamby") }),
+        appInfo = AndroidKitSettingsLink(onClick = onAppInfo),
     )
     AndroidKitSettingsPage(
         configuration = settingsConfiguration,
@@ -366,6 +330,29 @@ fun SettingsScreen(
             },
         )
     }
+}
+
+@Composable
+fun AppInfoScreen(onBack: () -> Unit) {
+    val uriHandler = LocalUriHandler.current
+    fun link(path: String = "", supportingText: String? = null) = AndroidKitSettingsLink(
+        onClick = { uriHandler.openUri("$REPOSITORY_URL$path") },
+        supportingText = supportingText,
+    )
+    AndroidKitSettingsPage(
+        configuration = AndroidKitSettingsPageConfiguration.AppInfo(
+            AndroidKitSettingsAbout(
+                version = BuildConfig.VERSION_NAME,
+                privacyPolicy = link("/blob/main/docs/PRIVACY.md"),
+                termsOfUse = link(),
+                libraries = link("/blob/main/THIRD-PARTY-NOTICES.md"),
+                sourceCode = link(),
+                license = link("/blob/main/LICENSE", supportingText = "MIT"),
+                contributors = link("/graphs/contributors"),
+            ),
+        ),
+        onBack = onBack,
+    )
 }
 
 private const val REPOSITORY_URL = "https://github.com/mamby/personal-health-vault"

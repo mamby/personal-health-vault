@@ -142,6 +142,7 @@ data class HealthIdentifierEditorRoute(
 ) : EditorRoute
 
 @Serializable data object SettingsRoute : TopLevelRoute
+@Serializable data object AppInfoRoute : AppRoute
 @Serializable data object ManageProfilesRoute : TopLevelRoute
 
 enum class TopLevelDestination(
