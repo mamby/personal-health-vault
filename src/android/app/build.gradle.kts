@@ -8,6 +8,8 @@ plugins {
     jacoco
 }
 
+apply(from = rootProject.file("gradle/validate-androidkit-resources.gradle"))
+
 android {
     namespace = "net.mamby.health"
     compileSdk = 37
@@ -74,6 +76,8 @@ android {
     }
 
     androidResources {
+        localeFilters += providers.gradleProperty("androidKitSupportedLocales").get()
+            .split(',').map { "b+" + it.replace('-', '+') }
         generateLocaleConfig = true
     }
 

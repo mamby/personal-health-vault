@@ -1,0 +1,241 @@
+import groovy.json.JsonSlurper
+import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
+import org.gradle.api.attributes.Attribute
+import org.gradle.api.attributes.Usage
+import org.gradle.api.artifacts.component.ProjectComponentIdentifier
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.provider.ListProperty
+import org.gradle.api.tasks.*
+import org.w3c.dom.Element
+import javax.xml.parsers.DocumentBuilderFactory
+import java.util.zip.ZipFile
+
+/**
+ * Applied by each consuming application. Uses AGP's public variant/source API;
+ * the generated assets dependency makes validation a prerequisite of APK/AAB packaging.
+ */
+abstract class ValidateAndroidKitResources extends DefaultTask {
+    @InputFiles @PathSensitive(PathSensitivity.RELATIVE)
+    abstract ConfigurableFileCollection getHostResources()
+
+    @InputFiles @PathSensitive(PathSensitivity.NONE)
+    abstract ConfigurableFileCollection getDependencyAars()
+
+    @Input
+    abstract ListProperty<String> getSupportedLocales()
+
+    @OutputDirectory
+    abstract DirectoryProperty getOutputDirectory()
+
+    private static final String CONTRACT = 'assets/androidkit-localization-contract.json'
+    private static final String PREFIX = 'androidkit_'
+
+    @TaskAction
+    void validateResources() {
+        def errors = []
+        def aars = dependencyAars.files.findAll { it.name.endsWith('.aar') }
+        def kitAars = aars.findAll { file ->
+            new ZipFile(file).withCloseable { zip -> zip.getEntry(CONTRACT) != null }
+        }
+        if (kitAars.size() != 1) {
+            throw new GradleException('Expected exactly one AndroidKit Compose AAR with its localization contract. Update Kit before building.')
+        }
+        def kit = kitAars.first()
+        def available = [] as Set
+        new ZipFile(kit).withCloseable { zip ->
+            def contract = zip.getInputStream(zip.getEntry(CONTRACT)).withCloseable {
+                new JsonSlurper().parse(it, 'UTF-8')
+            }
+            if (contract.schema != 1 || contract.resourcePrefix != PREFIX || contract.defaultLocale != 'en') {
+                throw new GradleException('Unsupported AndroidKit localization contract.')
+            }
+            available.addAll(contract.supportedLocales.collect { canonical(it.toString()) })
+            if (!available.contains('en')) errors.add('Kit must include its English default locale.')
+            def byLocale = [:].withDefault { [:] }
+            zip.entries().each { entry ->
+                if (entry.name ==~ /res\/values[^\/]*\/[^\/]+\.xml/) {
+                    def folder = entry.name.split('/')[1]
+                    def locale = resourceLocale(folder) ?: 'en'
+                    zip.getInputStream(entry).withCloseable { stream ->
+                        elements(stream).each { element ->
+                            def name = element.getAttribute('name')
+                            if (name.startsWith(PREFIX) && element.tagName in ['string', 'plurals', 'string-array'] &&
+                                element.getAttribute('translatable') != 'false') {
+                                def key = element.tagName + '/' + name
+                                if (element.textContent.trim().isEmpty()) errors.add("Kit has empty translation: ${locale}/${key}")
+                                byLocale[locale][key] = element.textContent
+                            }
+                        }
+                    }
+                }
+            }
+            def baseKeys = byLocale['en'].keySet()
+            if (baseKeys.isEmpty()) errors.add('Kit has no canonical shared strings.')
+            available.each { locale ->
+                def missing = baseKeys - byLocale[locale].keySet()
+                if (missing) errors.add("Kit locale ${locale} is incomplete: ${missing.join(', ')}")
+                def extra = byLocale[locale].keySet() - baseKeys
+                if (extra) errors.add("Kit locale ${locale} has unknown keys: ${extra.join(', ')}")
+            }
+        }
+        def declared = supportedLocales.get().collect { canonical(it) }.toSet()
+        if (declared.isEmpty()) errors.add('Declare androidKitSupportedLocales with every supported application locale.')
+        declared.each { locale ->
+            checkSupported(locale, available, 'Host language declaration', errors)
+        }
+        hostResources.files.findAll { it.isDirectory() }.each { root ->
+            root.eachFileRecurse { file ->
+                if (file.isFile()) {
+                    def relative = root.toPath().relativize(file.toPath()).toString().replace('\\', '/')
+                    def parts = relative.split('/')
+                    if (parts.length >= 2) {
+                        def locale = resourceLocale(parts[0])
+                        if (locale != null) checkSupported(locale, available, file.toString(), errors)
+                        checkResource(relative, { file.newInputStream() }, file.toString(), errors)
+                        if (parts[0].startsWith('xml') && file.name.endsWith('.xml')) {
+                            file.withInputStream { stream ->
+                                def config = documentRoot(stream)
+                                if (config.tagName == 'locale-config') {
+                                    def android = 'http://schemas.android.com/apk/res/android'
+                                    def defaultTag = config.getAttributeNS(android, 'defaultLocale')
+                                    if (defaultTag) checkSupported(canonical(defaultTag), available, file.toString(), errors)
+                                    def locales = config.getElementsByTagName('locale')
+                                    (0..<locales.length).each { index ->
+                                        def tag = locales.item(index).getAttributeNS(android, 'name')
+                                        if (tag) checkSupported(canonical(tag), available, file.toString(), errors)
+                                    }
+                                }
+                            }
+                        }
+                    } else if (file.name == 'resources.properties') {
+                        checkDefaultLocale(file, available, errors)
+                    }
+                }
+            }
+        }
+        // Dependency resources also participate in Android resource merging.
+        aars.findAll { it != kit }.each { file ->
+            new ZipFile(file).withCloseable { zip ->
+                zip.entries().each { entry ->
+                    if (entry.name.startsWith('res/') && !entry.directory) {
+                        checkResource(entry.name.substring(4), { zip.getInputStream(entry) },
+                            "${file.name}!/${entry.name}", errors)
+                    }
+                }
+            }
+        }
+        if (errors) throw new GradleException('AndroidKit localization validation failed:\n' + errors.unique().collect { '- ' + it }.join('\n'))
+        outputDirectory.get().asFile.mkdirs()
+        logger.lifecycle("AndroidKit localization: ${declared.sort().join(', ')} supported; no host resource overrides.")
+    }
+
+    static void checkDefaultLocale(File file, Set available, List errors) {
+        def properties = new Properties()
+        file.withInputStream { properties.load(it) }
+        def locale = properties.getProperty('unqualifiedResLocale')
+        if (locale) checkSupported(canonical(locale), available, file.toString(), errors)
+    }
+
+    static void checkResource(String path, Closure open, String origin, List errors) {
+        def parts = path.split('/')
+        if (parts.length < 2) return
+        if (parts.last().startsWith(PREFIX)) errors.add("${origin}: resource name is reserved for AndroidKit.")
+        if (!path.endsWith('.xml')) return
+        // Only value declarations and locale configuration need XML inspection.
+        if (!parts[0].startsWith('values') && !parts[0].startsWith('xml')) return
+        open.call().withCloseable { stream ->
+            def children = elements(stream)
+            if (parts[0].startsWith('values')) {
+                children.each { element ->
+                    if (element.getAttribute('name').startsWith(PREFIX)) {
+                        errors.add("${origin}: ${element.getAttribute('name')} is owned by AndroidKit; remove the host definition.")
+                    }
+                }
+            }
+        }
+    }
+
+    static Element documentRoot(InputStream stream) {
+        def factory = DocumentBuilderFactory.newInstance()
+        factory.setNamespaceAware(true)
+        factory.setFeature('http://apache.org/xml/features/disallow-doctype-decl', true)
+        factory.setFeature('http://xml.org/sax/features/external-general-entities', false)
+        factory.setFeature('http://xml.org/sax/features/external-parameter-entities', false)
+        factory.setXIncludeAware(false)
+        factory.setExpandEntityReferences(false)
+        factory.newDocumentBuilder().parse(stream).documentElement
+    }
+
+    static List<Element> elements(InputStream stream) {
+        def nodes = documentRoot(stream).childNodes
+        (0..<nodes.length).collect { nodes.item(it) }.findAll { it instanceof Element }
+    }
+
+    static String canonical(String tag) {
+        try {
+            def locale = new Locale.Builder().setLanguageTag(tag.trim()).build()
+            if (!locale.language) throw new IllformedLocaleException('Missing language')
+            return locale.toLanguageTag()
+        } catch (IllformedLocaleException failure) {
+            throw new GradleException("Invalid application locale: ${tag}", failure)
+        }
+    }
+
+    static String resourceLocale(String folder) {
+        def qualifiers = folder.split('-').drop(1)
+        for (int i = 0; i < qualifiers.size(); i++) {
+            def part = qualifiers[i]
+            if (part.startsWith('b+')) return canonical(part.substring(2).replace('+', '-'))
+            if (part ==~ /[a-z]{2,3}/ && part != 'car') {
+                def region = i + 1 < qualifiers.size() && qualifiers[i + 1] ==~ /r([A-Z]{2}|[0-9]{3})/ ?
+                    '-' + qualifiers[i + 1].substring(1) : ''
+                return canonical(part + region)
+            }
+        }
+        null
+    }
+
+    static void checkSupported(String locale, Set available, String origin, List errors) {
+        // A neutral Kit translation covers regional variants of that language.
+        if (!available.contains(locale) && !available.contains(Locale.forLanguageTag(locale).language)) {
+            errors.add("${origin}: locale ${locale} is not supported by AndroidKit. Add its complete translations to Kit first.")
+        }
+    }
+}
+
+plugins.withId('com.android.application') {
+    def components = extensions.getByName('androidComponents')
+    components.onVariants(components.selector().all()) { variant ->
+        def capitalized = variant.name.capitalize()
+        def aarFiles = variant.runtimeConfiguration.incoming.artifactView {
+            componentFilter { !(it instanceof ProjectComponentIdentifier) }
+            attributes.attribute(Attribute.of('artifactType', String), 'aar')
+            lenient = true // Java-only dependencies have no AAR variant.
+        }
+        def localAars = variant.runtimeConfiguration.incoming.artifactView {
+            withVariantReselection()
+            componentFilter { it instanceof ProjectComponentIdentifier }
+            attributes {
+                variant.runtimeConfiguration.attributes.keySet().each { key ->
+                    attribute(key, variant.runtimeConfiguration.attributes.getAttribute(key))
+                }
+                attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage, 'androidkit-localization'))
+            }
+        }.files
+        def validation = tasks.register("validate${capitalized}AndroidKitLocalization", ValidateAndroidKitResources) {
+            hostResources.from(variant.sources.res.all)
+            dependencyAars.from(aarFiles.files)
+            dependencyAars.from(localAars)
+            supportedLocales.set(providers.gradleProperty('androidKitSupportedLocales').map {
+                it.split(',').collect { tag -> tag.trim() }.findAll { tag -> !tag.isEmpty() }
+            }.orElse([]))
+            outputDirectory.set(layout.buildDirectory.dir("generated/androidkitLocalization/${variant.name}/assets"))
+        }
+        variant.sources.assets.addGeneratedSourceDirectory(validation) { task -> task.outputDirectory }
+        tasks.matching { it.name == 'check' || it.name == "lint${capitalized}" }.configureEach {
+            dependsOn(validation)
+        }
+    }
+}

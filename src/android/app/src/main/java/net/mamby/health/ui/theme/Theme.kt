@@ -11,17 +11,14 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import java.util.UUID
 import net.mamby.androidkit.compose.theme.AndroidKitCardStyle
 import net.mamby.androidkit.compose.theme.AndroidKitDimensions
 import net.mamby.androidkit.compose.theme.AndroidKitFloatingActionButtonStyle
 import net.mamby.androidkit.compose.theme.AndroidKitFloatingSurfaceStyle
-import net.mamby.androidkit.compose.theme.AndroidKitStrings
 import net.mamby.androidkit.compose.theme.AndroidKitTheme
 import net.mamby.androidkit.compose.theme.AndroidKitThemeDefinition
-import net.mamby.health.R
 
 @Immutable
 internal data class ProfileAccentColors(
@@ -237,30 +234,6 @@ fun HealthVaultTheme(
                     shape = CircleShape,
                     visualSize = dimensions.floatingActionButtonSize,
                 ),
-            ),
-            strings = AndroidKitStrings(
-                back = stringResource(R.string.action_back),
-                add = stringResource(R.string.common_add),
-                close = stringResource(R.string.common_close),
-                more = stringResource(R.string.action_more),
-                retry = stringResource(R.string.common_retry),
-                cancel = stringResource(R.string.common_cancel),
-                confirm = stringResource(R.string.common_confirm),
-                save = stringResource(R.string.common_save),
-                hideTitleBar = stringResource(R.string.android_kit_hide_title_bar),
-                showTitleBar = stringResource(R.string.android_kit_show_title_bar),
-                about = stringResource(R.string.settings_about),
-                contact = stringResource(R.string.settings_contact),
-                appInfo = stringResource(R.string.settings_app_info),
-                app = stringResource(R.string.settings_app),
-                privacyPolicy = stringResource(R.string.settings_privacy_policy),
-                termsOfUse = stringResource(R.string.settings_terms_of_use),
-                thirdPartyLicenses = stringResource(R.string.settings_third_party_licenses),
-                version = stringResource(R.string.settings_version),
-                openSource = stringResource(R.string.settings_open_source),
-                sourceCode = stringResource(R.string.settings_source_code),
-                license = stringResource(R.string.settings_license),
-                contributors = stringResource(R.string.settings_contributors),
             ),
             content = content,
         )
