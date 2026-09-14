@@ -335,9 +335,8 @@ fun SettingsScreen(
 @Composable
 fun AppInfoScreen(onBack: () -> Unit) {
     val uriHandler = LocalUriHandler.current
-    fun link(path: String = "", supportingText: String? = null) = AndroidKitSettingsLink(
+    fun link(path: String = "") = AndroidKitSettingsLink(
         onClick = { uriHandler.openUri("$REPOSITORY_URL$path") },
-        supportingText = supportingText,
     )
     AndroidKitSettingsPage(
         configuration = AndroidKitSettingsPageConfiguration.AppInfo(
@@ -347,7 +346,7 @@ fun AppInfoScreen(onBack: () -> Unit) {
                 termsOfUse = link(),
                 libraries = link("/blob/main/THIRD-PARTY-NOTICES.md"),
                 sourceCode = link(),
-                license = link("/blob/main/LICENSE", supportingText = "MIT"),
+                license = link("/blob/main/LICENSE"),
                 contributors = link("/graphs/contributors"),
             ),
         ),
