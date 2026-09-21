@@ -147,7 +147,6 @@ fun SettingsScreen(
     val backupNowLabel = stringResource(R.string.backup_now)
     val removeBackupLabel = stringResource(R.string.remove_backup_configuration)
     val restoreBackupLabel = stringResource(R.string.restore_backup)
-    val appLockBody = stringResource(R.string.app_lock_body)
 
     val backupLastSuccess = settings.backupStatus.lastSuccess?.let {
         stringResource(R.string.backup_last_success, it.localizedDateTime(zoneId))
@@ -165,10 +164,10 @@ fun SettingsScreen(
     val buildChannelText = stringResource(R.string.build_channel, stringResource(environmentLabelResource()))
     val dataTitleText = stringResource(R.string.data_title)
     val deleteVaultText = stringResource(R.string.delete_vault)
-    val uriHandler = LocalUriHandler.current
+    val generalTitle = stringResource(R.string.settings_general)
+    val securityTitle = stringResource(R.string.settings_security)
     val settingsConfiguration = AndroidKitSettingsPageConfiguration.Main(
-        contact = AndroidKitSettingsLink(onClick = { uriHandler.openUri("https://github.com/mamby") }),
-        appInfo = AndroidKitSettingsLink(onClick = onAppInfo),
+        about = AndroidKitSettingsLink(onClick = onAppInfo),
     )
     AndroidKitSettingsPage(
         configuration = settingsConfiguration,
@@ -176,8 +175,8 @@ fun SettingsScreen(
         onBack = onBack,
     ) {
         message?.let { section(key = "message") { info(label = it) } }
-        generalSection(
-            language = AndroidKitLanguageSetting(
+        section(key = "general", label = generalTitle) {
+            language(AndroidKitLanguageSetting(
                 selection = AndroidKitSettingsSelection(
                     options = languageOptions.map { (tag, label) -> AndroidKitSettingsOption(tag, label) },
                     selectedId = selectedLocaleTag.ifBlank { "system" },
@@ -187,8 +186,8 @@ fun SettingsScreen(
                         currentValueLabel = languageLabels.getValue(systemLocaleTag),
                     ),
                 ),
-            ),
-            theme = AndroidKitSettingsSelection(
+            ))
+            theme(AndroidKitSettingsSelection(
                 options = themeOptions.map { (mode, label) -> AndroidKitSettingsOption(mode.name, label) },
                 selectedId = settings.themeMode.name,
                 onSelected = { onThemeChanged(ThemeMode.valueOf(it)) },
@@ -196,15 +195,14 @@ fun SettingsScreen(
                     id = ThemeMode.SYSTEM.name,
                     currentValueLabel = systemThemeText,
                 ),
-            ),
-            floatingOpacity = AndroidKitFloatingOpacitySetting(
+            ))
+            transparency(AndroidKitFloatingOpacitySetting(
                 value = settings.floatingSurfaceOpacityLevel,
                 onValueChange = onOpacityChanged, onValueChangeFinished = onOpacityChangeFinished,
-            ),
-        )
-        securitySection(
-            appLock = AndroidKitAppLockSetting(
-                supportingText = appLockBody,
+            ))
+        }
+        section(key = "security", label = securityTitle) {
+            appLock(AndroidKitAppLockSetting(
                 checked = settings.appLockEnabled, onCheckedChange = onAppLockChanged,
                 timeout = AndroidKitAppLockTimeoutSetting(
                     options = lockTimeouts.map { (duration, label) ->
@@ -214,8 +212,8 @@ fun SettingsScreen(
                     onSelected = { id -> onAppLockTimeoutChanged(lockTimeouts.first { it.first.toString() == id }.first) },
                 ),
                 onLockNow = onLockNow,
-            ),
-        )
+            ))
+        }
         section(
             key = "backup",
             label = backupTitleText,
@@ -339,14 +337,15 @@ fun AppInfoScreen(onBack: () -> Unit) {
         onClick = { uriHandler.openUri("$REPOSITORY_URL$path") },
     )
     AndroidKitSettingsPage(
-        configuration = AndroidKitSettingsPageConfiguration.AppInfo(
+        configuration = AndroidKitSettingsPageConfiguration.About(
             AndroidKitSettingsAbout(
+                appName = stringResource(R.string.app_name),
                 version = BuildConfig.VERSION_NAME,
                 privacyPolicy = link("/blob/main/docs/PRIVACY.md"),
                 termsOfUse = link(),
                 libraries = link("/blob/main/THIRD-PARTY-NOTICES.md"),
-                projectRepository = link(),
-                contribute = link("/contribute"),
+                sourceCode = link(),
+                contact = AndroidKitSettingsLink(onClick = { uriHandler.openUri("https://github.com/mamby") }),
             ),
         ),
         onBack = onBack,
