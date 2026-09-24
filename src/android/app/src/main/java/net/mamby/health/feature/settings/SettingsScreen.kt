@@ -23,6 +23,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
@@ -43,7 +44,8 @@ import net.mamby.health.settings.AppSettings
 import net.mamby.health.settings.BackupState
 import net.mamby.health.settings.ThemeMode
 import net.mamby.androidkit.compose.form.AndroidKitSettingsPage
-import net.mamby.androidkit.compose.form.AndroidKitSettingsPageConfiguration
+import net.mamby.androidkit.compose.form.AndroidKitSettingsSearchConfiguration
+import net.mamby.androidkit.compose.form.AndroidKitSettingsSearchPage
 import net.mamby.androidkit.compose.form.AndroidKitSettingsSelection
 import net.mamby.androidkit.compose.form.AndroidKitSettingsOption
 import net.mamby.androidkit.compose.form.AndroidKitSettingsSystemOption
@@ -53,6 +55,7 @@ import net.mamby.androidkit.compose.form.AndroidKitLanguageSetting
 import net.mamby.androidkit.compose.form.AndroidKitFloatingOpacitySetting
 import net.mamby.androidkit.compose.form.AndroidKitAppLockSetting
 import net.mamby.androidkit.compose.form.AndroidKitAppLockTimeoutSetting
+import net.mamby.androidkit.compose.form.androidKitSettingsCatalog
 import net.mamby.health.ui.components.FormDialog
 import net.mamby.health.ui.components.SwitchField
 import net.mamby.health.ui.format.localizedDateTime
@@ -83,6 +86,8 @@ fun SettingsScreen(
     restoreRequestId: Long = 0L,
     onRestoreRequestHandled: () -> Unit = {},
 ) {
+    var searchVisible by rememberSaveable { mutableStateOf(false) }
+    var recentQueries by rememberSaveable { mutableStateOf(emptyList<String>()) }
     val configuration = LocalConfiguration.current
     val context = LocalContext.current
     val selectedLocaleTag = remember(configuration) {
@@ -166,15 +171,15 @@ fun SettingsScreen(
     val deleteVaultText = stringResource(R.string.delete_vault)
     val generalTitle = stringResource(R.string.settings_general)
     val securityTitle = stringResource(R.string.settings_security)
-    val settingsConfiguration = AndroidKitSettingsPageConfiguration.Main(
-        about = AndroidKitSettingsLink(onClick = onAppInfo),
-    )
-    AndroidKitSettingsPage(
-        configuration = settingsConfiguration,
-        title = stringResource(R.string.settings_title),
-        onBack = onBack,
-    ) {
-        message?.let { section(key = "message") { info(label = it) } }
+    val settingsTitle = stringResource(R.string.settings_title)
+    val about = appInfo()
+    val catalog = androidKitSettingsCatalog(search = AndroidKitSettingsSearchConfiguration(
+        onOpenSearch = { searchVisible = true },
+        recentQueries = recentQueries,
+        onRecentQueriesChange = { recentQueries = it },
+    )) {
+        main(key = MainSettingsPageKey, title = settingsTitle) {
+        message?.let { section(key = "message") { info(key = "message", label = it) } }
         section(key = "general", label = generalTitle) {
             language(AndroidKitLanguageSetting(
                 selection = AndroidKitSettingsSelection(
@@ -219,16 +224,17 @@ fun SettingsScreen(
             label = backupTitleText,
             description = backupBodyText,
         ) {
-            info(label = backupStateLabel, supportingText = backupLastSuccess)
+            info(key = "status", label = backupStateLabel, supportingText = backupLastSuccess)
 
             if (settings.backupConfiguration == null) {
-                button(label = configureBackupLabel, onClick = { backupDialog = true })
+                button(key = "configure", label = configureBackupLabel, onClick = { backupDialog = true })
             } else {
-                button(label = backupNowLabel, onClick = onBackupNow)
-                button(label = configureBackupLabel, onClick = { backupDialog = true })
-                button(label = removeBackupLabel, onClick = onClearBackup)
+                button(key = "backup-now", label = backupNowLabel, onClick = onBackupNow)
+                button(key = "configure", label = configureBackupLabel, onClick = { backupDialog = true })
+                button(key = "remove", label = removeBackupLabel, onClick = onClearBackup)
             }
             button(
+                key = "restore",
                 label = restoreBackupLabel,
                 onClick = {
                     openBackup.launch(
@@ -242,16 +248,23 @@ fun SettingsScreen(
             )
         }
         section(key = "recovery", label = recoveryTitleText) {
-            info(label = recoveryBodyText)
+            info(key = "recovery", label = recoveryBodyText)
         }
         section(key = "privacy", label = privacyTitleText) {
-            info(label = privacyBodyText)
-            info(label = healthDisclaimerText)
-            info(label = buildChannelText)
+            info(key = "privacy", label = privacyBodyText)
+            info(key = "disclaimer", label = healthDisclaimerText)
+            info(key = "build-channel", label = buildChannelText)
         }
-        section(key = "data", label = dataTitleText) {
-            button(label = deleteVaultText, onClick = { deleteDialog = true })
+            section(key = "data", label = dataTitleText) {
+                button(key = "delete", label = deleteVaultText, onClick = { deleteDialog = true })
+            }
         }
+        about(key = AboutSettingsPageKey, content = about, onOpen = onAppInfo)
+    }
+    if (searchVisible) {
+        AndroidKitSettingsSearchPage(catalog = catalog, onBack = { searchVisible = false })
+    } else {
+        AndroidKitSettingsPage(catalog = catalog, pageKey = MainSettingsPageKey, onBack = onBack)
     }
 
     if (backupDialog) {
@@ -332,26 +345,44 @@ fun SettingsScreen(
 
 @Composable
 fun AppInfoScreen(onBack: () -> Unit) {
+    var searchVisible by rememberSaveable { mutableStateOf(false) }
+    var recentQueries by rememberSaveable { mutableStateOf(emptyList<String>()) }
+    val title = stringResource(R.string.settings_title)
+    val about = appInfo()
+    val catalog = androidKitSettingsCatalog(search = AndroidKitSettingsSearchConfiguration(
+        onOpenSearch = { searchVisible = true },
+        recentQueries = recentQueries,
+        onRecentQueriesChange = { recentQueries = it },
+    )) {
+        main(key = MainSettingsPageKey, title = title)
+        about(key = AboutSettingsPageKey, content = about, onOpen = {})
+    }
+    if (searchVisible) {
+        AndroidKitSettingsSearchPage(catalog = catalog, onBack = { searchVisible = false })
+    } else {
+        AndroidKitSettingsPage(catalog = catalog, pageKey = AboutSettingsPageKey, onBack = onBack)
+    }
+}
+
+@Composable
+private fun appInfo(): AndroidKitSettingsAbout {
     val uriHandler = LocalUriHandler.current
     fun link(path: String = "") = AndroidKitSettingsLink(
         onClick = { uriHandler.openUri("$REPOSITORY_URL$path") },
     )
-    AndroidKitSettingsPage(
-        configuration = AndroidKitSettingsPageConfiguration.About(
-            AndroidKitSettingsAbout(
-                appName = stringResource(R.string.app_name),
-                version = BuildConfig.VERSION_NAME,
-                privacyPolicy = link("/blob/main/docs/PRIVACY.md"),
-                termsOfUse = link(),
-                libraries = link("/blob/main/THIRD-PARTY-NOTICES.md"),
-                sourceCode = link(),
-                contact = AndroidKitSettingsLink(onClick = { uriHandler.openUri("https://github.com/mamby") }),
-            ),
-        ),
-        onBack = onBack,
+    return AndroidKitSettingsAbout(
+        appName = stringResource(R.string.app_name),
+        version = BuildConfig.VERSION_NAME,
+        privacyPolicy = link("/blob/main/docs/PRIVACY.md"),
+        termsOfUse = link(),
+        libraries = link("/blob/main/THIRD-PARTY-NOTICES.md"),
+        sourceCode = link(),
+        contact = AndroidKitSettingsLink(onClick = { uriHandler.openUri("https://github.com/mamby") }),
     )
 }
 
+private const val MainSettingsPageKey = "main"
+private const val AboutSettingsPageKey = "about"
 private const val REPOSITORY_URL = "https://github.com/mamby/personal-health-vault"
 
 @StringRes
