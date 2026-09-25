@@ -440,6 +440,7 @@ private fun VaultNavigation(
     }
     var searchQuery by remember { mutableStateOf("") }
     var searchFilter by remember { mutableStateOf(SearchFilter.ALL) }
+    var settingsSearchVisible by rememberSaveable { mutableStateOf(false) }
     var restoreRequestId by rememberSaveable { mutableLongStateOf(0L) }
     var pendingDeepLink by remember { mutableStateOf<DeepLinkTarget?>(null) }
     var notificationsBlocked by remember { mutableStateOf(viewModel.notificationsBlocked()) }
@@ -463,6 +464,11 @@ private fun VaultNavigation(
         viewModel.closeEditorSession(editorRoute.sessionId)
         navigation.goBack()
         viewModel.showEditorDraftDiscarded()
+    }
+
+    fun selectTopLevelDestination(destination: TopLevelDestination) {
+        if (destination == TopLevelDestination.Settings) settingsSearchVisible = false
+        navigation.selectRoot(destination)
     }
 
     LaunchedEffect(pendingDeepLink) {
@@ -595,7 +601,7 @@ private fun VaultNavigation(
         BackHandler(enabled = navigation.isAtSecondaryRoot, onBack = navigation::goBack)
         AppNavigationSuite(
             selectedDestination = navigation.selectedDestination,
-            onDestinationSelected = navigation::selectRoot,
+            onDestinationSelected = ::selectTopLevelDestination,
             navigationVisible = !focusedFlowActive,
         ) {
             Box(Modifier.fillMaxSize()) {
@@ -736,7 +742,7 @@ private fun VaultNavigation(
                                 {
                                     FreshRestorePrompt {
                                         restoreRequestId += 1
-                                        navigation.selectRoot(TopLevelDestination.Settings)
+                                        selectTopLevelDestination(TopLevelDestination.Settings)
                                     }
                                 }
                             } else {
@@ -1590,6 +1596,8 @@ private fun VaultNavigation(
                             },
                             restoreRequestId = restoreRequestId,
                             onRestoreRequestHandled = { restoreRequestId = 0L },
+                            controlledSearchVisible = settingsSearchVisible,
+                            onControlledSearchVisibleChange = { settingsSearchVisible = it },
                         )
                     }
                     entry<ManageProfilesRoute> {

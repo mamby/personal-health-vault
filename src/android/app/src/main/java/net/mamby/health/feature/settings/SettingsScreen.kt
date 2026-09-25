@@ -4,6 +4,7 @@ import android.net.Uri
 import android.icu.text.MeasureFormat
 import android.icu.util.Measure
 import android.icu.util.MeasureUnit
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
@@ -85,8 +86,19 @@ fun SettingsScreen(
     onDeleteVault: () -> Unit,
     restoreRequestId: Long = 0L,
     onRestoreRequestHandled: () -> Unit = {},
+    controlledSearchVisible: Boolean? = null,
+    onControlledSearchVisibleChange: ((Boolean) -> Unit)? = null,
 ) {
-    var searchVisible by rememberSaveable { mutableStateOf(false) }
+    require((controlledSearchVisible == null) == (onControlledSearchVisibleChange == null))
+    var localSearchVisible by rememberSaveable { mutableStateOf(false) }
+    val searchVisible = controlledSearchVisible ?: localSearchVisible
+    fun updateSearchVisibility(visible: Boolean) {
+        val onChange = onControlledSearchVisibleChange
+        if (onChange == null) localSearchVisible = visible else onChange(visible)
+    }
+    BackHandler(enabled = searchVisible) {
+        updateSearchVisibility(false)
+    }
     var recentQueries by rememberSaveable { mutableStateOf(emptyList<String>()) }
     val configuration = LocalConfiguration.current
     val context = LocalContext.current
@@ -174,7 +186,7 @@ fun SettingsScreen(
     val settingsTitle = stringResource(R.string.settings_title)
     val about = appInfo()
     val catalog = androidKitSettingsCatalog(search = AndroidKitSettingsSearchConfiguration(
-        onOpenSearch = { searchVisible = true },
+        onOpenSearch = { updateSearchVisibility(true) },
         recentQueries = recentQueries,
         onRecentQueriesChange = { recentQueries = it },
     )) {
@@ -262,7 +274,7 @@ fun SettingsScreen(
         about(key = AboutSettingsPageKey, content = about, onOpen = onAppInfo)
     }
     if (searchVisible) {
-        AndroidKitSettingsSearchPage(catalog = catalog, onBack = { searchVisible = false })
+        AndroidKitSettingsSearchPage(catalog = catalog, onBack = { updateSearchVisibility(false) })
     } else {
         AndroidKitSettingsPage(catalog = catalog, pageKey = MainSettingsPageKey, onBack = onBack)
     }
@@ -347,6 +359,9 @@ fun SettingsScreen(
 fun AppInfoScreen(onBack: () -> Unit) {
     var searchVisible by rememberSaveable { mutableStateOf(false) }
     var recentQueries by rememberSaveable { mutableStateOf(emptyList<String>()) }
+    BackHandler(enabled = searchVisible) {
+        searchVisible = false
+    }
     val title = stringResource(R.string.settings_title)
     val about = appInfo()
     val catalog = androidKitSettingsCatalog(search = AndroidKitSettingsSearchConfiguration(
