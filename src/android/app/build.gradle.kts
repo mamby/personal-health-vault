@@ -127,9 +127,9 @@ jacoco {
 
 dependencies {
     val androidKitVersion = providers.gradleProperty("androidKitVersion").get()
-    val composeBom = platform("androidx.compose:compose-bom:2026.08.00")
+    val composeBom = platform("androidx.compose:compose-bom:2026.09.00")
     val lifecycleVersion = "2.11.0"
-    val navigation3Version = "1.1.6"
+    val navigation3Version = "1.2.0"
     val adaptiveVersion = "1.3.0"
     val workVersion = "2.11.2"
 
