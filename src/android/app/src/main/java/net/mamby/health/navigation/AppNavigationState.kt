@@ -16,8 +16,11 @@ class AppNavigationState internal constructor(
     val currentBackStack: NavBackStack<NavKey>
         get() = navigation.currentBackStack
 
+    internal val isAtRoot: Boolean
+        get() = navigation.isAtRoot
+
     val isAtSecondaryRoot: Boolean
-        get() = selectedDestination != TopLevelDestination.Home && navigation.isAtRoot
+        get() = selectedDestination != TopLevelDestination.Home && isAtRoot
 
     fun select(destination: TopLevelDestination) {
         navigation.selectRoot(destination.route, popToRootOnReselect = false)

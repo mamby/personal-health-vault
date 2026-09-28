@@ -602,7 +602,8 @@ private fun VaultNavigation(
         AppNavigationSuite(
             selectedDestination = navigation.selectedDestination,
             onDestinationSelected = ::selectTopLevelDestination,
-            navigationVisible = !focusedFlowActive,
+            navigationVisible = navigation.isAtRoot &&
+                !(navigation.selectedDestination == TopLevelDestination.Settings && settingsSearchVisible),
         ) {
             Box(Modifier.fillMaxSize()) {
                 CompositionLocalProvider(LocalProfileDisplayLabels provides profileLabels) {
