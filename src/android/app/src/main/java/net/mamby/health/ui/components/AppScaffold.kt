@@ -2,26 +2,13 @@ package net.mamby.health.ui.components
 
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import net.mamby.androidkit.compose.layout.AndroidKitPageAction
 import net.mamby.androidkit.compose.layout.AndroidKitPageActionItem
 import net.mamby.androidkit.navigation3.listDetailBackAction
 import net.mamby.health.R
-import net.mamby.androidkit.compose.action.AndroidKitFloatingAction
-
-@Composable
-fun floatingAddAction(
-    label: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-): AndroidKitFloatingAction.Button = AndroidKitFloatingAction.Button(
-    icon = painterResource(R.drawable.ic_lucide_plus), label = label,
-    onClick = onClick, modifier = modifier, tooltip = label,
-)
 
 @Composable
 fun titleBarAction(
@@ -34,6 +21,16 @@ fun titleBarAction(
     label = label,
     onClick = onClick,
     enabled = enabled,
+)
+
+@Composable
+fun addTitleBarAction(
+    label: String,
+    onClick: () -> Unit,
+): AndroidKitPageAction = titleBarAction(
+    label = label,
+    icon = R.drawable.ic_lucide_plus,
+    onClick = onClick,
 )
 
 @Composable

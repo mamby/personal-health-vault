@@ -40,10 +40,10 @@ import net.mamby.health.ui.components.DropdownTrailingIcon
 import net.mamby.health.ui.components.ProfileOwnerHeader
 import net.mamby.health.ui.components.SectionCard
 import net.mamby.health.ui.components.SwitchField
+import net.mamby.health.ui.components.addTitleBarAction
 import net.mamby.health.ui.components.withPagePadding
 import net.mamby.health.ui.format.localizedLabel
 import net.mamby.health.ui.theme.UiTokens
-import net.mamby.health.ui.components.floatingAddAction
 
 @Composable
 fun ManageDocumentCategoriesScreen(
@@ -59,9 +59,11 @@ fun ManageDocumentCategoriesScreen(
     AndroidKitPage(
         title = stringResource(R.string.manage_document_categories),
         onBack = onBack,
-        floatingActionButton = floatingAddAction(
-            label = stringResource(R.string.add_document_category),
-            onClick = { adding = true },
+        actions = listOf(
+            addTitleBarAction(
+                label = stringResource(R.string.add_document_category),
+                onClick = { adding = true },
+            ),
         ),
     ) { padding ->
         LazyVerticalGrid(

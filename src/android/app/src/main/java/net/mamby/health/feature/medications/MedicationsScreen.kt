@@ -49,6 +49,7 @@ import net.mamby.health.ui.components.EditorSection
 import net.mamby.health.ui.components.ProfileFilterChip
 import net.mamby.health.ui.components.ProfileMarker
 import net.mamby.health.ui.components.ProfileOwnerHeader
+import net.mamby.health.ui.components.addTitleBarAction
 import net.mamby.health.ui.components.RemovableInputChip
 import net.mamby.health.ui.components.ListCard
 import net.mamby.health.ui.components.SwitchField
@@ -58,7 +59,6 @@ import net.mamby.health.ui.components.withPagePadding
 import net.mamby.health.ui.format.labelResource
 import net.mamby.health.ui.format.localizedTime
 import net.mamby.health.ui.theme.UiTokens
-import net.mamby.health.ui.components.floatingAddAction
 
 @Composable
 fun MedicationsScreen(
@@ -77,9 +77,11 @@ fun MedicationsScreen(
     }
     AndroidKitPage(
         title = stringResource(R.string.medications_title),
-        floatingActionButton = floatingAddAction(
-            label = stringResource(R.string.add_medication),
-            onClick = { onAdd(filterProfileId ?: records.singleOrNull()?.profile?.id) },
+        actions = listOf(
+            addTitleBarAction(
+                label = stringResource(R.string.add_medication),
+                onClick = { onAdd(filterProfileId ?: records.singleOrNull()?.profile?.id) },
+            ),
         ),
     ) { innerPadding ->
         LazyVerticalGrid(

@@ -549,6 +549,7 @@
     <string name="add_contact">إضافة جهة اتصال</string>
     <string name="new_contact">جهة اتصال جديدة</string>
     <string name="edit_contact">تعديل جهة الاتصال</string>
+    <string name="contact_title">جهة اتصال</string>
     <string name="no_contacts_title">لا توجد جهات اتصال</string>
     <string name="no_contacts_body">أضف الأشخاص والمؤسسات والخدمات التي قد ترغب في الاتصال بها.</string>
     <string name="contact_details">بيانات الاتصال</string>

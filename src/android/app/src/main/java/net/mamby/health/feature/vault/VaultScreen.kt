@@ -31,12 +31,12 @@ import net.mamby.health.ui.components.EmptyState
 import net.mamby.health.ui.components.ListCard
 import net.mamby.health.ui.components.ProfileFilterChip
 import net.mamby.health.ui.components.ProfileMarker
+import net.mamby.health.ui.components.addTitleBarAction
 import net.mamby.health.ui.components.titleBarAction
 import net.mamby.health.ui.components.withPagePadding
 import net.mamby.health.ui.format.localizedLabel
 import net.mamby.health.ui.format.localizedDate
 import net.mamby.health.ui.theme.UiTokens
-import net.mamby.health.ui.components.floatingAddAction
 
 @Composable
 fun VaultScreen(
@@ -78,17 +78,17 @@ fun VaultScreen(
         title = stringResource(R.string.documents_tab),
         onBack = onBack,
         actions = listOf(
+            addTitleBarAction(
+                label = stringResource(R.string.import_document),
+                onClick = {
+                    onImportRequested(filterProfileId ?: records.singleOrNull()?.profile?.id)
+                },
+            ),
             titleBarAction(
                 label = stringResource(R.string.manage_document_categories),
                 icon = R.drawable.ic_lucide_sliders_horizontal,
                 onClick = { onManageCategories(filterProfileId) },
             ),
-        ),
-        floatingActionButton = floatingAddAction(
-            label = stringResource(R.string.import_document),
-            onClick = {
-                onImportRequested(filterProfileId ?: records.singleOrNull()?.profile?.id)
-            },
         ),
     ) { innerPadding ->
         LazyVerticalGrid(

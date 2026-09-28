@@ -543,6 +543,7 @@
     <string name="add_contact">Ajouter un contact</string>
     <string name="new_contact">Nouveau contact</string>
     <string name="edit_contact">Modifier le contact</string>
+    <string name="contact_title">Contact</string>
     <string name="no_contacts_title">Aucun contact</string>
     <string name="no_contacts_body">Ajoutez les personnes, organismes et services que vous pourriez vouloir contacter.</string>
     <string name="contact_details">Coordonnées</string>

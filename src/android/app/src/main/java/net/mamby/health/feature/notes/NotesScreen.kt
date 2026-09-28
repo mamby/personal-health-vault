@@ -35,10 +35,10 @@ import net.mamby.health.ui.components.EditorSection
 import net.mamby.health.ui.components.EmptyState
 import net.mamby.health.ui.components.ListCard
 import net.mamby.health.ui.components.rememberEditorState
+import net.mamby.health.ui.components.addTitleBarAction
 import net.mamby.health.ui.components.withPagePadding
 import net.mamby.health.ui.format.localizedDateTime
 import net.mamby.health.ui.theme.UiTokens
-import net.mamby.health.ui.components.floatingAddAction
 
 @Composable
 fun NotesScreen(
@@ -52,9 +52,11 @@ fun NotesScreen(
     }
     AndroidKitPage(
         title = stringResource(R.string.health_notes_title),
-        floatingActionButton = floatingAddAction(
-            label = stringResource(R.string.add_health_note),
-            onClick = onAdd,
+        actions = listOf(
+            addTitleBarAction(
+                label = stringResource(R.string.add_health_note),
+                onClick = onAdd,
+            ),
         ),
     ) { padding ->
         LazyVerticalGrid(

@@ -64,12 +64,12 @@ import net.mamby.health.ui.components.SectionCard
 import net.mamby.health.ui.components.SwitchField
 import net.mamby.health.ui.components.TimeField
 import net.mamby.health.ui.components.rememberEditorState
+import net.mamby.health.ui.components.addTitleBarAction
 import net.mamby.health.ui.components.withPagePadding
 import net.mamby.health.ui.format.localizedDate
 import net.mamby.health.ui.format.localizedDateTime
 import net.mamby.health.ui.format.localizedTime
 import net.mamby.health.ui.theme.UiTokens
-import net.mamby.health.ui.components.floatingAddAction
 
 @Composable
 fun ScheduleScreen(
@@ -90,9 +90,11 @@ fun ScheduleScreen(
 
     AndroidKitPage(
         title = stringResource(R.string.schedule_title),
-        floatingActionButton = floatingAddAction(
-            label = stringResource(R.string.add_schedule),
-            onClick = onAdd,
+        actions = listOf(
+            addTitleBarAction(
+                label = stringResource(R.string.add_schedule),
+                onClick = onAdd,
+            ),
         ),
     ) { innerPadding ->
         LazyVerticalGrid(

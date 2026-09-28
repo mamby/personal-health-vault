@@ -67,6 +67,7 @@ import net.mamby.health.ui.components.ListCard
 import net.mamby.health.ui.components.SectionCard
 import net.mamby.health.ui.components.TimeField
 import net.mamby.health.ui.components.rememberEditorState
+import net.mamby.health.ui.components.addTitleBarAction
 import net.mamby.health.ui.components.titleBarAction
 import net.mamby.health.ui.components.withPagePadding
 import net.mamby.health.ui.format.labelResource
@@ -75,7 +76,6 @@ import net.mamby.health.ui.format.localizedLabel
 import net.mamby.health.ui.format.localizedValue
 import net.mamby.health.ui.format.symbol
 import net.mamby.health.ui.theme.UiTokens
-import net.mamby.health.ui.components.floatingAddAction
 
 @Composable
 fun MeasurementsScreen(
@@ -99,15 +99,15 @@ fun MeasurementsScreen(
         title = stringResource(R.string.measurements_title),
         onBack = onBack,
         actions = listOf(
+            addTitleBarAction(
+                label = stringResource(R.string.add_measurement),
+                onClick = { onAdd(filterProfileId ?: records.singleOrNull()?.profile?.id) },
+            ),
             titleBarAction(
                 label = stringResource(R.string.manage_measurement_types),
                 icon = R.drawable.ic_lucide_sliders_horizontal,
                 onClick = { onManageTypes(filterProfileId) },
             ),
-        ),
-        floatingActionButton = floatingAddAction(
-            label = stringResource(R.string.add_measurement),
-            onClick = { onAdd(filterProfileId ?: records.singleOrNull()?.profile?.id) },
         ),
     ) { padding ->
         LazyVerticalGrid(
@@ -208,9 +208,11 @@ fun ManageMeasurementTypesScreen(
     AndroidKitPage(
         title = stringResource(R.string.manage_measurement_types),
         onBack = onBack,
-        floatingActionButton = floatingAddAction(
-            label = stringResource(R.string.add_measurement_type),
-            onClick = { adding = true },
+        actions = listOf(
+            addTitleBarAction(
+                label = stringResource(R.string.add_measurement_type),
+                onClick = { adding = true },
+            ),
         ),
     ) { padding ->
         LazyVerticalGrid(

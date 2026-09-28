@@ -55,9 +55,9 @@ import net.mamby.health.ui.components.EmptyState
 import net.mamby.health.ui.components.LabeledValue
 import net.mamby.health.ui.components.ListCard
 import net.mamby.health.ui.components.rememberEditorState
+import net.mamby.health.ui.components.addTitleBarAction
 import net.mamby.health.ui.components.withPagePadding
 import net.mamby.health.ui.theme.UiTokens
-import net.mamby.health.ui.components.floatingAddAction
 
 @Composable
 fun ContactsScreen(
@@ -74,9 +74,11 @@ fun ContactsScreen(
 
     AndroidKitPage(
         title = stringResource(R.string.contacts_title),
-        floatingActionButton = floatingAddAction(
-            label = stringResource(R.string.add_contact),
-            onClick = onAdd,
+        actions = listOf(
+            addTitleBarAction(
+                label = stringResource(R.string.add_contact),
+                onClick = onAdd,
+            ),
         ),
     ) { padding ->
         LazyVerticalGrid(
@@ -123,7 +125,7 @@ fun ContactDetailScreen(
     var deleteVisible by remember(contact.id) { mutableStateOf(false) }
 
     AndroidKitPage(
-        title = contact.name,
+        title = stringResource(R.string.contact_title),
         onBack = onBack,
         actions = detailTitleBarActions(
             onEdit = onEdit,
@@ -139,6 +141,10 @@ fun ContactDetailScreen(
                 .withPagePadding(),
             verticalArrangement = Arrangement.spacedBy(UiTokens.ContentSpacing),
         ) {
+            Text(
+                text = contact.name,
+                style = MaterialTheme.typography.headlineSmall,
+            )
             DetailSection(stringResource(R.string.contact_details)) {
                 Column(verticalArrangement = Arrangement.spacedBy(UiTokens.SectionSpacing)) {
                     ContactActionGroup(
@@ -165,10 +171,12 @@ fun ContactDetailScreen(
                         actionLabel = { stringResource(R.string.contact_address_action, it) },
                         onClick = onSearchAddress,
                     )
-                    LabeledValue(
-                        label = stringResource(R.string.common_notes),
-                        value = contact.notes.orEmpty(),
-                    )
+                    contact.notes?.takeIf(String::isNotBlank)?.let { notes ->
+                        LabeledValue(
+                            label = stringResource(R.string.common_notes),
+                            value = notes,
+                        )
+                    }
                 }
             }
         }
