@@ -133,6 +133,12 @@ dependencies {
     val adaptiveVersion = "1.3.0"
     val workVersion = "2.11.2"
 
+    constraints {
+        implementation("androidx.concurrent:concurrent-futures-ktx:1.2.0") {
+            because("WorkManager testing requires the app and test APK to share Concurrent Futures 1.2.0")
+        }
+    }
+
     implementation(composeBom)
     implementation(platform("net.mamby.androidkit:bom:$androidKitVersion"))
     androidTestImplementation(composeBom)
