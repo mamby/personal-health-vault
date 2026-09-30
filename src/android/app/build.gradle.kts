@@ -131,11 +131,11 @@ dependencies {
     val lifecycleVersion = "2.11.0"
     val navigation3Version = "1.2.0"
     val adaptiveVersion = "1.3.0"
-    val workVersion = "2.11.2"
+    val workVersion = "2.12.0"
 
     constraints {
-        implementation("androidx.concurrent:concurrent-futures-ktx:1.2.0") {
-            because("WorkManager testing requires the app and test APK to share Concurrent Futures 1.2.0")
+        implementation("androidx.concurrent:concurrent-futures-ktx:1.3.0") {
+            because("WorkManager testing requires the app and test APK to share Concurrent Futures 1.3.0")
         }
     }
 
@@ -160,10 +160,10 @@ dependencies {
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-text")
     implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.core:core-ktx:1.19.0")
+    implementation("androidx.core:core-ktx:1.19.1")
     implementation("androidx.core:core-splashscreen:1.2.0")
     implementation("androidx.datastore:datastore-preferences:1.2.1")
-    implementation("androidx.fragment:fragment-ktx:1.9.0")
+    implementation("androidx.fragment:fragment-ktx:1.9.1")
     implementation("androidx.hilt:hilt-work:1.4.0")
     implementation("androidx.lifecycle:lifecycle-process:$lifecycleVersion")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:$lifecycleVersion")
