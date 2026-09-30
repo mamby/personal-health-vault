@@ -1,6 +1,9 @@
 package net.mamby.health.ui
 
 import androidx.activity.ComponentActivity
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
@@ -10,7 +13,6 @@ import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
-import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performKeyInput
@@ -244,12 +246,15 @@ class ContactsScreenInstrumentedTest {
             composeRule.activity.getString(R.string.contact_address_action, contact.addresses.single()) to
                 "address:${contact.addresses.single()}",
         )
-        actions.forEach { (contentDescription, _) ->
+        actions.forEach { (actionLabel, expectedAction) ->
             composeRule
-                .onNodeWithContentDescription(contentDescription)
+                .onNodeWithText(expectedAction.substringAfter(':'))
                 .performScrollTo()
                 .assertIsDisplayed()
                 .assertHasClickAction()
+                .assert(SemanticsMatcher("Localized contact action label") {
+                    it.config[SemanticsActions.OnClick].label == actionLabel
+                })
                 .performClick()
         }
 

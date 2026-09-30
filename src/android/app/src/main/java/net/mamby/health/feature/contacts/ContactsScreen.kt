@@ -1,14 +1,11 @@
 package net.mamby.health.feature.contacts
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -17,9 +14,6 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -35,9 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
@@ -45,6 +37,8 @@ import java.net.URI
 import java.time.Instant
 import java.util.Locale
 import java.util.UUID
+import net.mamby.androidkit.compose.presentation.AndroidKitSectionCard
+import net.mamby.androidkit.compose.presentation.AndroidKitSectionCardEntry
 import net.mamby.androidkit.compose.layout.AndroidKitPage
 import net.mamby.androidkit.compose.theme.AndroidKitThemeTokens
 import net.mamby.health.R
@@ -177,13 +171,10 @@ fun ContactDetailScreen(
                     onClick = onSearchAddress,
                 )
                 contact.notes?.takeIf(String::isNotBlank)?.let { notes ->
-                    ContactDetailSection(stringResource(R.string.common_notes)) {
-                        Text(
-                            text = notes,
-                            modifier = Modifier.padding(AndroidKitThemeTokens.dimensions.spaceMedium),
-                            style = AndroidKitThemeTokens.settingSectionStyle.entryLabelTextStyle,
-                        )
-                    }
+                    AndroidKitSectionCard(
+                        title = stringResource(R.string.common_notes),
+                        entries = listOf(AndroidKitSectionCardEntry.Multiline("notes", notes)),
+                    )
                 }
             }
         }
@@ -210,71 +201,17 @@ private fun ContactActionGroup(
     onClick: (String) -> Unit,
 ) {
     val nonBlankValues = values.filter(String::isNotBlank)
-    if (nonBlankValues.isNotEmpty()) {
-        val dimensions = AndroidKitThemeTokens.dimensions
-        val style = AndroidKitThemeTokens.settingSectionStyle
-        ContactDetailSection(label) {
-            nonBlankValues.forEachIndexed { index, value ->
-                if (index > 0) {
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = dimensions.spaceMedium),
-                        color = style.dividerColor,
-                    )
-                }
-                val accessibilityLabel = actionLabel(value)
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(role = Role.Button, onClickLabel = accessibilityLabel) { onClick(value) }
-                        .heightIn(min = dimensions.minimumTouchTarget)
-                        .semantics(mergeDescendants = true) {
-                            contentDescription = accessibilityLabel
-                        }
-                        .padding(
-                            horizontal = dimensions.spaceMedium,
-                            vertical = dimensions.settingSectionEntryVerticalPadding,
-                        ),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = value,
-                        modifier = Modifier.fillMaxWidth(),
-                        style = style.entryLabelTextStyle,
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ContactDetailSection(
-    title: String,
-    content: @Composable () -> Unit,
-) {
-    val style = AndroidKitThemeTokens.settingSectionStyle
-    val dimensions = AndroidKitThemeTokens.dimensions
-    Column(verticalArrangement = Arrangement.spacedBy(dimensions.settingSectionSpacing)) {
-        Text(
-            text = title,
-            modifier = Modifier
-                .padding(horizontal = dimensions.spaceMedium)
-                .semantics { heading() },
-            style = style.sectionLabelTextStyle,
-            color = style.secondaryContentColor,
-        )
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = style.shape,
-            colors = CardDefaults.cardColors(
-                containerColor = style.containerColor,
-                contentColor = style.contentColor,
-            ),
-            border = BorderStroke(style.borderWidth, style.borderColor),
-        ) {
-            content()
-        }
-    }
+    AndroidKitSectionCard(
+        title = label,
+        entries = nonBlankValues.mapIndexed { index, value ->
+            AndroidKitSectionCardEntry.Action(
+                key = "value:$value:${nonBlankValues.take(index).count { it == value }}",
+                label = value,
+                actionLabel = actionLabel(value),
+                onClick = { onClick(value) },
+            )
+        },
+    )
 }
 
 @Composable
