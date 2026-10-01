@@ -315,7 +315,7 @@
     <string name="security_title">Sécurité</string>
     <string name="settings_appearance">Apparence</string>
     <string name="settings_security">Sécurité</string>
-    <string name="settings_backup">Sauvegarde et récupération</string>
+    <string name="settings_backup">Sauvegarde et restauration</string>
     <string name="settings_data">Données locales</string>
     <string name="settings_about">À propos</string>
     <string name="theme_title">Thème</string>

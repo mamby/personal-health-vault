@@ -174,17 +174,11 @@ fun SettingsScreen(
     val systemThemeText = stringResource(
                         if (isSystemInDarkTheme()) R.string.theme_dark else R.string.theme_light,
                     )
-    val backupTitleText = stringResource(R.string.backup_title)
+    val backupTitleText = stringResource(R.string.settings_backup)
     val backupBodyText = stringResource(R.string.backup_body)
-    val recoveryTitleText = stringResource(R.string.recovery_title)
-    val recoveryBodyText = stringResource(R.string.recovery_body)
-    val privacyTitleText = stringResource(R.string.privacy_title)
-    val privacyBodyText = stringResource(R.string.privacy_body)
-    val healthDisclaimerText = stringResource(R.string.health_disclaimer)
-    val buildChannelText = stringResource(R.string.build_channel, stringResource(environmentLabelResource()))
     val dataTitleText = stringResource(R.string.data_title)
     val deleteVaultText = stringResource(R.string.delete_vault)
-    val generalTitle = stringResource(R.string.settings_general)
+    val appearanceTitle = stringResource(R.string.settings_appearance)
     val allowScreenshotsLabel = stringResource(R.string.settings_allow_screenshots)
     val allowScreenshotsDescription = stringResource(R.string.settings_allow_screenshots_description)
     val securityTitle = stringResource(R.string.settings_security)
@@ -199,7 +193,7 @@ fun SettingsScreen(
     )) {
         main(key = MainSettingsPageKey, title = settingsTitle) {
         message?.let { section(key = "message") { info(key = "message", label = it) } }
-        section(key = "general", label = generalTitle) {
+        section(key = "language") {
             language(AndroidKitLanguageSetting(
                 selection = AndroidKitSettingsSelection(
                     options = languageOptions.map { (tag, label) -> AndroidKitSettingsOption(tag, label) },
@@ -211,6 +205,8 @@ fun SettingsScreen(
                     ),
                 ),
             ))
+        }
+        section(key = "appearance", label = appearanceTitle) {
             theme(AndroidKitSettingsSelection(
                 options = themeOptions.map { (mode, label) -> AndroidKitSettingsOption(mode.name, label) },
                 selectedId = settings.themeMode.name,
@@ -226,13 +222,6 @@ fun SettingsScreen(
             ))
         }
         section(key = "security", label = securityTitle) {
-            toggle(
-                key = "allow-screenshots",
-                label = allowScreenshotsLabel,
-                supportingText = allowScreenshotsDescription,
-                checked = settings.allowScreenshots,
-                onCheckedChange = onAllowScreenshotsChanged,
-            )
             appLock(AndroidKitAppLockSetting(
                 checked = settings.appLockEnabled, onCheckedChange = onAppLockChanged,
                 enabled = !appLockChangePending,
@@ -245,6 +234,13 @@ fun SettingsScreen(
                 ),
                 onLockNow = onLockNow,
             ))
+            toggle(
+                key = "allow-screenshots",
+                label = allowScreenshotsLabel,
+                supportingText = allowScreenshotsDescription,
+                checked = settings.allowScreenshots,
+                onCheckedChange = onAllowScreenshotsChanged,
+            )
         }
         section(
             key = "backup",
@@ -273,14 +269,6 @@ fun SettingsScreen(
                     )
                 },
             )
-        }
-        section(key = "recovery", label = recoveryTitleText) {
-            info(key = "recovery", label = recoveryBodyText)
-        }
-        section(key = "privacy", label = privacyTitleText) {
-            info(key = "privacy", label = privacyBodyText)
-            info(key = "disclaimer", label = healthDisclaimerText)
-            info(key = "build-channel", label = buildChannelText)
         }
             section(key = "data", label = dataTitleText) {
                 button(key = "delete", label = deleteVaultText, onClick = { deleteDialog = true })
@@ -417,15 +405,6 @@ private fun appInfo(): AndroidKitSettingsAbout {
 private const val MainSettingsPageKey = "main"
 private const val AboutSettingsPageKey = "about"
 private const val REPOSITORY_URL = "https://github.com/mamby/personal-health-vault"
-
-@StringRes
-private fun environmentLabelResource(): Int = when (BuildConfig.ENVIRONMENT) {
-    "dev" -> R.string.channel_dev
-    "beta" -> R.string.channel_beta
-    "stage" -> R.string.channel_stage
-    "prod" -> R.string.channel_prod
-    else -> R.string.channel_dev
-}
 
 @Composable
 private fun BackupConfigurationDialog(

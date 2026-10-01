@@ -315,7 +315,7 @@
     <string name="security_title">الأمان</string>
     <string name="settings_appearance">المظهر</string>
     <string name="settings_security">الأمان</string>
-    <string name="settings_backup">النسخ الاحتياطي والاسترداد</string>
+    <string name="settings_backup">النسخ الاحتياطي والاستعادة</string>
     <string name="settings_data">البيانات المحلية</string>
     <string name="settings_about">حول التطبيق</string>
     <string name="theme_title">المظهر</string>
