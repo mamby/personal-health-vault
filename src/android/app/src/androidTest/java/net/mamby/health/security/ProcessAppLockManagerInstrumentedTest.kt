@@ -32,6 +32,42 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class ProcessAppLockManagerInstrumentedTest {
     @Test
+    fun disablingLock_requiresFreshAuthenticationAndPreservesTheSettingUntilSuccess() = runBlocking {
+        for (result in listOf(UnlockResult.Success, UnlockResult.Cancelled, UnlockResult.Failed(1))) {
+            val authenticator = PendingAuthenticator()
+            val repository = FakeSettingsRepository(AppSettings(appLockEnabled = true))
+            val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
+            val manager = ProcessAppLockManager(repository, authenticator, Clock.systemUTC(), scope)
+            lateinit var activity: FragmentActivity
+            InstrumentationRegistry.getInstrumentation().runOnMainSync {
+                activity = FragmentActivity()
+            }
+            try {
+                authenticator.result.complete(UnlockResult.Success)
+                assertEquals(UnlockResult.Success, manager.unlock(activity))
+                authenticator.result = CompletableDeferred()
+
+                val disabling = async(Dispatchers.Unconfined) { manager.disable(activity) }
+                assertEquals(false, disabling.isCompleted)
+                assertEquals(true, repository.settings.value.appLockEnabled)
+                manager.onStop(TestLifecycleOwner())
+                manager.onStart(TestLifecycleOwner())
+                assertEquals(AppLockState.Unlocked, manager.state.value)
+
+                authenticator.result.complete(result)
+                assertEquals(result, disabling.await())
+                assertEquals(result != UnlockResult.Success, repository.settings.value.appLockEnabled)
+                assertEquals(
+                    if (result == UnlockResult.Success) AppLockState.Disabled else AppLockState.Unlocked,
+                    manager.state.value,
+                )
+            } finally {
+                scope.cancel()
+            }
+        }
+    }
+
+    @Test
     fun enablingLock_keepsSettingsAccessibleOnSuccessAndCancellation() = runBlocking {
         for (result in listOf(UnlockResult.Success, UnlockResult.Cancelled)) {
             val authenticator = PendingAuthenticator()
@@ -154,7 +190,7 @@ class ProcessAppLockManagerInstrumentedTest {
 }
 
 private class PendingAuthenticator : BiometricAuthenticator {
-    val result = CompletableDeferred<UnlockResult>()
+    var result = CompletableDeferred<UnlockResult>()
 
     override fun availability(): AuthenticationAvailability = AuthenticationAvailability.Available
 

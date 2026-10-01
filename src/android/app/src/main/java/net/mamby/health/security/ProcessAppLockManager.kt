@@ -75,15 +75,22 @@ class ProcessAppLockManager @Inject constructor(
             }
         }
 
-    override suspend fun disable() {
-        settingsRepository.setAppLockEnabled(false)
-        synchronized(monitor) {
-            settings = (settings ?: AppSettings()).copy(appLockEnabled = false)
-            authenticated = false
-            backgroundedAt = null
-            mutableState.value = AppLockState.Disabled
+    override suspend fun disable(activity: FragmentActivity): UnlockResult =
+        authenticationMutex.withLock {
+            // Changing the setting always requires a new authentication result.
+            // Keep Settings mounted and retain the current state on failure.
+            val result = authenticator.authenticate(activity)
+            if (result !is UnlockResult.Success) return@withLock result
+
+            settingsRepository.setAppLockEnabled(false)
+            synchronized(monitor) {
+                settings = (settings ?: AppSettings()).copy(appLockEnabled = false)
+                authenticated = false
+                backgroundedAt = null
+                mutableState.value = AppLockState.Disabled
+            }
+            UnlockResult.Success
         }
-    }
 
     override fun onStart(owner: LifecycleOwner) {
         synchronized(monitor) {

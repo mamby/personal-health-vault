@@ -89,8 +89,6 @@ import net.mamby.health.core.model.ScheduleTiming
 import net.mamby.health.feature.dashboard.DashboardScreen
 import net.mamby.health.feature.contacts.ContactEditorScreen
 import net.mamby.health.feature.schedule.ScheduleEditorScreen
-import net.mamby.health.feature.search.SearchFilter
-import net.mamby.health.feature.search.SearchScreen
 import net.mamby.health.feature.settings.SettingsScreen
 import net.mamby.health.feature.vault.VaultScreen
 import net.mamby.health.navigation.AppNavigationState
@@ -472,14 +470,13 @@ class ComposeScreensInstrumentedTest {
         assertEquals(
             listOf(
                 "Home",
-                "Search",
                 "HealthRecords",
-                "Notes",
                 "Medications",
                 "Schedule",
+                "Notes",
                 "Contacts",
-                "Settings",
                 "Profiles",
+                "Settings",
             ),
             TopLevelDestination.entries.map(Enum<*>::name),
         )
@@ -530,11 +527,19 @@ class ComposeScreensInstrumentedTest {
     fun compactNavigationUsesFourRootsAndMore() {
         assertEquals(
             listOf(
+                TopLevelDestination.Home,
+                TopLevelDestination.HealthRecords,
                 TopLevelDestination.Medications,
                 TopLevelDestination.Schedule,
+            ),
+            TopLevelDestination.compactPrimary,
+        )
+        assertEquals(
+            listOf(
+                TopLevelDestination.Notes,
                 TopLevelDestination.Contacts,
-                TopLevelDestination.Settings,
                 TopLevelDestination.Profiles,
+                TopLevelDestination.Settings,
             ),
             TopLevelDestination.compactOverflow,
         )
@@ -571,11 +576,11 @@ class ComposeScreensInstrumentedTest {
             .assertIsDisplayed()
             .performClick()
         composeRule
-            .onNodeWithText(composeRule.activity.getString(R.string.schedule_title))
+            .onNodeWithText(composeRule.activity.getString(R.string.nav_notes))
             .assertIsDisplayed()
             .performClick()
         composeRule.runOnIdle {
-            assertEquals(TopLevelDestination.Schedule, selectedDestination)
+            assertEquals(TopLevelDestination.Notes, selectedDestination)
         }
     }
 
@@ -894,63 +899,6 @@ class ComposeScreensInstrumentedTest {
             .boundsInRoot
 
         assertTrue(snackbarBounds.bottom < homeIconBounds.top)
-    }
-
-    @Test
-    fun searchViewportFitsInsideImeInsetAndRemainsEditable() {
-        var submittedQuery = ""
-        var imeBottomPx = 0
-        composeRule.setContent {
-            DeviceConfigurationOverride(DeviceConfigurationOverride.ForcedSize(DpSize(400.dp, 800.dp))) {
-                val imeBottom = with(LocalDensity.current) { 300.dp.roundToPx() }
-                imeBottomPx = imeBottom
-                DeviceConfigurationOverride(
-                    DeviceConfigurationOverride.WindowInsets(
-                        WindowInsetsCompat.Builder()
-                            .setInsets(WindowInsetsCompat.Type.ime(), Insets.of(0, 0, 0, imeBottom))
-                            .setVisible(WindowInsetsCompat.Type.ime(), true)
-                            .build(),
-                    ),
-                    ) {
-                    HealthVaultTheme {
-                        var query by remember { mutableStateOf("") }
-                        SearchScreen(
-                            records = emptyVault("Amina").profiles,
-                            notes = emptyList(),
-                            schedules = emptyList(),
-                            contacts = emptyList(),
-                            onResultSelected = {},
-                            query = query,
-                            filter = SearchFilter.ALL,
-                            onQueryChanged = {
-                                query = it
-                                submittedQuery = it
-                            },
-                            onFilterChanged = {},
-                        )
-                    }
-                }
-            }
-        }
-
-        val rootBounds = composeRule
-            .onAllNodes(isRoot())
-            .fetchSemanticsNodes()
-            .maxBy { it.boundsInRoot.width * it.boundsInRoot.height }
-            .boundsInRoot
-        val searchField = composeRule
-            .onAllNodes(
-                SemanticsMatcher.keyIsDefined(SemanticsActions.SetText),
-                useUnmergedTree = true,
-            )[0]
-        val searchFieldBounds = searchField.fetchSemanticsNode().boundsInRoot
-
-        assertTrue(
-            "Search field $searchFieldBounds does not clear the IME in root $rootBounds",
-            searchFieldBounds.bottom <= rootBounds.bottom - imeBottomPx,
-        )
-        searchField.performTextInput("A")
-        composeRule.runOnIdle { assertEquals("A", submittedQuery) }
     }
 
     @Test

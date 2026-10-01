@@ -50,7 +50,7 @@ interface AppLockManager : DefaultLifecycleObserver {
 
     suspend fun enable(activity: FragmentActivity): UnlockResult
 
-    suspend fun disable()
+    suspend fun disable(activity: FragmentActivity): UnlockResult
 
     suspend fun unlock(activity: FragmentActivity): UnlockResult
 

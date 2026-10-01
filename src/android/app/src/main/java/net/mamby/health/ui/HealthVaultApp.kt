@@ -81,9 +81,6 @@ import java.util.UUID
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import net.mamby.health.R
-import net.mamby.health.core.model.HealthSearchResult
-import net.mamby.health.core.model.HealthSearchScope
-import net.mamby.health.core.model.HealthSearchTarget
 import net.mamby.health.core.model.HealthVault
 import net.mamby.health.core.model.ProfileRecord
 import net.mamby.health.core.model.VaultItemKind
@@ -110,8 +107,6 @@ import net.mamby.health.feature.profiles.ProfileOwnerGateScreen
 import net.mamby.health.feature.schedule.ScheduleScreen
 import net.mamby.health.feature.schedule.ScheduleDetailScreen
 import net.mamby.health.feature.schedule.ScheduleEditorScreen
-import net.mamby.health.feature.search.SearchScreen
-import net.mamby.health.feature.search.SearchFilter
 import net.mamby.health.feature.settings.SettingsScreen
 import net.mamby.health.feature.settings.AppInfoScreen
 import net.mamby.health.feature.summary.SummaryScreen
@@ -170,7 +165,6 @@ import net.mamby.health.navigation.DocumentsRoute
 import net.mamby.health.navigation.ScheduleRoute
 import net.mamby.health.navigation.ScheduleDetailRoute
 import net.mamby.health.navigation.ScheduleEditorRoute
-import net.mamby.health.navigation.SearchRoute
 import net.mamby.health.navigation.SettingsRoute
 import net.mamby.health.navigation.AppInfoRoute
 import net.mamby.health.navigation.TopLevelDestination
@@ -403,6 +397,7 @@ private fun RecoverySettings(
                     onOpacityChangeFinished = { viewModel.saveFloatingSurfaceOpacityLevel() },
                     onLocaleChanged = onLocaleChanged,
                     onAppLockChanged = { enabled -> activity?.let { viewModel.setAppLockEnabled(it, enabled) } },
+                    appLockChangePending = viewModel.appLockChangePending.collectAsStateWithLifecycle().value,
                     onAppLockTimeoutChanged = viewModel::setAppLockTimeout,
                     onLockNow = viewModel::lockNow,
                     onConfigureBackup = viewModel::configureBackup,
@@ -438,8 +433,6 @@ private fun VaultNavigation(
     val profileLabels = disambiguatedProfileLabels(vault.profiles.map { it.profile }) { profile, ordinal, _ ->
         resources.getString(R.string.profile_disambiguated_name, profile.displayName, ordinal)
     }
-    var searchQuery by remember { mutableStateOf("") }
-    var searchFilter by remember { mutableStateOf(SearchFilter.ALL) }
     var settingsSearchVisible by rememberSaveable { mutableStateOf(false) }
     var restoreRequestId by rememberSaveable { mutableLongStateOf(0L) }
     var pendingDeepLink by remember { mutableStateOf<DeepLinkTarget?>(null) }
@@ -933,26 +926,6 @@ private fun VaultNavigation(
                                 onSelected = { id -> navigation.navigate(ContactDetailRoute(id.toString())) },
                             )
                         }
-                    }
-                    entry<SearchRoute>(
-                        metadata = ListDetailSceneStrategy.listPane(
-                            detailPlaceholder = { DetailPlaceholder(R.string.search_initial_body) },
-                        ),
-                    ) {
-                        SearchScreen(
-                            records = vault.profiles,
-                            notes = vault.notes,
-                            schedules = vault.schedules,
-                            contacts = vault.contacts,
-                            onResultSelected = { result ->
-                                navigation.navigate(result.toRoute())
-                                viewModel.resetPreview()
-                            },
-                            query = searchQuery,
-                            filter = searchFilter,
-                            onQueryChanged = { searchQuery = it },
-                            onFilterChanged = { searchFilter = it },
-                        )
                     }
                     entry<MedicationsRoute>(
                         metadata = ListDetailSceneStrategy.listPane(
@@ -1578,6 +1551,7 @@ private fun VaultNavigation(
                             onAppLockChanged = { enabled ->
                                 activity?.let { viewModel.setAppLockEnabled(it, enabled) }
                             },
+                            appLockChangePending = viewModel.appLockChangePending.collectAsStateWithLifecycle().value,
                             onAppLockTimeoutChanged = viewModel::setAppLockTimeout,
                             onLockNow = viewModel::lockNow,
                             onConfigureBackup = viewModel::configureBackup,
@@ -1585,8 +1559,6 @@ private fun VaultNavigation(
                             onClearBackup = viewModel::clearBackup,
                             onPrepareRestore = viewModel::prepareRestore,
                             onCommitRestore = { restore, confirmed ->
-                                searchQuery = ""
-                                searchFilter = SearchFilter.ALL
                                 viewModel.commitRestore(restore, confirmed)
                                 navigation.resetTo()
                             },
@@ -1628,28 +1600,6 @@ private fun VaultNavigation(
         }
     }
 
-}
-
-private fun HealthSearchResult.toRoute(): AppRoute {
-    val profileId = (scope as? HealthSearchScope.Profile)?.profileId
-    fun requireProfileId(): String = requireNotNull(profileId) {
-        "A profile-scoped search result must include its owner."
-    }.toString()
-
-    return when (val selected = target) {
-        is HealthSearchTarget.Document -> DocumentDetailRoute(requireProfileId(), selected.id.toString())
-        is HealthSearchTarget.Medication -> MedicationDetailRoute(requireProfileId(), selected.id.toString())
-        is HealthSearchTarget.Schedule -> ScheduleDetailRoute(selected.id.toString())
-        is HealthSearchTarget.EmergencyContact -> EmergencyContactDetailRoute(requireProfileId(), selected.id.toString())
-        is HealthSearchTarget.Vaccination -> VaccinationDetailRoute(requireProfileId(), selected.id.toString())
-        is HealthSearchTarget.HealthInfo -> HealthInfoRoute(requireProfileId())
-        is HealthSearchTarget.Note -> NoteDetailRoute(selected.id.toString())
-        is HealthSearchTarget.Measurement -> MeasurementDetailRoute(requireProfileId(), selected.id.toString())
-        is HealthSearchTarget.Contact -> ContactDetailRoute(selected.id.toString())
-        is HealthSearchTarget.FamilyHistory -> FamilyHistoryDetailRoute(requireProfileId(), selected.id.toString())
-        is HealthSearchTarget.Directive -> CareDirectiveDetailRoute(requireProfileId(), selected.id.toString())
-        is HealthSearchTarget.Identifier -> HealthIdentifierDetailRoute(requireProfileId(), selected.id.toString())
-    }
 }
 
 @Composable

@@ -58,7 +58,6 @@
     <string name="nav_settings">الإعدادات</string>
     <string name="nav_home">الرئيسية</string>
     <string name="nav_health_records">السجل الصحي</string>
-    <string name="nav_search">بحث</string>
     <string name="nav_notes">الملاحظات</string>
     <string name="health_records_title">السجل الصحي</string>
     <string name="health_info_tab">المعلومات الصحية</string>
@@ -86,16 +85,6 @@
     <string name="people_empty_title">لم تتم إضافة أشخاص</string>
     <string name="people_empty_body">أضف شخصًا عندما تريد حفظ معلومات صحية تخصه.</string>
     <string name="profile_disambiguated_name">%1$s · %2$d</string>
-    <string name="search_title">بحث</string>
-    <string name="search_hint">البحث عن هذا الشخص</string>
-    <string name="search_hint_all">البحث عن جميع الأشخاص</string>
-    <string name="search_initial_title">البحث في البيانات الصحية لـ %1$s</string>
-    <string name="search_initial_title_all">البحث في البيانات الصحية</string>
-    <string name="search_initial_body">ابحث عن المعلومات الصحية وجهات الاتصال واللقاحات وتفاصيل المستندات والأدوية والملاحظات والجداول.</string>
-    <string name="search_no_results_title">لا توجد نتائج</string>
-    <string name="search_no_results_body">لا يطابق أي عنصر في السجلات الصحية لـ %1$s جميع هذه الكلمات.</string>
-    <string name="search_no_results_body_all">لا يوجد ما يطابق جميع هذه الكلمات.</string>
-    <string name="search_filter_all">الكل</string>
     <string name="open_in_health_records">فتح في السجل الصحي</string>
     <string name="record_unavailable">هذا العنصر غير متاح للشخص المحدد.</string>
     <string name="getting_started_title">ابدأ الآن</string>

@@ -31,7 +31,6 @@ data class ProfileOwnerGateRoute(
 ) : AppRoute
 
 @Serializable data object HomeRoute : TopLevelRoute
-@Serializable data object SearchRoute : TopLevelRoute
 @Serializable data object HealthRecordsRoute : TopLevelRoute
 @Serializable data object NotesRoute : TopLevelRoute
 @Serializable data object MedicationsRoute : TopLevelRoute
@@ -151,16 +150,10 @@ enum class TopLevelDestination(
     @DrawableRes val icon: Int,
 ) {
     Home(HomeRoute, R.string.nav_home, R.drawable.ic_lucide_house),
-    Search(SearchRoute, R.string.nav_search, R.drawable.ic_lucide_search),
     HealthRecords(
         HealthRecordsRoute,
         R.string.nav_health_records,
         R.drawable.ic_lucide_heart_pulse,
-    ),
-    Notes(
-        NotesRoute,
-        R.string.nav_notes,
-        R.drawable.ic_lucide_sticky_notes,
     ),
     Medications(
         MedicationsRoute,
@@ -172,21 +165,26 @@ enum class TopLevelDestination(
         R.string.schedule_title,
         R.drawable.ic_lucide_calendar_days,
     ),
+    Notes(
+        NotesRoute,
+        R.string.nav_notes,
+        R.drawable.ic_lucide_sticky_notes,
+    ),
     Contacts(
         ContactsRoute,
         R.string.contacts_title,
         R.drawable.ic_lucide_list,
     ),
+    Profiles(ManageProfilesRoute, R.string.profiles_title, R.drawable.ic_lucide_users),
     Settings(
         SettingsRoute,
         R.string.settings_title,
         R.drawable.ic_lucide_settings,
     ),
-    Profiles(ManageProfilesRoute, R.string.profiles_title, R.drawable.ic_lucide_users),
     ;
 
     companion object {
-        val compactPrimary = listOf(Home, Search, HealthRecords, Notes)
-        val compactOverflow = listOf(Medications, Schedule, Contacts, Settings, Profiles)
+        val compactPrimary = listOf(Home, HealthRecords, Medications, Schedule)
+        val compactOverflow = listOf(Notes, Contacts, Profiles, Settings)
     }
 }

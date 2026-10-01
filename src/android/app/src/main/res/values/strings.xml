@@ -58,7 +58,6 @@
     <string name="nav_settings">Settings</string>
     <string name="nav_home">Home</string>
     <string name="nav_health_records">Health records</string>
-    <string name="nav_search">Search</string>
     <string name="nav_notes">Notes</string>
     <string name="health_records_title">Health records</string>
     <string name="health_info_tab">Health info</string>
@@ -86,16 +85,6 @@
     <string name="people_empty_title">No people added</string>
     <string name="people_empty_body">Add a person when you want to keep health information that belongs to them.</string>
     <string name="profile_disambiguated_name">%1$s · %2$d</string>
-    <string name="search_title">Search</string>
-    <string name="search_hint">Search this person</string>
-    <string name="search_hint_all">Search all people</string>
-    <string name="search_initial_title">Search %1$s’s health data</string>
-    <string name="search_initial_title_all">Search health data</string>
-    <string name="search_initial_body">Find health information, contacts, vaccinations, document details, medications, notes, and schedules.</string>
-    <string name="search_no_results_title">No results</string>
-    <string name="search_no_results_body">Nothing in %1$s’s health records matches all of those terms.</string>
-    <string name="search_no_results_body_all">Nothing matches all of those terms.</string>
-    <string name="search_filter_all">All</string>
     <string name="open_in_health_records">Open in Health records</string>
     <string name="record_unavailable">This item is unavailable for the selected person.</string>
     <string name="getting_started_title">Get started</string>

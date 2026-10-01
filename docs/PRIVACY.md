@@ -10,7 +10,7 @@ User health information is persisted only as authenticated ciphertext in app-pri
 
 Fresh install contains no sample health data. The app immediately persists a valid encrypted empty root and opens Home. It does not require or invent a person. If the user later creates person-owned health information, the app asks who it is for and lets them select or add that person before continuing. Creating a note, schedule, or contact never triggers that step.
 
-Global search examines all profiles, shared notes, shared schedules, and shared contacts by default and may narrow person-owned groups with its screen-local profile filter. Its query, filters, and results remain in unlocked process memory; the app does not create a plaintext search index or persist search terms. Person-owned results retain their owning profile, while note, schedule, and contact results are explicitly shared and never display a profile marker. Identifier values are never indexed or displayed in result lists. They remain masked until the user explicitly reveals a detail value, and that reveal state is temporary.
+The app has no global Search page. The reusable search model operates only on unlocked in-memory data and does not create a plaintext search index or persist search terms. Health identifier values are excluded from searchable content. They remain masked until the user explicitly reveals a detail value, and that reveal state is temporary.
 
 ## Network and third parties
 

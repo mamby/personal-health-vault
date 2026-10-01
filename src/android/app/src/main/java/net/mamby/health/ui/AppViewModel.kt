@@ -85,6 +85,8 @@ class AppViewModel @Inject constructor(
 ) : ViewModel() {
     val vaultState: StateFlow<VaultState> = vaultRepository.state
     val lockState: StateFlow<AppLockState> = appLockManager.state
+    private val mutableAppLockChangePending = MutableStateFlow(false)
+    val appLockChangePending: StateFlow<Boolean> = mutableAppLockChangePending.asStateFlow()
     val settings: StateFlow<AppSettings> = settingsRepository.settings.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
@@ -484,18 +486,21 @@ class AppViewModel @Inject constructor(
     }
 
     fun setAppLockEnabled(activity: FragmentActivity, enabled: Boolean) {
+        if (mutableAppLockChangePending.value) return
+        mutableAppLockChangePending.value = true
         viewModelScope.launch {
-            val result = if (enabled) appLockManager.enable(activity) else {
-                appLockManager.disable()
-                UnlockResult.Success
-            }
-            mutableNotice.value = when (result) {
-                UnlockResult.Success -> UiNotice(
-                    if (enabled) R.string.app_lock_enabled else R.string.app_lock_disabled,
-                )
-                UnlockResult.Cancelled -> UiNotice(R.string.unlock_canceled)
-                is UnlockResult.Failed -> UiNotice(R.string.unlock_failed)
-                is UnlockResult.Unavailable -> UiNotice(R.string.unlock_unavailable)
+            try {
+                val result = if (enabled) appLockManager.enable(activity) else appLockManager.disable(activity)
+                mutableNotice.value = when (result) {
+                    UnlockResult.Success -> UiNotice(
+                        if (enabled) R.string.app_lock_enabled else R.string.app_lock_disabled,
+                    )
+                    UnlockResult.Cancelled -> UiNotice(R.string.unlock_canceled)
+                    is UnlockResult.Failed -> UiNotice(R.string.unlock_failed)
+                    is UnlockResult.Unavailable -> UiNotice(R.string.unlock_unavailable)
+                }
+            } finally {
+                mutableAppLockChangePending.value = false
             }
         }
     }

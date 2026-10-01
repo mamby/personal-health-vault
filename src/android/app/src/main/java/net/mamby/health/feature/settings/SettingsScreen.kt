@@ -75,6 +75,7 @@ fun SettingsScreen(
     onOpacityChangeFinished: () -> Unit,
     onLocaleChanged: (String) -> Unit,
     onAppLockChanged: (Boolean) -> Unit,
+    appLockChangePending: Boolean = false,
     onAppLockTimeoutChanged: (Duration) -> Unit,
     onLockNow: () -> Unit,
     onConfigureBackup: (Uri, CharArray, Boolean) -> Unit,
@@ -224,6 +225,7 @@ fun SettingsScreen(
         section(key = "security", label = securityTitle) {
             appLock(AndroidKitAppLockSetting(
                 checked = settings.appLockEnabled, onCheckedChange = onAppLockChanged,
+                enabled = !appLockChangePending,
                 timeout = AndroidKitAppLockTimeoutSetting(
                     options = lockTimeouts.map { (duration, label) ->
                         AndroidKitSettingsOption(duration.toString(), label)
