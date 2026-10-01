@@ -100,6 +100,7 @@ fun SettingsScreen(
         updateSearchVisibility(false)
     }
     var recentQueries by rememberSaveable { mutableStateOf(emptyList<String>()) }
+    var recentQueriesVisible by rememberSaveable { mutableStateOf(true) }
     val configuration = LocalConfiguration.current
     val context = LocalContext.current
     val selectedLocaleTag = remember(configuration) {
@@ -189,6 +190,8 @@ fun SettingsScreen(
         onOpenSearch = { updateSearchVisibility(true) },
         recentQueries = recentQueries,
         onRecentQueriesChange = { recentQueries = it },
+        recentQueriesVisible = recentQueriesVisible,
+        onRecentQueriesVisibleChange = { recentQueriesVisible = it },
     )) {
         main(key = MainSettingsPageKey, title = settingsTitle) {
         message?.let { section(key = "message") { info(key = "message", label = it) } }
@@ -359,6 +362,7 @@ fun SettingsScreen(
 fun AppInfoScreen(onBack: () -> Unit) {
     var searchVisible by rememberSaveable { mutableStateOf(false) }
     var recentQueries by rememberSaveable { mutableStateOf(emptyList<String>()) }
+    var recentQueriesVisible by rememberSaveable { mutableStateOf(true) }
     BackHandler(enabled = searchVisible) {
         searchVisible = false
     }
@@ -368,6 +372,8 @@ fun AppInfoScreen(onBack: () -> Unit) {
         onOpenSearch = { searchVisible = true },
         recentQueries = recentQueries,
         onRecentQueriesChange = { recentQueries = it },
+        recentQueriesVisible = recentQueriesVisible,
+        onRecentQueriesVisibleChange = { recentQueriesVisible = it },
     )) {
         main(key = MainSettingsPageKey, title = title)
         about(key = AboutSettingsPageKey, content = about, onOpen = {})

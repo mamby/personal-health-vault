@@ -73,7 +73,7 @@ import androidx.core.graphics.Insets
 import androidx.core.view.WindowInsetsCompat
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
-import androidx.navigation3.ui.NavDisplay
+import net.mamby.androidkit.navigation3.AndroidKitNavDisplay
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
@@ -1224,7 +1224,7 @@ class ComposeScreensInstrumentedTest {
             mutableStateListOf<NavKey>(NotesRoute, NoteDetailRoute("detail"))
         }
 
-        NavDisplay(
+        AndroidKitNavDisplay(
             backStack = backStack,
             onBack = {
                 if (backStack.size > 1) backStack.removeAt(backStack.lastIndex)

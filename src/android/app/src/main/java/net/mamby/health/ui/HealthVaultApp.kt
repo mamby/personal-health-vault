@@ -76,7 +76,7 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
-import androidx.navigation3.ui.NavDisplay
+import net.mamby.androidkit.navigation3.AndroidKitNavDisplay
 import java.util.UUID
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -385,7 +385,7 @@ private fun RecoverySettings(
         if (backStack.size > 1) backStack.removeLastOrNull() else onBack()
     }
     BackHandler(onBack = goBack)
-    NavDisplay(
+    AndroidKitNavDisplay(
         backStack = backStack,
         onBack = goBack,
         entryDecorators = listOf(rememberSaveableStateHolderNavEntryDecorator()),
@@ -607,7 +607,7 @@ private fun VaultNavigation(
         ) {
             Box(Modifier.fillMaxSize()) {
                 CompositionLocalProvider(LocalProfileDisplayLabels provides profileLabels) {
-                    if (editorSessionValid) NavDisplay(
+                    if (editorSessionValid) AndroidKitNavDisplay(
                         backStack = navigation.currentBackStack,
                         onBack = navigation::goBack,
                         sceneStrategies = listOf(listDetailStrategy),
