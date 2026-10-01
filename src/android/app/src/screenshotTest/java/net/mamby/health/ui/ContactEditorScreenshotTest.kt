@@ -98,6 +98,7 @@ private fun ContactEditorPreviewContent(darkTheme: Boolean = false) {
                         ContactEditorScreen(
                             existing = CONTACTS.first(),
                             onCancel = {},
+                            onSaved = {},
                             onSave = { _, _ -> },
                         )
                     }
@@ -106,6 +107,7 @@ private fun ContactEditorPreviewContent(darkTheme: Boolean = false) {
                 ContactEditorScreen(
                     existing = CONTACTS.first(),
                     onCancel = {},
+                    onSaved = {},
                     onSave = { _, _ -> },
                 )
             }

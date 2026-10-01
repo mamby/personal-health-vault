@@ -540,6 +540,9 @@
     <string name="contact_email_addresses">Adresses e-mail</string>
     <string name="contact_websites">Sites web</string>
     <string name="contact_addresses">Adresses</string>
+    <string name="contact_email_address">Adresse e-mail</string>
+    <string name="contact_website">Site web</string>
+    <string name="contact_address">Adresse</string>
     <string name="delete_saved_contact_title">Supprimer le contact ?</string>
     <string name="delete_saved_contact_message">Ce contact sera supprimé.</string>
     <string name="add_another">Ajouter un autre élément</string>

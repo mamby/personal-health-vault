@@ -1158,6 +1158,14 @@ private fun VaultNavigation(
                                 onSave = { updated, onResult ->
                                     viewModel.upsertContact(updated, onResult)
                                 },
+                                onSaved = { id ->
+                                    val activeRoute = navigation.currentBackStack.lastOrNull()
+                                        as? ContactEditorRoute
+                                    closeEditor(route.sessionId)
+                                    if (activeRoute?.sessionId == route.sessionId && route.id == null) {
+                                        navigation.navigate(ContactDetailRoute(id.toString()))
+                                    }
+                                },
                             )
                         }
                     }

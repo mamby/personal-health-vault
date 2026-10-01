@@ -1,35 +1,58 @@
 package net.mamby.health.feature.contacts
 
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
@@ -37,6 +60,8 @@ import java.net.URI
 import java.time.Instant
 import java.util.Locale
 import java.util.UUID
+import kotlin.math.roundToInt
+import kotlinx.coroutines.launch
 import net.mamby.androidkit.compose.presentation.AndroidKitSectionCard
 import net.mamby.androidkit.compose.presentation.AndroidKitSectionCardEntry
 import net.mamby.androidkit.compose.layout.AndroidKitPage
@@ -47,12 +72,12 @@ import net.mamby.health.ui.components.AppEditorScaffold
 import net.mamby.health.ui.components.ConfirmDeleteDialog
 import net.mamby.health.ui.components.detailTitleBarActions
 import net.mamby.health.ui.components.EditorFieldPair
-import net.mamby.health.ui.components.EditorSection
 import net.mamby.health.ui.components.EmptyState
 import net.mamby.health.ui.components.ListCard
 import net.mamby.health.ui.components.rememberEditorState
 import net.mamby.health.ui.components.addTitleBarAction
 import net.mamby.health.ui.components.withPagePadding
+import net.mamby.health.ui.theme.LocalContactActionColors
 import net.mamby.health.ui.theme.UiTokens
 
 @Composable
@@ -119,6 +144,7 @@ fun ContactDetailScreen(
     onSearchAddress: (String) -> Unit,
 ) {
     var deleteVisible by remember(contact.id) { mutableStateOf(false) }
+    val actionColors = LocalContactActionColors.current
 
     AndroidKitPage(
         title = stringResource(R.string.contact_title),
@@ -149,24 +175,32 @@ fun ContactDetailScreen(
                 ContactActionGroup(
                     label = stringResource(R.string.contact_phone_numbers),
                     values = contact.phoneNumbers,
+                    icon = R.drawable.ic_lucide_phone,
+                    iconTint = actionColors.phone,
                     actionLabel = { stringResource(R.string.contact_phone_action, it) },
                     onClick = onDialPhone,
                 )
                 ContactActionGroup(
                     label = stringResource(R.string.contact_email_addresses),
                     values = contact.emailAddresses,
+                    icon = R.drawable.ic_lucide_mail,
+                    iconTint = actionColors.email,
                     actionLabel = { stringResource(R.string.contact_email_action, it) },
                     onClick = onComposeEmail,
                 )
                 ContactActionGroup(
                     label = stringResource(R.string.contact_websites),
                     values = contact.websites,
+                    icon = R.drawable.ic_lucide_external_link,
+                    iconTint = actionColors.website,
                     actionLabel = { stringResource(R.string.contact_website_action, it) },
                     onClick = onOpenWebsite,
                 )
                 ContactActionGroup(
                     label = stringResource(R.string.contact_addresses),
                     values = contact.addresses,
+                    icon = R.drawable.ic_lucide_map_pin,
+                    iconTint = actionColors.address,
                     actionLabel = { stringResource(R.string.contact_address_action, it) },
                     onClick = onSearchAddress,
                 )
@@ -197,19 +231,41 @@ fun ContactDetailScreen(
 private fun ContactActionGroup(
     label: String,
     values: List<String>,
+    @DrawableRes icon: Int,
+    iconTint: Color,
     actionLabel: @Composable (String) -> String,
     onClick: (String) -> Unit,
 ) {
     val nonBlankValues = values.filter(String::isNotBlank)
+    val dimensions = AndroidKitThemeTokens.dimensions
     AndroidKitSectionCard(
         title = label,
         entries = nonBlankValues.mapIndexed { index, value ->
-            AndroidKitSectionCardEntry.Action(
+            val localizedActionLabel = actionLabel(value)
+            AndroidKitSectionCardEntry.Custom(
                 key = "value:$value:${nonBlankValues.take(index).count { it == value }}",
-                label = value,
-                actionLabel = actionLabel(value),
-                onClick = { onClick(value) },
-            )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(
+                            onClickLabel = localizedActionLabel,
+                            role = Role.Button,
+                            onClick = { onClick(value) },
+                        )
+                        .heightIn(min = dimensions.minimumTouchTarget),
+                    horizontalArrangement = Arrangement.spacedBy(dimensions.spaceMedium),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(value, modifier = Modifier.weight(1f))
+                    Icon(
+                        painter = painterResource(icon),
+                        contentDescription = null,
+                        modifier = Modifier.size(UiTokens.DetailActionIconSize),
+                        tint = iconTint,
+                    )
+                }
+            }
         },
     )
 }
@@ -219,6 +275,7 @@ fun ContactEditorScreen(
     existing: VaultContact?,
     onCancel: () -> Unit,
     onSave: (VaultContact, (Boolean) -> Unit) -> Unit,
+    onSaved: (UUID) -> Unit,
 ) {
     val state = rememberEditorState {
         ContactDraft(
@@ -256,81 +313,78 @@ fun ContactEditorScreen(
                 ),
             ) { saved ->
                 state.isSaving = false
-                if (saved) onCancel()
+                if (saved) onSaved(draft.id)
             }
         },
     ) {
-        EditorSection(stringResource(R.string.editor_section_basic)) {
-            OutlinedTextField(
-                value = draft.name,
-                onValueChange = { state.value = draft.copy(name = it) },
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text(stringResource(R.string.contact_name)) },
-                singleLine = true,
-            )
-        }
-        EditorSection(stringResource(R.string.editor_section_contact_channels)) {
-            EditorFieldPair(
-                first = { modifier ->
-                    ContactValueEditor(
-                        label = stringResource(R.string.contact_phone_numbers),
-                        values = draft.phoneNumbers,
-                        onValuesChange = { state.value = draft.copy(phoneNumbers = it) },
-                        keyboardType = KeyboardType.Phone,
-                        modifier = modifier,
-                    )
-                },
-                second = { modifier ->
-                    ContactValueEditor(
-                        label = stringResource(R.string.contact_email_addresses),
-                        values = draft.emailAddresses,
-                        onValuesChange = { state.value = draft.copy(emailAddresses = it) },
-                        keyboardType = KeyboardType.Email,
-                        modifier = modifier,
-                    )
-                },
-            )
-        }
-        EditorSection(stringResource(R.string.editor_section_location_online)) {
-            EditorFieldPair(
-                first = { modifier ->
-                    ContactValueEditor(
-                        label = stringResource(R.string.contact_websites),
-                        values = draft.websites,
-                        onValuesChange = { state.value = draft.copy(websites = it) },
-                        keyboardType = KeyboardType.Uri,
-                        modifier = modifier,
-                        invalidValueMessage = stringResource(R.string.invalid_contact_website),
-                        isValid = { it.isBlank() || normalizeWebsite(it) != null },
-                    )
-                },
-                second = { modifier ->
-                    ContactValueEditor(
-                        label = stringResource(R.string.contact_addresses),
-                        values = draft.addresses,
-                        onValuesChange = { state.value = draft.copy(addresses = it) },
-                        keyboardType = KeyboardType.Text,
-                        modifier = modifier,
-                        multiline = true,
-                    )
-                },
-            )
-        }
-        EditorSection(stringResource(R.string.common_notes)) {
-            OutlinedTextField(
-                value = draft.notes,
-                onValueChange = { state.value = draft.copy(notes = it) },
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text(stringResource(R.string.common_notes)) },
-                minLines = 3,
-            )
-        }
+        OutlinedTextField(
+            value = draft.name,
+            onValueChange = { state.value = draft.copy(name = it) },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text(stringResource(R.string.contact_name)) },
+            singleLine = true,
+        )
+        EditorFieldPair(
+            first = { modifier ->
+                ContactValueEditor(
+                    label = stringResource(R.string.contact_phone_numbers),
+                    fieldLabel = stringResource(R.string.contact_phone),
+                    values = draft.phoneNumbers,
+                    onValuesChange = { state.value = draft.copy(phoneNumbers = it) },
+                    keyboardType = KeyboardType.Phone,
+                    modifier = modifier,
+                )
+            },
+            second = { modifier ->
+                ContactValueEditor(
+                    label = stringResource(R.string.contact_email_addresses),
+                    fieldLabel = stringResource(R.string.contact_email_address),
+                    values = draft.emailAddresses,
+                    onValuesChange = { state.value = draft.copy(emailAddresses = it) },
+                    keyboardType = KeyboardType.Email,
+                    modifier = modifier,
+                )
+            },
+        )
+        EditorFieldPair(
+            first = { modifier ->
+                ContactValueEditor(
+                    label = stringResource(R.string.contact_websites),
+                    fieldLabel = stringResource(R.string.contact_website),
+                    values = draft.websites,
+                    onValuesChange = { state.value = draft.copy(websites = it) },
+                    keyboardType = KeyboardType.Uri,
+                    modifier = modifier,
+                    invalidValueMessage = stringResource(R.string.invalid_contact_website),
+                    isValid = { it.isBlank() || normalizeWebsite(it) != null },
+                )
+            },
+            second = { modifier ->
+                ContactValueEditor(
+                    label = stringResource(R.string.contact_addresses),
+                    fieldLabel = stringResource(R.string.contact_address),
+                    values = draft.addresses,
+                    onValuesChange = { state.value = draft.copy(addresses = it) },
+                    keyboardType = KeyboardType.Text,
+                    modifier = modifier,
+                    multiline = true,
+                )
+            },
+        )
+        OutlinedTextField(
+            value = draft.notes,
+            onValueChange = { state.value = draft.copy(notes = it) },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text(stringResource(R.string.common_notes)) },
+            minLines = 3,
+        )
     }
 }
 
 @Composable
 private fun ContactValueEditor(
     label: String,
+    fieldLabel: String,
     values: List<String>,
     onValuesChange: (List<String>) -> Unit,
     keyboardType: KeyboardType,
@@ -339,6 +393,14 @@ private fun ContactValueEditor(
     invalidValueMessage: String? = null,
     isValid: (String) -> Boolean = { true },
 ) {
+    var pendingFocusIndex by remember { mutableStateOf<Int?>(null) }
+    // Material reserves half the minimized label line height above the outline.
+    val labelClearance = with(LocalDensity.current) {
+        (MaterialTheme.typography.bodySmall.lineHeight.toPx() / 2).roundToInt()
+    }
+    val contentPadding = OutlinedTextFieldDefaults.contentPaddingWithoutLabel()
+    val layoutDirection = LocalLayoutDirection.current
+    val scope = rememberCoroutineScope()
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(UiTokens.CompactSpacing),
@@ -346,50 +408,93 @@ private fun ContactValueEditor(
         Text(label, style = MaterialTheme.typography.titleSmall)
         values.forEachIndexed { index, value ->
             val valid = isValid(value)
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(UiTokens.CompactSpacing),
-                verticalAlignment = Alignment.CenterVertically,
+            val focusRequester = remember { FocusRequester() }
+            val bringIntoViewRequester = remember { BringIntoViewRequester() }
+            LaunchedEffect(pendingFocusIndex) {
+                if (pendingFocusIndex == index) {
+                    focusRequester.requestFocus()
+                    pendingFocusIndex = null
+                }
+            }
+            val removeLabel = stringResource(
+                R.string.remove_contact_value,
+                value.ifBlank { fieldLabel },
+            )
+            Column(
+                modifier = Modifier
+                    .bringIntoViewRequester(bringIntoViewRequester)
+                    .onSizeChanged {
+                        if (!valid && invalidValueMessage != null) {
+                            scope.launch { bringIntoViewRequester.bringIntoView() }
+                        }
+                    },
             ) {
-                OutlinedTextField(
-                    value = value,
-                    onValueChange = { next ->
-                        onValuesChange(values.toMutableList().apply { this[index] = next })
-                    },
-                    modifier = Modifier.weight(1f),
-                    label = { Text(label) },
-                    singleLine = !multiline,
-                    minLines = if (multiline) 2 else 1,
-                    keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-                    isError = !valid,
-                    supportingText = invalidValueMessage
-                        ?.takeIf { !valid }
-                        ?.let { message -> ({ Text(message) }) },
-                )
-                val removeLabel = stringResource(
-                    R.string.remove_contact_value,
-                    value.ifBlank { label },
-                )
-                IconButton(
-                    onClick = {
-                        onValuesChange(values.toMutableList().apply { removeAt(index) })
-                    },
-                    modifier = Modifier.semantics {
-                        contentDescription = removeLabel
-                        onClick(label = removeLabel, action = null)
-                    },
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_lucide_x),
-                        contentDescription = null,
+                Row(horizontalArrangement = Arrangement.spacedBy(UiTokens.CompactSpacing)) {
+                    OutlinedTextField(
+                        value = value,
+                        onValueChange = { next ->
+                            onValuesChange(values.toMutableList().apply { this[index] = next })
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .focusRequester(focusRequester)
+                            .alignBy { (it.measuredHeight + labelClearance) / 2 }
+                            .semantics {
+                                if (!valid && invalidValueMessage != null) error(invalidValueMessage)
+                            },
+                        label = { Text(fieldLabel) },
+                        singleLine = !multiline,
+                        minLines = if (multiline) 2 else 1,
+                        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+                        isError = !valid,
+                    )
+                    IconButton(
+                        onClick = {
+                            onValuesChange(values.toMutableList().apply { removeAt(index) })
+                        },
+                        modifier = Modifier
+                            .alignBy { it.measuredHeight / 2 }
+                            .semantics {
+                                contentDescription = removeLabel
+                                onClick(label = removeLabel, action = null)
+                            },
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_lucide_x),
+                            contentDescription = null,
+                        )
+                    }
+                }
+                invalidValueMessage?.takeIf { !valid }?.let { message ->
+                    Text(
+                        text = message,
+                        modifier = Modifier.padding(
+                            start = contentPadding.calculateStartPadding(layoutDirection),
+                            end = contentPadding.calculateEndPadding(layoutDirection),
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
                     )
                 }
             }
         }
-        TextButton(onClick = { onValuesChange(values + "") }) {
+        TextButton(
+            onClick = {
+                pendingFocusIndex = values.size
+                onValuesChange(values + "")
+            },
+            modifier = Modifier.align(Alignment.Start),
+            contentPadding = PaddingValues(
+                top = ButtonDefaults.TextButtonContentPadding.calculateTopPadding(),
+                bottom = ButtonDefaults.TextButtonContentPadding.calculateBottomPadding(),
+            ),
+        ) {
             Icon(
                 painter = painterResource(R.drawable.ic_lucide_plus),
                 contentDescription = null,
+                modifier = Modifier.size(ButtonDefaults.IconSize),
             )
+            Spacer(Modifier.width(ButtonDefaults.IconSpacing))
             Text(stringResource(R.string.add_another))
         }
     }

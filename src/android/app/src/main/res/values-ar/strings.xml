@@ -546,6 +546,9 @@
     <string name="contact_email_addresses">عناوين البريد الإلكتروني</string>
     <string name="contact_websites">مواقع الويب</string>
     <string name="contact_addresses">العناوين</string>
+    <string name="contact_email_address">عنوان البريد الإلكتروني</string>
+    <string name="contact_website">موقع الويب</string>
+    <string name="contact_address">العنوان</string>
     <string name="delete_saved_contact_title">حذف جهة الاتصال؟</string>
     <string name="delete_saved_contact_message">ستُحذف جهة الاتصال.</string>
     <string name="add_another">إضافة عنصر آخر</string>

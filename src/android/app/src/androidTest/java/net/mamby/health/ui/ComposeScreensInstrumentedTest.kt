@@ -920,6 +920,7 @@ class ComposeScreensInstrumentedTest {
                         ContactEditorScreen(
                             existing = null,
                             onCancel = {},
+                            onSaved = {},
                             onSave = { _, _ -> },
                         )
                     }

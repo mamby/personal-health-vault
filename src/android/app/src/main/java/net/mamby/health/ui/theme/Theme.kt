@@ -21,6 +21,30 @@ import net.mamby.androidkit.compose.theme.AndroidKitTheme
 import net.mamby.androidkit.compose.theme.AndroidKitThemeDefinition
 
 @Immutable
+internal data class ContactActionColors(
+    val phone: Color,
+    val email: Color,
+    val website: Color,
+    val address: Color,
+)
+
+private val LightContactActionColors = ContactActionColors(
+    phone = Teal,
+    email = Info,
+    website = ContactWebsite,
+    address = ContactAddress,
+)
+
+private val DarkContactActionColors = ContactActionColors(
+    phone = TealLight,
+    email = InfoLight,
+    website = ContactWebsiteDark,
+    address = ContactAddressDark,
+)
+
+internal val LocalContactActionColors = staticCompositionLocalOf { LightContactActionColors }
+
+@Immutable
 internal data class ProfileAccentColors(
     val container: Color,
     val onContainer: Color,
@@ -200,6 +224,7 @@ fun HealthVaultTheme(
     )
 
     CompositionLocalProvider(
+        LocalContactActionColors provides if (darkTheme) DarkContactActionColors else LightContactActionColors,
         LocalProfileAccentPalette provides if (darkTheme) DarkProfileAccents else LightProfileAccents,
         LocalHomeTilePalette provides if (darkTheme) DarkHomeTiles else LightHomeTiles,
     ) {

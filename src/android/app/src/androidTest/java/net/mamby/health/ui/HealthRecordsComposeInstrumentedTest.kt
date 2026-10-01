@@ -198,6 +198,7 @@ class HealthRecordsComposeInstrumentedTest {
                 ContactEditorScreen(
                     existing = null,
                     onCancel = {},
+                    onSaved = {},
                     onSave = { contact, onResult ->
                         savedContact = contact
                         onResult(true)
@@ -211,10 +212,10 @@ class HealthRecordsComposeInstrumentedTest {
                 .onNode(hasText(composeRule.activity.getString(labelResource)) and hasSetTextAction())
                 .performTextInput(value)
         }
-        enterFirstValue(R.string.contact_phone_numbers, "+33 1 23 45")
-        enterFirstValue(R.string.contact_email_addresses, "dr@example.test")
-        enterFirstValue(R.string.contact_websites, "example.test:8443/path")
-        enterFirstValue(R.string.contact_addresses, "1 rue Centrale\nParis")
+        enterFirstValue(R.string.contact_phone, "+33 1 23 45")
+        enterFirstValue(R.string.contact_email_address, "dr@example.test")
+        enterFirstValue(R.string.contact_website, "example.test:8443/path")
+        enterFirstValue(R.string.contact_address, "1 rue Centrale\nParis")
         composeRule.onNodeWithText(composeRule.activity.getString(R.string.common_save)).performClick()
         composeRule.runOnIdle {
             assertEquals("Dr Martin", savedContact?.name)

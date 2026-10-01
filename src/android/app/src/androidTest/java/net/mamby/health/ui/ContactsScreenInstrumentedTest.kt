@@ -13,6 +13,8 @@ import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performKeyInput
@@ -42,11 +44,14 @@ class ContactsScreenInstrumentedTest {
     @Test
     fun contactFormCreatesVaultWideContactWithoutBlankValues() {
         var savedContact: VaultContact? = null
+        var openedContactId: UUID? = null
+        var canceled = false
         composeRule.setContent {
             HealthVaultTheme {
                 ContactEditorScreen(
                     existing = null,
-                    onCancel = {},
+                    onCancel = { canceled = true },
+                    onSaved = { openedContactId = it },
                     onSave = { contact, onResult ->
                         savedContact = contact
                         onResult(true)
@@ -62,7 +67,7 @@ class ContactsScreenInstrumentedTest {
             .onNode(hasText("Samira Haddad", substring = true) and hasSetTextAction())
             .assertTextContains("Samira Haddad", substring = true)
         composeRule
-            .onNodeWithText(composeRule.activity.getString(R.string.common_save))
+            .onNodeWithContentDescription(composeRule.activity.getString(R.string.common_save))
             .assertIsEnabled()
             .performClick()
 
@@ -73,6 +78,65 @@ class ContactsScreenInstrumentedTest {
             assertEquals(emptyList<String>(), savedContact?.emailAddresses)
             assertEquals(emptyList<String>(), savedContact?.websites)
             assertEquals(emptyList<String>(), savedContact?.addresses)
+            assertEquals(savedContact?.id, openedContactId)
+            assertEquals(false, canceled)
+        }
+    }
+
+    @Test
+    fun addingValuesToNewContactFocusesEachNewField() {
+        assertAddedValuesReceiveFocus(existing = null)
+    }
+
+    @Test
+    fun addingValuesToExistingContactFocusesEachNewField() {
+        assertAddedValuesReceiveFocus(
+            existing = VaultContact(
+                id = UUID.randomUUID(),
+                name = "Samira",
+                phoneNumbers = listOf("+33 6 12 34 56 78"),
+                emailAddresses = listOf("samira@example.test"),
+                websites = listOf("https://example.test"),
+                addresses = listOf("Paris"),
+                updatedAt = Instant.EPOCH,
+            ),
+        )
+    }
+
+    private fun assertAddedValuesReceiveFocus(existing: VaultContact?) {
+        composeRule.setContent {
+            HealthVaultTheme {
+                ContactEditorScreen(
+                    existing = existing,
+                    onCancel = {},
+                    onSaved = {},
+                    onSave = { _, _ -> },
+                )
+            }
+        }
+        listOf(
+            R.string.editor_section_basic,
+            R.string.editor_section_contact_channels,
+            R.string.editor_section_location_online,
+        ).forEach { title ->
+            composeRule.onNodeWithText(composeRule.activity.getString(title)).assertDoesNotExist()
+        }
+        listOf(
+            R.string.contact_phone,
+            R.string.contact_email_address,
+            R.string.contact_website,
+            R.string.contact_address,
+        ).forEachIndexed { groupIndex, label ->
+            repeat(2) { addedIndex ->
+                composeRule
+                    .onAllNodesWithText(composeRule.activity.getString(R.string.add_another))[groupIndex]
+                    .performScrollTo()
+                    .performClick()
+                composeRule
+                    .onAllNodes(hasText(composeRule.activity.getString(label)) and hasSetTextAction())[addedIndex + 1]
+                    .assertIsFocused()
+                    .performTextInput("new-$groupIndex-$addedIndex")
+            }
         }
     }
 
@@ -84,6 +148,7 @@ class ContactsScreenInstrumentedTest {
                 ContactEditorScreen(
                     existing = null,
                     onCancel = { canceled = true },
+                    onSaved = {},
                     onSave = { _, _ -> },
                 )
             }
@@ -92,7 +157,7 @@ class ContactsScreenInstrumentedTest {
         composeRule
             .onNode(hasText(composeRule.activity.getString(R.string.contact_name)) and hasSetTextAction())
             .performTextInput("Samira")
-        composeRule.onNodeWithText(composeRule.activity.getString(R.string.common_cancel)).performClick()
+        composeRule.onNodeWithContentDescription(composeRule.activity.getString(R.string.common_cancel)).performClick()
         composeRule
             .onNodeWithText(composeRule.activity.getString(R.string.unsaved_changes_title))
             .assertIsDisplayed()
@@ -115,6 +180,7 @@ class ContactsScreenInstrumentedTest {
                 ContactEditorScreen(
                     existing = null,
                     onCancel = { canceled = true },
+                    onSaved = {},
                     onSave = { _, _ -> },
                 )
             }
@@ -138,6 +204,7 @@ class ContactsScreenInstrumentedTest {
                 ContactEditorScreen(
                     existing = null,
                     onCancel = {},
+                    onSaved = {},
                     onSave = { _, onResult -> completion = onResult },
                 )
             }
@@ -146,14 +213,14 @@ class ContactsScreenInstrumentedTest {
         composeRule
             .onNode(hasText(composeRule.activity.getString(R.string.contact_name)) and hasSetTextAction())
             .performTextInput("Samira")
-        composeRule.onNodeWithText(composeRule.activity.getString(R.string.common_save)).performClick()
-        composeRule.onNodeWithText(composeRule.activity.getString(R.string.common_save)).assertDoesNotExist()
+        composeRule.onNodeWithContentDescription(composeRule.activity.getString(R.string.common_save)).performClick()
+        composeRule.onNodeWithContentDescription(composeRule.activity.getString(R.string.common_save)).assertDoesNotExist()
 
         composeRule.runOnIdle { requireNotNull(completion)(false) }
 
         composeRule.onNode(hasText("Samira") and hasSetTextAction()).assertIsDisplayed()
         composeRule
-            .onNodeWithText(composeRule.activity.getString(R.string.common_save))
+            .onNodeWithContentDescription(composeRule.activity.getString(R.string.common_save))
             .assertIsEnabled()
     }
 
@@ -164,6 +231,7 @@ class ContactsScreenInstrumentedTest {
                 ContactEditorScreen(
                     existing = null,
                     onCancel = {},
+                    onSaved = {},
                     onSave = { _, _ -> },
                 )
             }
@@ -173,14 +241,14 @@ class ContactsScreenInstrumentedTest {
             .onNode(hasText(composeRule.activity.getString(R.string.contact_name)) and hasSetTextAction())
             .performTextInput("Samira")
         composeRule
-            .onNode(hasText(composeRule.activity.getString(R.string.contact_websites)) and hasSetTextAction())
+            .onNode(hasText(composeRule.activity.getString(R.string.contact_website)) and hasSetTextAction())
             .performTextInput("ftp://example.test")
 
         composeRule
             .onNodeWithText(composeRule.activity.getString(R.string.invalid_contact_website))
             .assertIsDisplayed()
         composeRule
-            .onNodeWithText(composeRule.activity.getString(R.string.common_save))
+            .onNodeWithContentDescription(composeRule.activity.getString(R.string.common_save))
             .assertIsNotEnabled()
     }
 
@@ -191,6 +259,7 @@ class ContactsScreenInstrumentedTest {
                 ContactEditorScreen(
                     existing = null,
                     onCancel = {},
+                    onSaved = {},
                     onSave = { _, _ -> },
                 )
             }
@@ -198,7 +267,7 @@ class ContactsScreenInstrumentedTest {
         val nameField = composeRule
             .onNode(hasText(composeRule.activity.getString(R.string.contact_name)) and hasSetTextAction())
         val phoneField = composeRule
-            .onNode(hasText(composeRule.activity.getString(R.string.contact_phone_numbers)) and hasSetTextAction())
+            .onNode(hasText(composeRule.activity.getString(R.string.contact_phone)) and hasSetTextAction())
 
         nameField.performClick().assertIsFocused()
         nameField.performKeyInput { pressKey(Key.Tab) }

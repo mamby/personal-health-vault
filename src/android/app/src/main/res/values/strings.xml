@@ -538,6 +538,9 @@
     <string name="contact_email_addresses">Email addresses</string>
     <string name="contact_websites">Websites</string>
     <string name="contact_addresses">Addresses</string>
+    <string name="contact_email_address">Email address</string>
+    <string name="contact_website">Website</string>
+    <string name="contact_address">Address</string>
     <string name="delete_saved_contact_title">Delete contact?</string>
     <string name="delete_saved_contact_message">This contact will be deleted.</string>
     <string name="add_another">Add another</string>
