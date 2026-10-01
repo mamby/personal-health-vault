@@ -65,7 +65,6 @@ import net.mamby.androidkit.compose.presentation.AndroidKitSectionCard
 import net.mamby.androidkit.compose.presentation.AndroidKitSectionCardEntry
 import net.mamby.androidkit.compose.action.AndroidKitActionFlyoutScope
 import net.mamby.androidkit.compose.layout.AndroidKitPage
-import net.mamby.androidkit.compose.layout.AndroidKitPageTextAction
 import net.mamby.androidkit.compose.theme.AndroidKitThemeTokens
 import net.mamby.health.R
 import net.mamby.health.core.model.VaultContact
@@ -76,6 +75,7 @@ import net.mamby.health.ui.components.EmptyState
 import net.mamby.health.ui.components.ListCard
 import net.mamby.health.ui.components.rememberEditorState
 import net.mamby.health.ui.components.addTitleBarAction
+import net.mamby.health.ui.components.titleBarAction
 import net.mamby.health.ui.components.withPagePadding
 import net.mamby.health.ui.theme.LocalContactActionColors
 import net.mamby.health.ui.theme.UiTokens
@@ -149,16 +149,19 @@ fun ContactDetailScreen(
         title = stringResource(R.string.contact_title),
         onBack = onBack,
         actions = detailTitleBarActions(onEdit = onEdit) + listOf(
-            AndroidKitPageTextAction(
+            titleBarAction(
                 label = stringResource(R.string.common_share),
+                icon = R.drawable.ic_lucide_share_2,
                 onClick = {},
             ),
-            AndroidKitPageTextAction(
+            titleBarAction(
                 label = stringResource(R.string.common_pin),
+                icon = R.drawable.ic_lucide_pin,
                 onClick = {},
             ),
-            AndroidKitPageTextAction(
+            titleBarAction(
                 label = stringResource(R.string.common_delete),
+                icon = R.drawable.ic_lucide_trash_2,
                 onClick = {},
             ),
         ),
@@ -264,10 +267,13 @@ private fun contactEntryContextMenu(): AndroidKitActionFlyoutScope.() -> Unit {
     val copyLabel = stringResource(R.string.common_copy)
     val shareLabel = stringResource(R.string.common_share)
     val deleteLabel = stringResource(R.string.common_delete)
+    val copyIcon = ImageVector.vectorResource(R.drawable.ic_lucide_copy)
+    val shareIcon = ImageVector.vectorResource(R.drawable.ic_lucide_share_2)
+    val deleteIcon = ImageVector.vectorResource(R.drawable.ic_lucide_trash_2)
     return {
-        item(label = copyLabel, onClick = {})
-        item(label = shareLabel, onClick = {})
-        item(label = deleteLabel, onClick = {})
+        item(label = copyLabel, icon = copyIcon, onClick = {})
+        item(label = shareLabel, icon = shareIcon, onClick = {})
+        item(label = deleteLabel, icon = deleteIcon, onClick = {})
     }
 }
 
