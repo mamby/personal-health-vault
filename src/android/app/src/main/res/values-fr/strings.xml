@@ -631,4 +631,6 @@
     <string name="settings_third_party_licenses">Licences tierces</string>
     <string name="settings_version">Version</string>
     <string name="settings_open_source">Code ouvert</string>
+    <string name="settings_allow_screenshots">Autoriser les captures d’écran</string>
+    <string name="settings_allow_screenshots_description">Autorise les captures d’écran, l’enregistrement de l’écran et l’affichage sur des écrans non sécurisés lorsque l’application est déverrouillée. Les captures peuvent contenir des données de santé.</string>
 </resources>

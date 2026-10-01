@@ -1055,6 +1055,26 @@ class ComposeScreensInstrumentedTest {
     }
 
     @Test
+    fun settingsScreenshotToggleReflectsChanges() {
+        var settings by mutableStateOf(AppSettings())
+        composeRule.setContent {
+            HealthVaultTheme {
+                TestSettingsScreen(
+                    onBack = null,
+                    settings = settings,
+                    onAllowScreenshotsChange = { settings = settings.copy(allowScreenshots = it) },
+                )
+            }
+        }
+        val toggle = composeRule.onNodeWithText(
+            composeRule.activity.getString(R.string.settings_allow_screenshots),
+        )
+        toggle.performScrollTo().assertIsOff().performClick()
+        toggle.assertIsOn()
+        toggle.performClick().assertIsOff()
+    }
+
+    @Test
     fun settingsDoesNotExposeProfileManagement() {
         composeRule.setContent {
             HealthVaultTheme { TestSettingsScreen(onBack = null) }
@@ -1134,6 +1154,7 @@ class ComposeScreensInstrumentedTest {
     private fun TestSettingsScreen(
         onBack: (() -> Unit)?,
         settings: AppSettings = AppSettings(),
+        onAllowScreenshotsChange: (Boolean) -> Unit = {},
         onTimeoutChange: (Duration) -> Unit = {},
         onLockNow: () -> Unit = {},
     ) {
@@ -1150,6 +1171,7 @@ class ComposeScreensInstrumentedTest {
             onLocaleChanged = {},
             onAppLockChanged = {},
             onAppLockTimeoutChanged = onTimeoutChange,
+            onAllowScreenshotsChanged = onAllowScreenshotsChange,
             onLockNow = onLockNow,
             onConfigureBackup = { _, _, _ -> },
             onBackupNow = {},

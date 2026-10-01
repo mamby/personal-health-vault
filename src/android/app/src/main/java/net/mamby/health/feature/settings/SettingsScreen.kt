@@ -74,6 +74,7 @@ fun SettingsScreen(
     onOpacityChanged: (Float) -> Unit,
     onOpacityChangeFinished: () -> Unit,
     onLocaleChanged: (String) -> Unit,
+    onAllowScreenshotsChanged: (Boolean) -> Unit,
     onAppLockChanged: (Boolean) -> Unit,
     appLockChangePending: Boolean = false,
     onAppLockTimeoutChanged: (Duration) -> Unit,
@@ -184,6 +185,8 @@ fun SettingsScreen(
     val dataTitleText = stringResource(R.string.data_title)
     val deleteVaultText = stringResource(R.string.delete_vault)
     val generalTitle = stringResource(R.string.settings_general)
+    val allowScreenshotsLabel = stringResource(R.string.settings_allow_screenshots)
+    val allowScreenshotsDescription = stringResource(R.string.settings_allow_screenshots_description)
     val securityTitle = stringResource(R.string.settings_security)
     val settingsTitle = stringResource(R.string.settings_title)
     val about = appInfo()
@@ -223,6 +226,13 @@ fun SettingsScreen(
             ))
         }
         section(key = "security", label = securityTitle) {
+            toggle(
+                key = "allow-screenshots",
+                label = allowScreenshotsLabel,
+                supportingText = allowScreenshotsDescription,
+                checked = settings.allowScreenshots,
+                onCheckedChange = onAllowScreenshotsChanged,
+            )
             appLock(AndroidKitAppLockSetting(
                 checked = settings.appLockEnabled, onCheckedChange = onAppLockChanged,
                 enabled = !appLockChangePending,

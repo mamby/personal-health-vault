@@ -95,6 +95,10 @@ class DataStoreSettingsRepository @Inject constructor(
         dataStore.edit { it.remove(Keys.localeTag) }
     }
 
+    override suspend fun setAllowScreenshots(allowed: Boolean) {
+        dataStore.edit { it[Keys.allowScreenshots] = allowed }
+    }
+
     override suspend fun setAppLockEnabled(enabled: Boolean) {
         dataStore.edit { it[Keys.appLockEnabled] = enabled }
     }
@@ -174,6 +178,7 @@ class DataStoreSettingsRepository @Inject constructor(
             themeMode = preferences[Keys.themeMode]
                 ?.let { runCatching { ThemeMode.valueOf(it) }.getOrNull() }
                 ?: ThemeMode.SYSTEM,
+            allowScreenshots = preferences[Keys.allowScreenshots] ?: false,
             appLockEnabled = preferences[Keys.appLockEnabled] ?: false,
             appLockTimeout = Duration.ofMillis(
                 (preferences[Keys.appLockTimeoutMillis] ?: 0L).coerceAtLeast(0L),
@@ -208,6 +213,7 @@ class DataStoreSettingsRepository @Inject constructor(
         val floatingSurfaceOpacityLevel = floatPreferencesKey("floating_surface_opacity_level")
         val themeMode = stringPreferencesKey("theme_mode")
         val localeTag = stringPreferencesKey("locale_tag")
+        val allowScreenshots = booleanPreferencesKey("allow_screenshots")
         val appLockEnabled = booleanPreferencesKey("app_lock_enabled")
         val appLockTimeoutMillis = longPreferencesKey("app_lock_timeout_millis")
         val backupDestinationUri = stringPreferencesKey("backup_destination_uri")

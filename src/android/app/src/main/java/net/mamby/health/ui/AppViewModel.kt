@@ -505,6 +505,10 @@ class AppViewModel @Inject constructor(
         }
     }
 
+    fun setAllowScreenshots(allowed: Boolean) = launchOperation {
+        settingsRepository.setAllowScreenshots(allowed)
+    }
+
     fun setAppLockTimeout(timeout: Duration) = launchOperation {
         settingsRepository.setAppLockTimeout(timeout)
     }

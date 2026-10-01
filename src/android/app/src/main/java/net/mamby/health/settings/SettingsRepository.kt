@@ -14,6 +14,8 @@ interface SettingsRepository {
 
     suspend fun setLocaleTag(localeTag: String)
 
+    suspend fun setAllowScreenshots(allowed: Boolean)
+
     suspend fun setAppLockEnabled(enabled: Boolean)
 
     suspend fun setAppLockTimeout(timeout: Duration)

@@ -629,4 +629,6 @@
     <string name="settings_third_party_licenses">Third-party licenses</string>
     <string name="settings_version">Version</string>
     <string name="settings_open_source">Open source</string>
+    <string name="settings_allow_screenshots">Allow screenshots</string>
+    <string name="settings_allow_screenshots_description">Allows screenshots, screen recording, and display on non-secure screens while the app is unlocked. Captures may contain health data.</string>
 </resources>

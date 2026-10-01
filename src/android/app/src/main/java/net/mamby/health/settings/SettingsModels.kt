@@ -48,6 +48,7 @@ data class BackupStatus(
 data class AppSettings(
     val floatingSurfaceOpacityLevel: Float = DefaultFloatingSurfaceOpacityLevel,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    val allowScreenshots: Boolean = false,
     val appLockEnabled: Boolean = false,
     val appLockTimeout: Duration = Duration.ZERO,
     val backupConfiguration: BackupConfiguration? = null,

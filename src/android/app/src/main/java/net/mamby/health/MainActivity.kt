@@ -7,6 +7,10 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.launch
+import net.mamby.health.settings.SettingsRepository
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import net.mamby.health.data.VaultRepository
@@ -28,6 +32,9 @@ class MainActivity : AppCompatActivity() {
     @Inject
     lateinit var appLockManager: AppLockManager
 
+    @Inject
+    lateinit var settingsRepository: SettingsRepository
+
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
@@ -38,6 +45,14 @@ class MainActivity : AppCompatActivity() {
         }
         enableEdgeToEdge()
         AppLockWindowProtector.protect(window)
+        lifecycleScope.launch {
+            combine(settingsRepository.settings, appLockManager.state) { settings, lockState ->
+                settings.allowScreenshots &&
+                    (lockState is AppLockState.Disabled || lockState is AppLockState.Unlocked)
+            }.collect { allowed ->
+                AppLockWindowProtector.setScreenshotsAllowed(window, allowed)
+            }
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             window.isNavigationBarContrastEnforced = false
         }

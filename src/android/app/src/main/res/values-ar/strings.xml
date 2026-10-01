@@ -637,4 +637,6 @@
     <string name="settings_third_party_licenses">تراخيص الجهات الخارجية</string>
     <string name="settings_version">الإصدار</string>
     <string name="settings_open_source">مفتوح المصدر</string>
+    <string name="settings_allow_screenshots">السماح بلقطات الشاشة</string>
+    <string name="settings_allow_screenshots_description">يسمح بلقطات الشاشة وتسجيل الشاشة والعرض على شاشات غير آمنة عندما يكون التطبيق غير مقفل. قد تحتوي اللقطات على بيانات صحية.</string>
 </resources>

@@ -230,6 +230,10 @@ private class FakeSettingsRepository(initial: AppSettings) : SettingsRepository 
         // Locale selection is owned by AppCompat rather than AppSettings.
     }
 
+    override suspend fun setAllowScreenshots(allowed: Boolean) {
+        mutableSettings.update { it.copy(allowScreenshots = allowed) }
+    }
+
     override suspend fun setAppLockEnabled(enabled: Boolean) {
         mutableSettings.update { it.copy(appLockEnabled = enabled) }
     }
