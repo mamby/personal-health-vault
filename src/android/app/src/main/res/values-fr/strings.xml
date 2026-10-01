@@ -13,6 +13,9 @@
     <string name="common_save">Enregistrer</string>
     <string name="common_cancel">Annuler</string>
     <string name="common_delete">Supprimer</string>
+    <string name="common_copy">Copier</string>
+    <string name="common_share">Partager</string>
+    <string name="common_pin">Épingler</string>
     <string name="common_close">Fermer</string>
     <string name="common_retry">Réessayer</string>
     <string name="common_confirm">Confirmer</string>

@@ -12,6 +12,8 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.isPopup
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -20,6 +22,11 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.longClick
+import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.input.key.Key
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -278,6 +285,8 @@ class ContactsScreenInstrumentedTest {
     @Test
     fun everySavedContactValueIsAnIndependentAccessibleAction() {
         val invokedActions = mutableListOf<String>()
+        var edits = 0
+        var deletes = 0
         val contact = VaultContact(
             id = UUID.fromString("982c7e3f-68ce-43e8-b480-69d46b755a31"),
             name = "Samira Haddad",
@@ -293,8 +302,8 @@ class ContactsScreenInstrumentedTest {
                 ContactDetailScreen(
                     contact = contact,
                     onBack = null,
-                    onEdit = {},
-                    onDelete = {},
+                    onEdit = { edits++ },
+                    onDelete = { deletes++ },
                     onDialPhone = { invokedActions += "phone:$it" },
                     onComposeEmail = { invokedActions += "email:$it" },
                     onOpenWebsite = { invokedActions += "website:$it" },
@@ -328,6 +337,34 @@ class ContactsScreenInstrumentedTest {
         }
 
         composeRule.runOnIdle {
+            assertEquals(actions.map(Pair<String, String>::second), invokedActions)
+        }
+
+        // Each value, including read-only notes, has its own Kit context menu.
+        (actions.map { it.second.substringAfter(':') } + requireNotNull(contact.notes)).forEach { value ->
+            listOf(R.string.common_copy, R.string.common_share, R.string.common_delete).forEach { action ->
+                composeRule.onNodeWithText(value)
+                    .performScrollTo()
+                    .performTouchInput { longClick(Offset(2f, center.y)) }
+                    .assertIsSelected()
+                listOf(R.string.common_copy, R.string.common_share, R.string.common_delete).forEach { label ->
+                    composeRule.onNode(
+                        hasText(composeRule.activity.getString(label)) and hasAnyAncestor(isPopup()),
+                    ).assertIsDisplayed()
+                }
+                composeRule.onNode(
+                    hasText(composeRule.activity.getString(action)) and hasAnyAncestor(isPopup()),
+                ).performClick()
+                composeRule.onNodeWithText(value).assertIsNotSelected()
+                composeRule.onNodeWithText(composeRule.activity.getString(R.string.common_copy)).assertDoesNotExist()
+            }
+        }
+
+        composeRule.onNodeWithContentDescription(composeRule.activity.getString(R.string.common_edit))
+            .assertIsDisplayed().performClick()
+        composeRule.runOnIdle {
+            assertEquals(1, edits)
+            assertEquals(0, deletes)
             assertEquals(actions.map(Pair<String, String>::second), invokedActions)
         }
     }

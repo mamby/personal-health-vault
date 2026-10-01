@@ -13,6 +13,9 @@
     <string name="common_save">Save</string>
     <string name="common_cancel">Cancel</string>
     <string name="common_delete">Delete</string>
+    <string name="common_copy">Copy</string>
+    <string name="common_share">Share</string>
+    <string name="common_pin">Pin</string>
     <string name="common_close">Close</string>
     <string name="common_retry">Retry</string>
     <string name="common_confirm">Confirm</string>

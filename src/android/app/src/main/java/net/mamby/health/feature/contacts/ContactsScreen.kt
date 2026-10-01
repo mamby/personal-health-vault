@@ -43,11 +43,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.onClick
@@ -61,13 +63,13 @@ import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 import net.mamby.androidkit.compose.presentation.AndroidKitSectionCard
 import net.mamby.androidkit.compose.presentation.AndroidKitSectionCardEntry
-import net.mamby.androidkit.compose.presentation.AndroidKitSectionCardInteraction
+import net.mamby.androidkit.compose.action.AndroidKitActionFlyoutScope
 import net.mamby.androidkit.compose.layout.AndroidKitPage
+import net.mamby.androidkit.compose.layout.AndroidKitPageTextAction
 import net.mamby.androidkit.compose.theme.AndroidKitThemeTokens
 import net.mamby.health.R
 import net.mamby.health.core.model.VaultContact
 import net.mamby.health.ui.components.AppEditorScaffold
-import net.mamby.health.ui.components.ConfirmDeleteDialog
 import net.mamby.health.ui.components.detailTitleBarActions
 import net.mamby.health.ui.components.EditorFieldPair
 import net.mamby.health.ui.components.EmptyState
@@ -141,15 +143,24 @@ fun ContactDetailScreen(
     onOpenWebsite: (String) -> Unit,
     onSearchAddress: (String) -> Unit,
 ) {
-    var deleteVisible by remember(contact.id) { mutableStateOf(false) }
     val actionColors = LocalContactActionColors.current
 
     AndroidKitPage(
         title = stringResource(R.string.contact_title),
         onBack = onBack,
-        actions = detailTitleBarActions(
-            onEdit = onEdit,
-            onDelete = { deleteVisible = true },
+        actions = detailTitleBarActions(onEdit = onEdit) + listOf(
+            AndroidKitPageTextAction(
+                label = stringResource(R.string.common_share),
+                onClick = {},
+            ),
+            AndroidKitPageTextAction(
+                label = stringResource(R.string.common_pin),
+                onClick = {},
+            ),
+            AndroidKitPageTextAction(
+                label = stringResource(R.string.common_delete),
+                onClick = {},
+            ),
         ),
     ) { padding ->
         Column(
@@ -205,24 +216,19 @@ fun ContactDetailScreen(
                 contact.notes?.takeIf(String::isNotBlank)?.let { notes ->
                     AndroidKitSectionCard(
                         title = stringResource(R.string.common_notes),
-                        entries = listOf(AndroidKitSectionCardEntry.Multiline("notes", notes)),
+                        entries = listOf(
+                            AndroidKitSectionCardEntry.Multiline(
+                                key = "notes",
+                                text = notes,
+                                contextMenu = contactEntryContextMenu(),
+                            ),
+                        ),
                     )
                 }
             }
         }
     }
 
-    if (deleteVisible) {
-        ConfirmDeleteDialog(
-            title = stringResource(R.string.delete_saved_contact_title),
-            message = stringResource(R.string.delete_saved_contact_message),
-            onDismiss = { deleteVisible = false },
-            onConfirm = {
-                deleteVisible = false
-                onDelete()
-            },
-        )
-    }
 }
 
 @Composable
@@ -235,34 +241,34 @@ private fun ContactActionGroup(
     onClick: (String) -> Unit,
 ) {
     val nonBlankValues = values.filter(String::isNotBlank)
-    val dimensions = AndroidKitThemeTokens.dimensions
+    val contextMenu = contactEntryContextMenu()
     AndroidKitSectionCard(
         title = label,
         entries = nonBlankValues.mapIndexed { index, value ->
             val localizedActionLabel = actionLabel(value)
-            AndroidKitSectionCardEntry.Custom(
+            AndroidKitSectionCardEntry.Action(
                 key = "value:$value:${nonBlankValues.take(index).count { it == value }}",
-                interaction = AndroidKitSectionCardInteraction.Click(
-                    onClick = { onClick(value) },
-                    actionLabel = localizedActionLabel,
-                ),
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(dimensions.spaceMedium),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(value, modifier = Modifier.weight(1f))
-                    Icon(
-                        painter = painterResource(icon),
-                        contentDescription = null,
-                        modifier = Modifier.size(UiTokens.DetailActionIconSize),
-                        tint = iconTint,
-                    )
-                }
-            }
+                label = value,
+                actionLabel = localizedActionLabel,
+                onClick = { onClick(value) },
+                trailingIcon = ImageVector.vectorResource(icon),
+                trailingIconTint = iconTint,
+                contextMenu = contextMenu,
+            )
         },
     )
+}
+
+@Composable
+private fun contactEntryContextMenu(): AndroidKitActionFlyoutScope.() -> Unit {
+    val copyLabel = stringResource(R.string.common_copy)
+    val shareLabel = stringResource(R.string.common_share)
+    val deleteLabel = stringResource(R.string.common_delete)
+    return {
+        item(label = copyLabel, onClick = {})
+        item(label = shareLabel, onClick = {})
+        item(label = deleteLabel, onClick = {})
+    }
 }
 
 @Composable
