@@ -1,7 +1,6 @@
 package net.mamby.health.feature.contacts
 
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -12,7 +11,6 @@ import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -50,7 +48,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.onClick
@@ -64,6 +61,7 @@ import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 import net.mamby.androidkit.compose.presentation.AndroidKitSectionCard
 import net.mamby.androidkit.compose.presentation.AndroidKitSectionCardEntry
+import net.mamby.androidkit.compose.presentation.AndroidKitSectionCardInteraction
 import net.mamby.androidkit.compose.layout.AndroidKitPage
 import net.mamby.androidkit.compose.theme.AndroidKitThemeTokens
 import net.mamby.health.R
@@ -244,16 +242,13 @@ private fun ContactActionGroup(
             val localizedActionLabel = actionLabel(value)
             AndroidKitSectionCardEntry.Custom(
                 key = "value:$value:${nonBlankValues.take(index).count { it == value }}",
+                interaction = AndroidKitSectionCardInteraction.Click(
+                    onClick = { onClick(value) },
+                    actionLabel = localizedActionLabel,
+                ),
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(
-                            onClickLabel = localizedActionLabel,
-                            role = Role.Button,
-                            onClick = { onClick(value) },
-                        )
-                        .heightIn(min = dimensions.minimumTouchTarget),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(dimensions.spaceMedium),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
