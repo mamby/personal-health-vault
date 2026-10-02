@@ -18,7 +18,11 @@
     <string name="common_pin">Pin</string>
     <string name="common_unpin">Unpin</string>
     <string name="delete_vault_contact_message">This contact will be deleted from your contacts.</string>
-    <string name="delete_contact_value_title">Delete contact value?</string>
+    <string name="delete_contact_phone_title">Delete phone number?</string>
+    <string name="delete_contact_email_title">Delete email address?</string>
+    <string name="delete_contact_website_title">Delete website?</string>
+    <string name="delete_contact_address_title">Delete address?</string>
+    <string name="delete_contact_notes_title">Delete notes?</string>
     <string name="delete_contact_value_message">Delete “%1$s” from this contact?</string>
     <string name="common_close">Close</string>
     <string name="common_retry">Retry</string>

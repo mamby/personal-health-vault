@@ -20,7 +20,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
@@ -67,9 +67,11 @@ import java.util.UUID
 import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 import net.mamby.androidkit.compose.presentation.AndroidKitSectionCard
+import net.mamby.androidkit.compose.presentation.AndroidKitCard
 import net.mamby.androidkit.compose.presentation.AndroidKitSectionCardEntry
 import net.mamby.androidkit.compose.action.AndroidKitActionFlyoutScope
 import net.mamby.androidkit.compose.layout.AndroidKitPage
+import net.mamby.androidkit.compose.theme.AndroidKitDefaults
 import net.mamby.androidkit.compose.theme.AndroidKitThemeTokens
 import net.mamby.health.R
 import net.mamby.health.core.model.VaultContact
@@ -126,12 +128,25 @@ fun ContactsScreen(
                     )
                 }
             } else {
-                items(sortedContacts, key = VaultContact::id) { contact ->
-                    ListCard(
-                        title = contact.name,
-                        onClick = { onSelected(contact.id) },
-                    ) {
-                        contact.firstContactValue()?.let { Text(it) }
+                // Temporary presentation comparison; the first half uses Kit cards.
+                itemsIndexed(sortedContacts, key = { _, contact -> contact.id }) { index, contact ->
+                    if (index < (sortedContacts.size + 1) / 2) {
+                        AndroidKitCard(
+                            title = contact.name,
+                            supportingText = contact.firstContactValue(),
+                            style = AndroidKitThemeTokens.cardStyle.copy(
+                                shape = AndroidKitDefaults.shapes.extraLarge,
+                            ),
+                            onClick = { onSelected(contact.id) },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {}
+                    } else {
+                        ListCard(
+                            title = contact.name,
+                            onClick = { onSelected(contact.id) },
+                        ) {
+                            contact.firstContactValue()?.let { Text(it) }
+                        }
                     }
                 }
             }
@@ -205,6 +220,7 @@ fun ContactDetailScreen(
             titleBarAction(
                 label = stringResource(R.string.common_delete),
                 icon = R.drawable.ic_lucide_trash_2,
+                destructive = true,
                 enabled = !updating,
                 onClick = { deleting = true },
             ),
@@ -310,7 +326,15 @@ fun ContactDetailScreen(
     }
     pendingRemoval?.let { removal ->
         ConfirmDeleteDialog(
-            title = stringResource(R.string.delete_contact_value_title),
+            title = stringResource(
+                when (removal.field) {
+                    ContactField.Phone -> R.string.delete_contact_phone_title
+                    ContactField.Email -> R.string.delete_contact_email_title
+                    ContactField.Website -> R.string.delete_contact_website_title
+                    ContactField.Address -> R.string.delete_contact_address_title
+                    ContactField.Notes -> R.string.delete_contact_notes_title
+                },
+            ),
             message = stringResource(R.string.delete_contact_value_message, removal.value),
             onDismiss = { pendingRemoval = null },
             onConfirm = {
@@ -385,7 +409,7 @@ private fun contactEntryContextMenu(
     return {
         item(label = copyLabel, icon = copyIcon, onClick = onCopy)
         item(label = shareLabel, icon = shareIcon, onClick = onShare)
-        item(label = deleteLabel, icon = deleteIcon, enabled = enabled, onClick = onDelete)
+        item(label = deleteLabel, icon = deleteIcon, enabled = enabled, destructive = true, onClick = onDelete)
     }
 }
 

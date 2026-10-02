@@ -16,11 +16,13 @@ fun titleBarAction(
     @DrawableRes icon: Int,
     onClick: () -> Unit,
     enabled: Boolean = true,
+    destructive: Boolean = false,
 ): AndroidKitPageAction = AndroidKitPageAction(
     icon = ImageVector.vectorResource(icon),
     label = label,
     onClick = onClick,
     enabled = enabled,
+    destructive = destructive,
 )
 
 @Composable
@@ -53,6 +55,7 @@ fun detailTitleBarActions(
                 label = stringResource(R.string.common_delete),
                 icon = R.drawable.ic_lucide_trash_2,
                 onClick = delete,
+                destructive = true,
             ),
         )
     }

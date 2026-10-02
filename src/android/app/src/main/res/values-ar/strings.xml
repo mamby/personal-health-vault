@@ -18,7 +18,11 @@
     <string name="common_pin">تثبيت</string>
     <string name="common_unpin">إلغاء التثبيت</string>
     <string name="delete_vault_contact_message">ستُحذف جهة الاتصال هذه من جهات اتصالك.</string>
-    <string name="delete_contact_value_title">حذف قيمة من جهة الاتصال؟</string>
+    <string name="delete_contact_phone_title">حذف رقم الهاتف؟</string>
+    <string name="delete_contact_email_title">حذف عنوان البريد الإلكتروني؟</string>
+    <string name="delete_contact_website_title">حذف الموقع الإلكتروني؟</string>
+    <string name="delete_contact_address_title">حذف العنوان؟</string>
+    <string name="delete_contact_notes_title">حذف الملاحظات؟</string>
     <string name="delete_contact_value_message">حذف «%1$s» من جهة الاتصال هذه؟</string>
     <string name="common_close">إغلاق</string>
     <string name="common_retry">إعادة المحاولة</string>

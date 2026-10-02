@@ -357,7 +357,15 @@ class ContactsScreenInstrumentedTest {
         }
 
         // Each value, including read-only notes, has its own Kit context menu.
-        (actions.map { it.second.substringAfter(':') } + requireNotNull(contact.notes)).forEach { value ->
+        val deletionTitles = listOf(
+            R.string.delete_contact_phone_title,
+            R.string.delete_contact_phone_title,
+            R.string.delete_contact_email_title,
+            R.string.delete_contact_website_title,
+            R.string.delete_contact_address_title,
+            R.string.delete_contact_notes_title,
+        )
+        (actions.map { it.second.substringAfter(':') } + requireNotNull(contact.notes)).forEachIndexed { index, value ->
             listOf(R.string.common_copy, R.string.common_share, R.string.common_delete).forEach { action ->
                 composeRule.onNodeWithText(value)
                     .performScrollTo()
@@ -379,7 +387,7 @@ class ContactsScreenInstrumentedTest {
                     }
                 }
                 if (action == R.string.common_delete) {
-                    composeRule.onNodeWithText(composeRule.activity.getString(R.string.delete_contact_value_title))
+                    composeRule.onNodeWithText(composeRule.activity.getString(deletionTitles[index]))
                         .assertIsDisplayed()
                     composeRule.runOnIdle { assertEquals(emptyList<VaultContact>(), updates) }
                     composeRule.onNodeWithText(composeRule.activity.getString(R.string.common_cancel)).performClick()
