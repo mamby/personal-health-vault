@@ -71,7 +71,6 @@ import net.mamby.androidkit.compose.presentation.AndroidKitCard
 import net.mamby.androidkit.compose.presentation.AndroidKitSectionCardEntry
 import net.mamby.androidkit.compose.action.AndroidKitActionFlyoutScope
 import net.mamby.androidkit.compose.layout.AndroidKitPage
-import net.mamby.androidkit.compose.theme.AndroidKitDefaults
 import net.mamby.androidkit.compose.theme.AndroidKitThemeTokens
 import net.mamby.health.R
 import net.mamby.health.core.model.VaultContact
@@ -134,9 +133,6 @@ fun ContactsScreen(
                         AndroidKitCard(
                             title = contact.name,
                             supportingText = contact.firstContactValue(),
-                            style = AndroidKitThemeTokens.cardStyle.copy(
-                                shape = AndroidKitDefaults.shapes.extraLarge,
-                            ),
                             onClick = { onSelected(contact.id) },
                             modifier = Modifier.fillMaxWidth(),
                         ) {}

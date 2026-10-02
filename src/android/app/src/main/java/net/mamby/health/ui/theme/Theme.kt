@@ -1,7 +1,7 @@
 package net.mamby.health.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
@@ -11,12 +11,11 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import java.util.UUID
-import net.mamby.androidkit.compose.theme.AndroidKitCardStyle
-import net.mamby.androidkit.compose.theme.AndroidKitDimensions
-import net.mamby.androidkit.compose.theme.AndroidKitFloatingActionButtonStyle
-import net.mamby.androidkit.compose.theme.AndroidKitFloatingSurfaceStyle
+import net.mamby.androidkit.compose.theme.AndroidKitCardColors
+import net.mamby.androidkit.compose.theme.AndroidKitComponentColors
+import net.mamby.androidkit.compose.theme.AndroidKitFloatingActionButtonColors
+import net.mamby.androidkit.compose.theme.AndroidKitFloatingSurfaceColors
 import net.mamby.androidkit.compose.theme.AndroidKitTheme
 import net.mamby.androidkit.compose.theme.AndroidKitThemeDefinition
 
@@ -215,13 +214,6 @@ fun HealthVaultTheme(
     val colorScheme = if (darkTheme) DarkColors else LightColors
     val typography = Typography()
     val shapes = Shapes()
-    val dimensions = AndroidKitDimensions(
-        spaceSmall = UiTokens.CompactSpacing,
-        spaceMedium = UiTokens.ContentSpacing,
-        spaceLarge = UiTokens.SectionSpacing,
-        screenPadding = UiTokens.ScreenPadding,
-        floatingActionButtonSize = UiTokens.FloatingAddButtonSize,
-    )
 
     CompositionLocalProvider(
         LocalContactActionColors provides if (darkTheme) DarkContactActionColors else LightContactActionColors,
@@ -232,35 +224,26 @@ fun HealthVaultTheme(
             definition = AndroidKitThemeDefinition(
                 colorScheme = colorScheme,
                 isDark = darkTheme,
-                typography = typography,
-                shapes = shapes,
-                dimensions = dimensions,
                 floatingSurfaceOpacityLevel = floatingSurfaceOpacityLevel,
-                cardStyle = AndroidKitCardStyle(
-                    containerColor = colorScheme.surface,
-                    contentColor = colorScheme.onSurface,
-                    borderColor = colorScheme.outline,
-                    borderWidth = 1.dp,
-                    shape = shapes.medium,
-                ),
-                floatingActionButtonStyle = AndroidKitFloatingActionButtonStyle(
-                    surfaceStyle = AndroidKitFloatingSurfaceStyle(
-                        containerColor = colorScheme.tertiary,
-                        contentColor = colorScheme.onTertiary,
-                        borderColor = Color.Transparent,
-                        borderWidth = 0.dp,
-                        shadowColor = colorScheme.scrim.copy(
-                            alpha = UiTokens.FloatingAddButtonShadowAlpha,
-                        ),
-                        buttonShadowRadius = UiTokens.FloatingNavigationShadowRadius *
-                            UiTokens.FloatingIconButtonShadowScale,
-                        buttonShadowOffsetY = UiTokens.FloatingAddButtonShadowOffsetY,
+                componentColors = AndroidKitComponentColors(
+                    card = AndroidKitCardColors(
+                        containerColor = colorScheme.surface,
+                        contentColor = colorScheme.onSurface,
+                        borderColor = colorScheme.outline,
                     ),
-                    shape = CircleShape,
-                    visualSize = dimensions.floatingActionButtonSize,
+                    floatingActionButton = AndroidKitFloatingActionButtonColors(
+                        surfaceColors = AndroidKitFloatingSurfaceColors(
+                            containerColor = colorScheme.tertiary,
+                            contentColor = colorScheme.onTertiary,
+                            borderColor = Color.Transparent,
+                            shadowColor = colorScheme.scrim.copy(
+                                alpha = UiTokens.FloatingAddButtonShadowAlpha,
+                            ),
+                        ),
+                    ),
                 ),
             ),
-            content = content,
+            content = { MaterialTheme(colorScheme = colorScheme, typography = typography, shapes = shapes, content = content) },
         )
     }
 }

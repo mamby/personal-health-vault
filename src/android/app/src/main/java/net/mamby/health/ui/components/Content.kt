@@ -27,8 +27,6 @@ fun MetricCard(
 ) {
     AndroidKitCard(
         modifier = modifier,
-        contentPadding = PaddingValues(UiTokens.ScreenPadding),
-        contentSpacing = UiTokens.CompactSpacing,
     ) {
         Text(value, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
         Text(label, style = MaterialTheme.typography.bodyMedium)
@@ -44,11 +42,6 @@ fun SectionCard(
     AndroidKitCard(
         modifier = modifier.fillMaxWidth(),
         title = title,
-        style = AndroidKitThemeTokens.cardStyle.copy(
-            titleTextStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-        ),
-        contentPadding = PaddingValues(UiTokens.ScreenPadding),
-        contentSpacing = UiTokens.ContentSpacing,
     ) {
         content()
     }
@@ -65,12 +58,9 @@ fun ListCard(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
         title = title,
-        style = AndroidKitThemeTokens.cardStyle.copy(
+        colors = AndroidKitThemeTokens.cardColors.copy(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
-            titleTextStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
         ),
-        contentPadding = PaddingValues(UiTokens.ScreenPadding),
-        contentSpacing = UiTokens.ContentSpacing,
     ) {
         content()
     }
