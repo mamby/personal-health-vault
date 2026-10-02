@@ -19,7 +19,7 @@
     <string name="common_unpin">Unpin</string>
     <string name="delete_vault_contact_message">This contact will be deleted from your contacts.</string>
     <string name="delete_contact_phone_title">Delete phone number?</string>
-    <string name="delete_contact_email_title">Delete email address?</string>
+    <string name="delete_contact_email_title">Delete email?</string>
     <string name="delete_contact_website_title">Delete website?</string>
     <string name="delete_contact_address_title">Delete address?</string>
     <string name="delete_contact_notes_title">Delete notes?</string>
@@ -546,10 +546,10 @@
     <string name="no_contacts_body">Add people, organizations, and services you may want to contact.</string>
     <string name="contact_details">Contact details</string>
     <string name="contact_phone_numbers">Phone numbers</string>
-    <string name="contact_email_addresses">Email addresses</string>
+    <string name="contact_email_addresses">Emails</string>
     <string name="contact_websites">Websites</string>
     <string name="contact_addresses">Addresses</string>
-    <string name="contact_email_address">Email address</string>
+    <string name="contact_email_address">Email</string>
     <string name="contact_website">Website</string>
     <string name="contact_address">Address</string>
     <string name="delete_saved_contact_title">Delete contact?</string>

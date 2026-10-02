@@ -19,7 +19,7 @@
     <string name="common_unpin">Désépingler</string>
     <string name="delete_vault_contact_message">Ce contact sera supprimé de vos contacts.</string>
     <string name="delete_contact_phone_title">Supprimer le numéro de téléphone ?</string>
-    <string name="delete_contact_email_title">Supprimer l’adresse e-mail ?</string>
+    <string name="delete_contact_email_title">Supprimer l’e-mail ?</string>
     <string name="delete_contact_website_title">Supprimer le site web ?</string>
     <string name="delete_contact_address_title">Supprimer l’adresse ?</string>
     <string name="delete_contact_notes_title">Supprimer les notes ?</string>
@@ -548,10 +548,10 @@
     <string name="no_contacts_body">Ajoutez les personnes, organismes et services que vous pourriez vouloir contacter.</string>
     <string name="contact_details">Coordonnées</string>
     <string name="contact_phone_numbers">Numéros de téléphone</string>
-    <string name="contact_email_addresses">Adresses e-mail</string>
+    <string name="contact_email_addresses">E-mails</string>
     <string name="contact_websites">Sites web</string>
     <string name="contact_addresses">Adresses</string>
-    <string name="contact_email_address">Adresse e-mail</string>
+    <string name="contact_email_address">E-mail</string>
     <string name="contact_website">Site web</string>
     <string name="contact_address">Adresse</string>
     <string name="delete_saved_contact_title">Supprimer le contact ?</string>
