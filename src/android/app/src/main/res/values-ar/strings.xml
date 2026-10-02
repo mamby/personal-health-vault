@@ -16,6 +16,10 @@
     <string name="common_copy">نسخ</string>
     <string name="common_share">مشاركة</string>
     <string name="common_pin">تثبيت</string>
+    <string name="common_unpin">إلغاء التثبيت</string>
+    <string name="delete_vault_contact_message">ستُحذف جهة الاتصال هذه من جهات اتصالك.</string>
+    <string name="delete_contact_value_title">حذف قيمة من جهة الاتصال؟</string>
+    <string name="delete_contact_value_message">حذف «%1$s» من جهة الاتصال هذه؟</string>
     <string name="common_close">إغلاق</string>
     <string name="common_retry">إعادة المحاولة</string>
     <string name="common_confirm">تأكيد</string>

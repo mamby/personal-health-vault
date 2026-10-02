@@ -294,6 +294,8 @@ class HealthRecordsComposeInstrumentedTest {
                     onComposeEmail = { invoked += "email:$it" },
                     onOpenWebsite = { invoked += "website:$it" },
                     onSearchAddress = { invoked += "address:$it" },
+                    onShare = {},
+                    onUpdate = { _, complete -> complete(true) },
                 )
             }
         }

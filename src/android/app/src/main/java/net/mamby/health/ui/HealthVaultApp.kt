@@ -1124,8 +1124,24 @@ private fun VaultNavigation(
                                 )
                             },
                             onDelete = {
-                                viewModel.deleteContact(contact.id)
-                                navigation.goBack()
+                                viewModel.deleteContact(contact.id) { deleted ->
+                                    if (deleted && navigation.currentBackStack.lastOrNull() == route) {
+                                        navigation.goBack()
+                                    }
+                                }
+                            },
+                            onUpdate = viewModel::upsertContact,
+                            onShare = { text ->
+                                context.launchContactAction(
+                                    Intent.createChooser(
+                                        Intent(Intent.ACTION_SEND).apply {
+                                            type = "text/plain"
+                                            putExtra(Intent.EXTRA_TEXT, text)
+                                        },
+                                        null,
+                                    ),
+                                    viewModel::showContactActionUnavailable,
+                                )
                             },
                             onDialPhone = { context.launchContactAction(
                                 Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", it, null)),

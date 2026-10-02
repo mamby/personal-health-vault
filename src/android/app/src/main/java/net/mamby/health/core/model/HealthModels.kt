@@ -185,6 +185,7 @@ data class VaultContact(
     val addresses: List<String> = emptyList(),
     val notes: String? = null,
     val updatedAt: Instant,
+    val isPinned: Boolean = false,
 )
 
 @Serializable

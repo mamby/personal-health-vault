@@ -1,8 +1,16 @@
 package net.mamby.health.ui
 
+import android.content.ClipboardManager
+import android.content.ClipDescription
+import androidx.compose.runtime.mutableStateOf
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.DeviceConfigurationOverride
+import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.ForcedSize
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
@@ -36,6 +44,7 @@ import net.mamby.health.R
 import net.mamby.health.core.model.VaultContact
 import net.mamby.health.feature.contacts.ContactDetailScreen
 import net.mamby.health.feature.contacts.ContactEditorScreen
+import net.mamby.health.feature.contacts.ContactsScreen
 import net.mamby.health.ui.theme.HealthVaultTheme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -287,6 +296,8 @@ class ContactsScreenInstrumentedTest {
         val invokedActions = mutableListOf<String>()
         var edits = 0
         var deletes = 0
+        val sharedValues = mutableListOf<String>()
+        val updates = mutableListOf<VaultContact>()
         val contact = VaultContact(
             id = UUID.fromString("982c7e3f-68ce-43e8-b480-69d46b755a31"),
             name = "Samira Haddad",
@@ -304,6 +315,11 @@ class ContactsScreenInstrumentedTest {
                     onBack = null,
                     onEdit = { edits++ },
                     onDelete = { deletes++ },
+                    onShare = { sharedValues += it },
+                    onUpdate = { updated, complete ->
+                        updates += updated
+                        complete(true)
+                    },
                     onDialPhone = { invokedActions += "phone:$it" },
                     onComposeEmail = { invokedActions += "email:$it" },
                     onOpenWebsite = { invokedActions += "website:$it" },
@@ -355,6 +371,19 @@ class ContactsScreenInstrumentedTest {
                 composeRule.onNode(
                     hasText(composeRule.activity.getString(action)) and hasAnyAncestor(isPopup()),
                 ).performClick()
+                if (action == R.string.common_copy) {
+                    composeRule.runOnIdle {
+                        val clipboard = composeRule.activity.getSystemService(ClipboardManager::class.java)
+                        assertEquals(value, clipboard.primaryClip?.getItemAt(0)?.text?.toString())
+                        assertEquals(true, clipboard.primaryClipDescription?.extras?.getBoolean(ClipDescription.EXTRA_IS_SENSITIVE))
+                    }
+                }
+                if (action == R.string.common_delete) {
+                    composeRule.onNodeWithText(composeRule.activity.getString(R.string.delete_contact_value_title))
+                        .assertIsDisplayed()
+                    composeRule.runOnIdle { assertEquals(emptyList<VaultContact>(), updates) }
+                    composeRule.onNodeWithText(composeRule.activity.getString(R.string.common_cancel)).performClick()
+                }
                 composeRule.onNodeWithText(value).assertIsNotSelected()
                 composeRule.onNodeWithText(composeRule.activity.getString(R.string.common_copy)).assertDoesNotExist()
             }
@@ -365,7 +394,107 @@ class ContactsScreenInstrumentedTest {
         composeRule.runOnIdle {
             assertEquals(1, edits)
             assertEquals(0, deletes)
+            assertEquals(actions.map { it.second.substringAfter(':') } + requireNotNull(contact.notes), sharedValues)
+            assertEquals(emptyList<VaultContact>(), updates)
             assertEquals(actions.map(Pair<String, String>::second), invokedActions)
+        }
+    }
+
+    @Test
+    fun contactActionsPinShareAndConfirmDeletion() {
+        val original = VaultContact(
+            id = UUID.randomUUID(),
+            name = "Samira",
+            phoneNumbers = listOf("111", "222"),
+            notes = "Family doctor",
+            updatedAt = Instant.EPOCH,
+        )
+        val contact = mutableStateOf(original)
+        val shared = mutableListOf<String>()
+        var deletes = 0
+        composeRule.setContent {
+            HealthVaultTheme {
+                ContactDetailScreen(
+                    contact = contact.value,
+                    onBack = null,
+                    onEdit = {},
+                    onDelete = { deletes++ },
+                    onDialPhone = {},
+                    onComposeEmail = {},
+                    onOpenWebsite = {},
+                    onSearchAddress = {},
+                    onShare = { shared += it },
+                    onUpdate = { updated, complete -> contact.value = updated; complete(true) },
+                )
+            }
+        }
+        clickTitleAction(R.string.common_pin)
+        composeRule.runOnIdle { assertEquals(original.copy(isPinned = true), contact.value) }
+        clickTitleAction(R.string.common_share)
+        composeRule.runOnIdle {
+            assertEquals(1, shared.size)
+            org.junit.Assert.assertTrue(shared.single().contains("111\n222"))
+            org.junit.Assert.assertTrue(shared.single().contains("Family doctor"))
+        }
+        clickTitleAction(R.string.common_unpin)
+        composeRule.runOnIdle { assertEquals(original, contact.value) }
+
+        composeRule.onNodeWithText("111").performScrollTo()
+            .performTouchInput { longClick(Offset(2f, center.y)) }
+        composeRule.onNode(hasText(composeRule.activity.getString(R.string.common_delete)) and hasAnyAncestor(isPopup()))
+            .performClick()
+        composeRule.runOnIdle { assertEquals(original, contact.value) }
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.common_delete)).performClick()
+        composeRule.onNodeWithText("111").assertDoesNotExist()
+        composeRule.onNodeWithText("222").assertIsDisplayed()
+        composeRule.runOnIdle { assertEquals(original.copy(phoneNumbers = listOf("222")), contact.value) }
+
+        composeRule.onNodeWithText("Family doctor").performScrollTo()
+            .performTouchInput { longClick(Offset(2f, center.y)) }
+        composeRule.onNode(hasText(composeRule.activity.getString(R.string.common_delete)) and hasAnyAncestor(isPopup()))
+            .performClick()
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.common_delete)).performClick()
+        composeRule.onNodeWithText("Family doctor").assertDoesNotExist()
+        composeRule.runOnIdle { assertEquals(null, contact.value.notes) }
+
+        clickTitleAction(R.string.common_delete)
+        composeRule.runOnIdle { assertEquals(0, deletes) }
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.common_cancel)).performClick()
+        composeRule.runOnIdle { assertEquals(0, deletes) }
+        clickTitleAction(R.string.common_delete)
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.common_delete)).performClick()
+        composeRule.runOnIdle { assertEquals(1, deletes) }
+    }
+
+    @Test
+    @OptIn(ExperimentalTestApi::class)
+    fun pinnedContactsLeadParentListAndUnpinRestoresAlphabeticalOrder() {
+        val alice = VaultContact(UUID.randomUUID(), "Alice", updatedAt = Instant.EPOCH)
+        val zoe = VaultContact(UUID.randomUUID(), "Zoe", updatedAt = Instant.EPOCH, isPinned = true)
+        val contacts = mutableStateOf(listOf(alice, zoe))
+        composeRule.setContent {
+            DeviceConfigurationOverride(DeviceConfigurationOverride.ForcedSize(DpSize(320.dp, 640.dp))) {
+                HealthVaultTheme {
+                    ContactsScreen(contacts = contacts.value, onAdd = {}, onSelected = {})
+                }
+            }
+        }
+        fun top(name: String) = composeRule.onNodeWithText(name, useUnmergedTree = true)
+            .fetchSemanticsNode().boundsInRoot.top
+        org.junit.Assert.assertTrue(top("Zoe") < top("Alice"))
+        composeRule.runOnIdle { contacts.value = listOf(alice, zoe.copy(isPinned = false)) }
+        org.junit.Assert.assertTrue(top("Alice") < top("Zoe"))
+    }
+
+    private fun clickTitleAction(labelId: Int) {
+        val label = composeRule.activity.getString(labelId)
+        val direct = composeRule.onAllNodes(androidx.compose.ui.test.hasContentDescription(label))
+        if (direct.fetchSemanticsNodes().isNotEmpty()) {
+            composeRule.onNodeWithContentDescription(label).performClick()
+        } else {
+            val more = composeRule.activity.getString(net.mamby.androidkit.compose.R.string.androidkit_compose_more)
+            composeRule.onNodeWithContentDescription(more).performClick()
+            composeRule.onNode(hasText(label) and hasAnyAncestor(isPopup())).performClick()
         }
     }
 }

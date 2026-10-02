@@ -1,5 +1,8 @@
 package net.mamby.health.feature.contacts
 
+import android.content.ClipData
+import android.content.ClipDescription
+import android.os.PersistableBundle
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -46,6 +49,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -72,6 +77,7 @@ import net.mamby.health.ui.components.AppEditorScaffold
 import net.mamby.health.ui.components.detailTitleBarActions
 import net.mamby.health.ui.components.EditorFieldPair
 import net.mamby.health.ui.components.EmptyState
+import net.mamby.health.ui.components.ConfirmDeleteDialog
 import net.mamby.health.ui.components.ListCard
 import net.mamby.health.ui.components.rememberEditorState
 import net.mamby.health.ui.components.addTitleBarAction
@@ -88,7 +94,8 @@ fun ContactsScreen(
 ) {
     val sortedContacts = remember(contacts) {
         contacts.sortedWith(
-            compareBy<VaultContact> { it.name.lowercase(Locale.getDefault()) }
+            compareByDescending<VaultContact> { it.isPinned }
+                .thenBy { it.name.lowercase(Locale.getDefault()) }
                 .thenBy(VaultContact::id),
         )
     }
@@ -142,8 +149,40 @@ fun ContactDetailScreen(
     onComposeEmail: (String) -> Unit,
     onOpenWebsite: (String) -> Unit,
     onSearchAddress: (String) -> Unit,
+    onShare: (String) -> Unit,
+    onUpdate: (VaultContact, (Boolean) -> Unit) -> Unit,
 ) {
     val actionColors = LocalContactActionColors.current
+    val clipboard = LocalClipboard.current
+    val scope = rememberCoroutineScope()
+    val clipboardLabel = stringResource(R.string.contact_title)
+    var deleting by remember(contact.id) { mutableStateOf(false) }
+    var pendingRemoval by remember(contact.id) { mutableStateOf<ContactFieldRemoval?>(null) }
+    var updating by remember(contact.id) { mutableStateOf(false) }
+    val copyValue: (String) -> Unit = { value ->
+        scope.launch {
+            val clipData = ClipData.newPlainText(clipboardLabel, value).apply {
+                description.extras = PersistableBundle().apply {
+                    putBoolean(ClipDescription.EXTRA_IS_SENSITIVE, true)
+                }
+            }
+            clipboard.setClipEntry(ClipEntry(clipData))
+        }
+    }
+    val shareText = buildList {
+        add(contact.name)
+        listOf(
+            stringResource(R.string.contact_phone_numbers) to contact.phoneNumbers,
+            stringResource(R.string.contact_email_addresses) to contact.emailAddresses,
+            stringResource(R.string.contact_websites) to contact.websites,
+            stringResource(R.string.contact_addresses) to contact.addresses,
+            stringResource(R.string.common_notes) to listOfNotNull(contact.notes),
+        ).forEach { (label, values) ->
+            values.filter(String::isNotBlank).takeIf { it.isNotEmpty() }?.let {
+                add("$label:\n${it.joinToString("\n")}")
+            }
+        }
+    }.joinToString("\n\n")
 
     AndroidKitPage(
         title = stringResource(R.string.contact_title),
@@ -152,17 +191,22 @@ fun ContactDetailScreen(
             titleBarAction(
                 label = stringResource(R.string.common_share),
                 icon = R.drawable.ic_lucide_share_2,
-                onClick = {},
+                onClick = { onShare(shareText) },
             ),
             titleBarAction(
-                label = stringResource(R.string.common_pin),
+                label = stringResource(if (contact.isPinned) R.string.common_unpin else R.string.common_pin),
                 icon = R.drawable.ic_lucide_pin,
-                onClick = {},
+                enabled = !updating,
+                onClick = {
+                    updating = true
+                    onUpdate(contact.copy(isPinned = !contact.isPinned)) { updating = false }
+                },
             ),
             titleBarAction(
                 label = stringResource(R.string.common_delete),
                 icon = R.drawable.ic_lucide_trash_2,
-                onClick = {},
+                enabled = !updating,
+                onClick = { deleting = true },
             ),
         ),
     ) { padding ->
@@ -191,6 +235,10 @@ fun ContactDetailScreen(
                     iconTint = actionColors.phone,
                     actionLabel = { stringResource(R.string.contact_phone_action, it) },
                     onClick = onDialPhone,
+                    onCopy = copyValue,
+                    onShare = onShare,
+                    onDelete = { pendingRemoval = ContactFieldRemoval(ContactField.Phone, it) },
+                    enabled = !updating,
                 )
                 ContactActionGroup(
                     label = stringResource(R.string.contact_email_addresses),
@@ -199,6 +247,10 @@ fun ContactDetailScreen(
                     iconTint = actionColors.email,
                     actionLabel = { stringResource(R.string.contact_email_action, it) },
                     onClick = onComposeEmail,
+                    onCopy = copyValue,
+                    onShare = onShare,
+                    onDelete = { pendingRemoval = ContactFieldRemoval(ContactField.Email, it) },
+                    enabled = !updating,
                 )
                 ContactActionGroup(
                     label = stringResource(R.string.contact_websites),
@@ -207,6 +259,10 @@ fun ContactDetailScreen(
                     iconTint = actionColors.website,
                     actionLabel = { stringResource(R.string.contact_website_action, it) },
                     onClick = onOpenWebsite,
+                    onCopy = copyValue,
+                    onShare = onShare,
+                    onDelete = { pendingRemoval = ContactFieldRemoval(ContactField.Website, it) },
+                    enabled = !updating,
                 )
                 ContactActionGroup(
                     label = stringResource(R.string.contact_addresses),
@@ -215,6 +271,10 @@ fun ContactDetailScreen(
                     iconTint = actionColors.address,
                     actionLabel = { stringResource(R.string.contact_address_action, it) },
                     onClick = onSearchAddress,
+                    onCopy = copyValue,
+                    onShare = onShare,
+                    onDelete = { pendingRemoval = ContactFieldRemoval(ContactField.Address, it) },
+                    enabled = !updating,
                 )
                 contact.notes?.takeIf(String::isNotBlank)?.let { notes ->
                     AndroidKitSectionCard(
@@ -223,7 +283,12 @@ fun ContactDetailScreen(
                             AndroidKitSectionCardEntry.Multiline(
                                 key = "notes",
                                 text = notes,
-                                contextMenu = contactEntryContextMenu(),
+                                contextMenu = contactEntryContextMenu(
+                                    onCopy = { copyValue(notes) },
+                                    onShare = { onShare(notes) },
+                                    onDelete = { pendingRemoval = ContactFieldRemoval(ContactField.Notes, notes) },
+                                    enabled = !updating,
+                                ),
                             ),
                         ),
                     )
@@ -232,7 +297,41 @@ fun ContactDetailScreen(
         }
     }
 
+    if (deleting) {
+        ConfirmDeleteDialog(
+            title = stringResource(R.string.delete_contact_title),
+            message = stringResource(R.string.delete_vault_contact_message),
+            onDismiss = { deleting = false },
+            onConfirm = {
+                deleting = false
+                onDelete()
+            },
+        )
+    }
+    pendingRemoval?.let { removal ->
+        ConfirmDeleteDialog(
+            title = stringResource(R.string.delete_contact_value_title),
+            message = stringResource(R.string.delete_contact_value_message, removal.value),
+            onDismiss = { pendingRemoval = null },
+            onConfirm = {
+                pendingRemoval = null
+                updating = true
+                val updated = when (removal.field) {
+                    ContactField.Phone -> contact.copy(phoneNumbers = contact.phoneNumbers - removal.value)
+                    ContactField.Email -> contact.copy(emailAddresses = contact.emailAddresses - removal.value)
+                    ContactField.Website -> contact.copy(websites = contact.websites - removal.value)
+                    ContactField.Address -> contact.copy(addresses = contact.addresses - removal.value)
+                    ContactField.Notes -> contact.copy(notes = null)
+                }
+                onUpdate(updated) { updating = false }
+            },
+        )
+    }
 }
+
+private enum class ContactField { Phone, Email, Website, Address, Notes }
+
+private data class ContactFieldRemoval(val field: ContactField, val value: String)
 
 @Composable
 private fun ContactActionGroup(
@@ -242,9 +341,12 @@ private fun ContactActionGroup(
     iconTint: Color,
     actionLabel: @Composable (String) -> String,
     onClick: (String) -> Unit,
+    onCopy: (String) -> Unit,
+    onShare: (String) -> Unit,
+    onDelete: (String) -> Unit,
+    enabled: Boolean,
 ) {
     val nonBlankValues = values.filter(String::isNotBlank)
-    val contextMenu = contactEntryContextMenu()
     AndroidKitSectionCard(
         title = label,
         entries = nonBlankValues.mapIndexed { index, value ->
@@ -256,14 +358,24 @@ private fun ContactActionGroup(
                 onClick = { onClick(value) },
                 trailingIcon = ImageVector.vectorResource(icon),
                 trailingIconTint = iconTint,
-                contextMenu = contextMenu,
+                contextMenu = contactEntryContextMenu(
+                    onCopy = { onCopy(value) },
+                    onShare = { onShare(value) },
+                    onDelete = { onDelete(value) },
+                    enabled = enabled,
+                ),
             )
         },
     )
 }
 
 @Composable
-private fun contactEntryContextMenu(): AndroidKitActionFlyoutScope.() -> Unit {
+private fun contactEntryContextMenu(
+    onCopy: () -> Unit,
+    onShare: () -> Unit,
+    onDelete: () -> Unit,
+    enabled: Boolean,
+): AndroidKitActionFlyoutScope.() -> Unit {
     val copyLabel = stringResource(R.string.common_copy)
     val shareLabel = stringResource(R.string.common_share)
     val deleteLabel = stringResource(R.string.common_delete)
@@ -271,9 +383,9 @@ private fun contactEntryContextMenu(): AndroidKitActionFlyoutScope.() -> Unit {
     val shareIcon = ImageVector.vectorResource(R.drawable.ic_lucide_share_2)
     val deleteIcon = ImageVector.vectorResource(R.drawable.ic_lucide_trash_2)
     return {
-        item(label = copyLabel, icon = copyIcon, onClick = {})
-        item(label = shareLabel, icon = shareIcon, onClick = {})
-        item(label = deleteLabel, icon = deleteIcon, onClick = {})
+        item(label = copyLabel, icon = copyIcon, onClick = onCopy)
+        item(label = shareLabel, icon = shareIcon, onClick = onShare)
+        item(label = deleteLabel, icon = deleteIcon, enabled = enabled, onClick = onDelete)
     }
 }
 
@@ -317,6 +429,7 @@ fun ContactEditorScreen(
                     addresses = draft.addresses.normalizedValues(),
                     notes = draft.notes.trim().ifBlank { null },
                     updatedAt = draft.updatedAt,
+                    isPinned = existing?.isPinned ?: false,
                 ),
             ) { saved ->
                 state.isSaving = false

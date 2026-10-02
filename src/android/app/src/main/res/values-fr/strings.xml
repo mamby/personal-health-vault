@@ -16,6 +16,10 @@
     <string name="common_copy">Copier</string>
     <string name="common_share">Partager</string>
     <string name="common_pin">Épingler</string>
+    <string name="common_unpin">Désépingler</string>
+    <string name="delete_vault_contact_message">Ce contact sera supprimé de vos contacts.</string>
+    <string name="delete_contact_value_title">Supprimer cette valeur du contact ?</string>
+    <string name="delete_contact_value_message">Supprimer « %1$s » de ce contact ?</string>
     <string name="common_close">Fermer</string>
     <string name="common_retry">Réessayer</string>
     <string name="common_confirm">Confirmer</string>

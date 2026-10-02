@@ -87,6 +87,7 @@ class HealthVaultSerializationTest {
                     name = "Dr Martin",
                     phoneNumbers = listOf("+33 1 23 45 67 89"),
                     updatedAt = now,
+                    isPinned = true,
                 ),
             ),
             updatedAt = now,
@@ -98,6 +99,8 @@ class HealthVaultSerializationTest {
         assertEquals(1, decoded.sourceVersion)
         assertEquals(vault, decoded.vault)
         assertEquals(listOf(documentId, measurementId), decoded.vault.profiles.first().index().map(VaultItem::id))
+        val withoutPin = encoded.toString(Charsets.UTF_8).replace(",\"isPinned\":true", "").toByteArray(Charsets.UTF_8)
+        assertFalse(VaultCodec.decode(withoutPin).vault.contacts.single().isPinned)
         assertEquals(listOf(contactId), decoded.vault.contactIndex().map(VaultItem::id))
         val text = encoded.decodeToString()
         assertFalse(text.contains("\"summary\""))
