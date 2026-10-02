@@ -386,6 +386,8 @@ private fun RecoverySettings(
         entryProvider = entryProvider {
             entry<SettingsRoute> {
                 SettingsScreen(
+                    settingsStore = viewModel.kitSettingsStore,
+                    onSettingsStorageFailure = viewModel::settingsStorageFailed,
                     onAppInfo = { backStack.add(AppInfoRoute) },
                     settings = settings,
                     zoneId = viewModel.zoneId,
@@ -410,7 +412,9 @@ private fun RecoverySettings(
                     onDeleteVault = viewModel::deleteVault,
                 )
             }
-            entry<AppInfoRoute> { AppInfoScreen(onBack = goBack) }
+            entry<AppInfoRoute> {
+                AppInfoScreen(goBack, viewModel.kitSettingsStore, viewModel::settingsStorageFailed)
+            }
         },
     )
 }
@@ -1561,9 +1565,13 @@ private fun VaultNavigation(
                             )
                         }
                     }
-                    entry<AppInfoRoute> { AppInfoScreen(onBack = navigation::goBack) }
+                    entry<AppInfoRoute> {
+                        AppInfoScreen(navigation::goBack, viewModel.kitSettingsStore, viewModel::settingsStorageFailed)
+                    }
                     entry<SettingsRoute> {
                         SettingsScreen(
+                            settingsStore = viewModel.kitSettingsStore,
+                            onSettingsStorageFailure = viewModel::settingsStorageFailed,
                             onAppInfo = { navigation.navigate(AppInfoRoute) },
                             settings = settings,
                             zoneId = zoneId,

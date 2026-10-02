@@ -64,6 +64,7 @@ import net.mamby.health.security.UnlockResult
 import net.mamby.health.settings.AppSettings
 import net.mamby.health.settings.SettingsRepository
 import net.mamby.health.settings.ThemeMode
+import net.mamby.androidkit.compose.form.AndroidKitSettingsStore
 
 data class UiNotice(@StringRes val resourceId: Int)
 
@@ -74,6 +75,7 @@ class AppViewModel @Inject constructor(
     private val documentImporter: DocumentImporter,
     private val documentPreviewer: SecureDocumentPreviewer,
     private val settingsRepository: SettingsRepository,
+    val kitSettingsStore: AndroidKitSettingsStore,
     private val backupRepository: BackupRepository,
     private val reminderScheduler: ReminderScheduler,
     private val reminderSource: ReminderSource,
@@ -109,6 +111,10 @@ class AppViewModel @Inject constructor(
 
     fun clearNotice() {
         mutableNotice.value = null
+    }
+
+    fun settingsStorageFailed(@Suppress("UNUSED_PARAMETER") failure: Throwable) {
+        mutableNotice.value = UiNotice(R.string.error_generic)
     }
 
     fun showUnavailable() {
@@ -584,6 +590,7 @@ class AppViewModel @Inject constructor(
             backupRepository.clearConfiguration()
             reminderScheduler.cancelAll()
             context.getSystemService(NotificationManager::class.java)?.cancelAll()
+            kitSettingsStore.clearSearchHistories()
             vaultRepository.deleteVault()
             mutableRestorePreview.value = null
             mutablePreview.value = DocumentPreviewState.Idle

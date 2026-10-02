@@ -3,12 +3,7 @@ package net.mamby.health.di
 import android.content.ContentResolver
 import android.content.Context
 import androidx.datastore.core.DataStore
-import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
-import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.preferencesOf
-import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.work.WorkManager
 import dagger.Binds
 import dagger.Module
@@ -112,13 +107,8 @@ object PlatformModule {
     @Provides
     @Singleton
     fun provideSettingsDataStore(
-        @ApplicationContext context: Context,
-    ): DataStore<Preferences> = PreferenceDataStoreFactory.create(
-        corruptionHandler = ReplaceFileCorruptionHandler {
-            preferencesOf(booleanPreferencesKey("app_lock_enabled") to true)
-        },
-        produceFile = { context.preferencesDataStoreFile("settings.preferences_pb") },
-    )
+        store: net.mamby.androidkit.compose.form.AndroidKitSettingsStore,
+    ): DataStore<Preferences> = store.preferences
 
     @Provides
     @Singleton

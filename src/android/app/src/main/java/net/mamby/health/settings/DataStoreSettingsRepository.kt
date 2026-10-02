@@ -54,11 +54,14 @@ class DataStoreSettingsRepository @Inject constructor(
 
     init {
         applicationScope.launch {
-            val legacyLocaleTag = dataStore.data.first()[Keys.localeTag]
+            val preferences = try { dataStore.data.first() } catch (_: IOException) { return@launch }
+            val savedLocaleTag = preferences[stringPreferencesKey("selected_language_tag")]
+                ?.let { if (it == "system") "" else it }
+            val legacyLocaleTag = (savedLocaleTag ?: preferences[Keys.localeTag])
                 ?.takeIf { it in AppSettings.supportedLocaleTags }
             if (legacyLocaleTag != null) {
                 withContext(mainDispatcher) {
-                    if (AppCompatDelegate.getApplicationLocales().isEmpty) {
+                    if (savedLocaleTag != null || AppCompatDelegate.getApplicationLocales().isEmpty) {
                         AppCompatDelegate.setApplicationLocales(
                             LocaleListCompat.forLanguageTags(legacyLocaleTag),
                         )
@@ -105,7 +108,7 @@ class DataStoreSettingsRepository @Inject constructor(
 
     override suspend fun setAppLockTimeout(timeout: Duration) {
         require(!timeout.isNegative) { "App-lock timeout must not be negative" }
-        dataStore.edit { it[Keys.appLockTimeoutMillis] = timeout.toMillis() }
+        dataStore.edit { it[Keys.appLockTimeout] = timeout.toString() }
     }
 
     override suspend fun setBackupConfiguration(configuration: BackupConfiguration) {
@@ -180,9 +183,7 @@ class DataStoreSettingsRepository @Inject constructor(
                 ?: ThemeMode.SYSTEM,
             allowScreenshots = preferences[Keys.allowScreenshots] ?: false,
             appLockEnabled = preferences[Keys.appLockEnabled] ?: false,
-            appLockTimeout = Duration.ofMillis(
-                (preferences[Keys.appLockTimeoutMillis] ?: 0L).coerceAtLeast(0L),
-            ),
+            appLockTimeout = preferences[Keys.appLockTimeout]?.let(Duration::parse) ?: Duration.ZERO,
             backupConfiguration = backupConfiguration,
             backupStatus = BackupStatus(
                 state = if (destination != null && backupConfiguration == null) {
@@ -215,7 +216,7 @@ class DataStoreSettingsRepository @Inject constructor(
         val localeTag = stringPreferencesKey("locale_tag")
         val allowScreenshots = booleanPreferencesKey("allow_screenshots")
         val appLockEnabled = booleanPreferencesKey("app_lock_enabled")
-        val appLockTimeoutMillis = longPreferencesKey("app_lock_timeout_millis")
+        val appLockTimeout = stringPreferencesKey("app_lock_timeout")
         val backupDestinationUri = stringPreferencesKey("backup_destination_uri")
         val backupScheduled = booleanPreferencesKey("backup_scheduled")
         val backupSalt = stringPreferencesKey("backup_salt")

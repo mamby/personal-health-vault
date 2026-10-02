@@ -8,7 +8,6 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -47,6 +46,10 @@ import net.mamby.health.settings.ThemeMode
 import net.mamby.androidkit.compose.form.AndroidKitSettingsPage
 import net.mamby.androidkit.compose.form.AndroidKitSettingsSearchConfiguration
 import net.mamby.androidkit.compose.form.AndroidKitSettingsSearchPage
+import net.mamby.androidkit.compose.form.AndroidKitSettingsStore
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.floatPreferencesKey
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import net.mamby.androidkit.compose.form.AndroidKitSettingsSelection
 import net.mamby.androidkit.compose.form.AndroidKitSettingsOption
 import net.mamby.androidkit.compose.form.AndroidKitSettingsSystemOption
@@ -64,6 +67,8 @@ import net.mamby.health.ui.theme.UiTokens
 
 @Composable
 fun SettingsScreen(
+    settingsStore: AndroidKitSettingsStore,
+    onSettingsStorageFailure: (Throwable) -> Unit,
     onAppInfo: () -> Unit,
     settings: AppSettings,
     zoneId: ZoneId,
@@ -101,17 +106,8 @@ fun SettingsScreen(
     BackHandler(enabled = searchVisible) {
         updateSearchVisibility(false)
     }
-    var recentQueries by rememberSaveable { mutableStateOf(emptyList<String>()) }
-    var recentQueriesVisible by rememberSaveable { mutableStateOf(true) }
-    val configuration = LocalConfiguration.current
+    val searchHistory = remember(settingsStore) { settingsStore.searchHistory("settings") }
     val context = LocalContext.current
-    val selectedLocaleTag = remember(configuration) {
-        AppCompatDelegate.getApplicationLocales()
-            .get(0)
-            ?.language
-            ?.takeIf { it in AppSettings.supportedLocaleTags }
-            ?: AppSettings.DEFAULT_LOCALE_TAG
-    }
     val systemLocaleTag = androidx.core.app.LocaleManagerCompat.getSystemLocales(context)
         .get(0)
         ?.language
@@ -186,18 +182,16 @@ fun SettingsScreen(
     val about = appInfo()
     val catalog = androidKitSettingsCatalog(search = AndroidKitSettingsSearchConfiguration(
         onOpenSearch = { updateSearchVisibility(true) },
-        recentQueries = recentQueries,
-        onRecentQueriesChange = { recentQueries = it },
-        recentQueriesVisible = recentQueriesVisible,
-        onRecentQueriesVisibleChange = { recentQueriesVisible = it },
+        history = searchHistory,
+        onStorageFailure = onSettingsStorageFailure,
     )) {
         main(key = MainSettingsPageKey, title = settingsTitle) {
         message?.let { section(key = "message") { info(key = "message", label = it) } }
         section(key = "language") {
             language(AndroidKitLanguageSetting(
                 selection = AndroidKitSettingsSelection(
+                    persistence = settingsStore.setting(stringPreferencesKey("selected_language_tag"), "system"),
                     options = languageOptions.map { (tag, label) -> AndroidKitSettingsOption(tag, label) },
-                    selectedId = selectedLocaleTag.ifBlank { "system" },
                     onSelected = { tag -> onLocaleChanged(tag.takeUnless { it == "system" }.orEmpty()) },
                     systemOption = AndroidKitSettingsSystemOption(
                         id = "system",
@@ -208,8 +202,8 @@ fun SettingsScreen(
         }
         section(key = "appearance", label = appearanceTitle) {
             theme(AndroidKitSettingsSelection(
+                persistence = settingsStore.setting(stringPreferencesKey("theme_mode"), ThemeMode.SYSTEM.name),
                 options = themeOptions.map { (mode, label) -> AndroidKitSettingsOption(mode.name, label) },
-                selectedId = settings.themeMode.name,
                 onSelected = { onThemeChanged(ThemeMode.valueOf(it)) },
                 systemOption = AndroidKitSettingsSystemOption(
                     id = ThemeMode.SYSTEM.name,
@@ -217,19 +211,19 @@ fun SettingsScreen(
                 ),
             ))
             transparency(AndroidKitFloatingOpacitySetting(
-                value = settings.floatingSurfaceOpacityLevel,
+                persistence = settingsStore.setting(floatPreferencesKey("floating_surface_opacity_level"), net.mamby.health.settings.DefaultFloatingSurfaceOpacityLevel),
                 onValueChange = onOpacityChanged, onValueChangeFinished = onOpacityChangeFinished,
             ))
         }
         section(key = "security", label = securityTitle) {
             appLock(AndroidKitAppLockSetting(
-                checked = settings.appLockEnabled, onCheckedChange = onAppLockChanged,
+                persistence = settingsStore.setting(booleanPreferencesKey("app_lock_enabled"), false), onCheckedChange = onAppLockChanged,
                 enabled = !appLockChangePending,
                 timeout = AndroidKitAppLockTimeoutSetting(
+                    persistence = settingsStore.setting(stringPreferencesKey("app_lock_timeout"), Duration.ZERO.toString()),
                     options = lockTimeouts.map { (duration, label) ->
                         AndroidKitSettingsOption(duration.toString(), label)
                     },
-                    selectedId = settings.appLockTimeout.toString(),
                     onSelected = { id -> onAppLockTimeoutChanged(lockTimeouts.first { it.first.toString() == id }.first) },
                 ),
                 onLockNow = onLockNow,
@@ -238,7 +232,7 @@ fun SettingsScreen(
                 key = "allow-screenshots",
                 label = allowScreenshotsLabel,
                 supportingText = allowScreenshotsDescription,
-                checked = settings.allowScreenshots,
+                persistence = settingsStore.setting(booleanPreferencesKey("allow_screenshots"), false),
                 onCheckedChange = onAllowScreenshotsChanged,
             )
         }
@@ -359,10 +353,13 @@ fun SettingsScreen(
 }
 
 @Composable
-fun AppInfoScreen(onBack: () -> Unit) {
+fun AppInfoScreen(
+    onBack: () -> Unit,
+    settingsStore: AndroidKitSettingsStore,
+    onSettingsStorageFailure: (Throwable) -> Unit,
+) {
     var searchVisible by rememberSaveable { mutableStateOf(false) }
-    var recentQueries by rememberSaveable { mutableStateOf(emptyList<String>()) }
-    var recentQueriesVisible by rememberSaveable { mutableStateOf(true) }
+    val searchHistory = remember(settingsStore) { settingsStore.searchHistory("about") }
     BackHandler(enabled = searchVisible) {
         searchVisible = false
     }
@@ -370,10 +367,8 @@ fun AppInfoScreen(onBack: () -> Unit) {
     val about = appInfo()
     val catalog = androidKitSettingsCatalog(search = AndroidKitSettingsSearchConfiguration(
         onOpenSearch = { searchVisible = true },
-        recentQueries = recentQueries,
-        onRecentQueriesChange = { recentQueries = it },
-        recentQueriesVisible = recentQueriesVisible,
-        onRecentQueriesVisibleChange = { recentQueriesVisible = it },
+        history = searchHistory,
+        onStorageFailure = onSettingsStorageFailure,
     )) {
         main(key = MainSettingsPageKey, title = title)
         about(key = AboutSettingsPageKey, content = about, onOpen = {})

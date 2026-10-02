@@ -1038,7 +1038,11 @@ class ComposeScreensInstrumentedTest {
                 )
             }
         }
-        composeRule.onNodeWithText(composeRule.activity.getString(R.string.app_lock_timeout))
+        val timeoutLabel = composeRule.activity.getString(
+            net.mamby.androidkit.compose.R.string.androidkit_compose_lock_after_leaving_app,
+        )
+        composeRule.waitUntilAtLeastOneExists(hasText(timeoutLabel))
+        composeRule.onNodeWithText(timeoutLabel)
             .performScrollTo().performClick()
         composeRule.onNode(isDialog()).assertExists()
         composeRule.onNode(
@@ -1048,7 +1052,7 @@ class ComposeScreensInstrumentedTest {
         val fiveMinutes = composeRule.activity.getString(R.string.timeout_five_minutes)
         composeRule.onNodeWithText(fiveMinutes).performClick()
         composeRule.onNode(isDialog()).assertDoesNotExist()
-        composeRule.runOnIdle { assertEquals(Duration.ofMinutes(5), settings.appLockTimeout) }
+        composeRule.waitUntil { settings.appLockTimeout == Duration.ofMinutes(5) }
         composeRule.onNodeWithText(fiveMinutes).assertIsDisplayed()
         composeRule.onNodeWithText(composeRule.activity.getString(R.string.lock_now))
             .performScrollTo().performClick()
@@ -1159,7 +1163,26 @@ class ComposeScreensInstrumentedTest {
         onTimeoutChange: (Duration) -> Unit = {},
         onLockNow: () -> Unit = {},
     ) {
+        val context = androidx.compose.ui.platform.LocalContext.current
+        val store = androidx.compose.runtime.remember {
+            net.mamby.androidkit.compose.form.AndroidKitSettingsStore.open(
+                context, "settings-test-${java.util.UUID.randomUUID()}",
+                net.mamby.androidkit.compose.form.AndroidKitSettingsStorageProtection.Plaintext,
+                listOf(object : net.mamby.androidkit.compose.form.AndroidKitSettingsStoreMigration {
+                    override val id = "fixture"
+                    override suspend fun readHistories(): Map<String, net.mamby.androidkit.compose.form.AndroidKitSearchHistorySnapshot> = emptyMap()
+                    override suspend fun cleanUp() = Unit
+                    override suspend fun readPreferences() = androidx.datastore.preferences.core.preferencesOf(
+                        androidx.datastore.preferences.core.booleanPreferencesKey("app_lock_enabled") to settings.appLockEnabled,
+                        androidx.datastore.preferences.core.booleanPreferencesKey("allow_screenshots") to settings.allowScreenshots,
+                        androidx.datastore.preferences.core.stringPreferencesKey("app_lock_timeout") to settings.appLockTimeout.toString(),
+                    )
+                }),
+            )
+        }
         SettingsScreen(
+            settingsStore = store,
+            onSettingsStorageFailure = { throw it },
             onAppInfo = {},
             settings = settings,
             zoneId = ZoneOffset.UTC,
