@@ -107,6 +107,7 @@ import net.mamby.health.feature.profiles.ProfileOwnerGateScreen
 import net.mamby.health.feature.schedule.ScheduleScreen
 import net.mamby.health.feature.schedule.ScheduleDetailScreen
 import net.mamby.health.feature.schedule.ScheduleEditorScreen
+import net.mamby.health.feature.settings.SettingsScope
 import net.mamby.health.feature.settings.SettingsScreen
 import net.mamby.health.feature.settings.AppInfoScreen
 import net.mamby.health.feature.summary.SummaryScreen
@@ -374,49 +375,52 @@ private fun RecoverySettings(
     onLocaleChanged: (String) -> Unit,
     onBack: () -> Unit,
 ) {
+    var settingsSearchVisible by rememberSaveable { mutableStateOf(false) }
     val backStack = rememberNavBackStack(SettingsRoute)
     val goBack: () -> Unit = {
         if (backStack.size > 1) backStack.removeLastOrNull() else onBack()
     }
     BackHandler(onBack = goBack)
-    AndroidKitNavDisplay(
-        backStack = backStack,
-        onBack = goBack,
-        entryDecorators = listOf(rememberSaveableStateHolderNavEntryDecorator()),
-        entryProvider = entryProvider {
-            entry<SettingsRoute> {
-                SettingsScreen(
-                    settingsStore = viewModel.kitSettingsStore,
-                    onSettingsStorageFailure = viewModel::settingsStorageFailed,
-                    onAppInfo = { backStack.add(AppInfoRoute) },
-                    settings = settings,
-                    zoneId = viewModel.zoneId,
-                    restorePreview = restorePreview,
-                    message = notice?.let { stringResource(it.resourceId) },
-                    onBack = onBack,
-                    onThemeChanged = viewModel::setThemeMode,
-                    onOpacityChanged = viewModel::previewFloatingSurfaceOpacityLevel,
-                    onOpacityChangeFinished = { viewModel.saveFloatingSurfaceOpacityLevel() },
-                    onLocaleChanged = onLocaleChanged,
-                    onAppLockChanged = { enabled -> activity?.let { viewModel.setAppLockEnabled(it, enabled) } },
-                    appLockChangePending = viewModel.appLockChangePending.collectAsStateWithLifecycle().value,
-                    onAppLockTimeoutChanged = viewModel::setAppLockTimeout,
-                    onAllowScreenshotsChanged = viewModel::setAllowScreenshots,
-                    onLockNow = viewModel::lockNow,
-                    onConfigureBackup = viewModel::configureBackup,
-                    onBackupNow = viewModel::backupNow,
-                    onClearBackup = viewModel::clearBackup,
-                    onPrepareRestore = viewModel::prepareRestore,
-                    onCommitRestore = viewModel::commitRestore,
-                    onDiscardRestore = viewModel::discardRestore,
-                    onDeleteVault = viewModel::deleteVault,
-                )
-            }
-            entry<AppInfoRoute> {
-                AppInfoScreen(goBack, viewModel.kitSettingsStore, viewModel::settingsStorageFailed)
-            }
-        },
-    )
+    SettingsScope(
+        settingsStore = viewModel.kitSettingsStore,
+        onSettingsStorageFailure = viewModel::settingsStorageFailed,
+        onAppInfo = { backStack.add(AppInfoRoute) },
+        settings = settings,
+        zoneId = viewModel.zoneId,
+        restorePreview = restorePreview,
+        message = notice?.let { stringResource(it.resourceId) },
+        onThemeChanged = viewModel::setThemeMode,
+        onOpacityChanged = viewModel::previewFloatingSurfaceOpacityLevel,
+        onOpacityChangeFinished = { viewModel.saveFloatingSurfaceOpacityLevel() },
+        onLocaleChanged = onLocaleChanged,
+        onAppLockChanged = { enabled -> activity?.let { viewModel.setAppLockEnabled(it, enabled) } },
+        appLockChangePending = viewModel.appLockChangePending.collectAsStateWithLifecycle().value,
+        onAppLockTimeoutChanged = viewModel::setAppLockTimeout,
+        onAllowScreenshotsChanged = viewModel::setAllowScreenshots,
+        onLockNow = viewModel::lockNow,
+        onConfigureBackup = viewModel::configureBackup,
+        onBackupNow = viewModel::backupNow,
+        onClearBackup = viewModel::clearBackup,
+        onPrepareRestore = viewModel::prepareRestore,
+        onCommitRestore = viewModel::commitRestore,
+        onDiscardRestore = viewModel::discardRestore,
+        onDeleteVault = viewModel::deleteVault,
+        onOpenSearch = { settingsSearchVisible = true },
+    ) {
+        AndroidKitNavDisplay(
+            backStack = backStack,
+            onBack = goBack,
+            entryDecorators = listOf(rememberSaveableStateHolderNavEntryDecorator()),
+            entryProvider = entryProvider {
+                entry<SettingsRoute> {
+                    SettingsScreen(onBack = onBack, searchVisible = settingsSearchVisible, onCloseSearch = { settingsSearchVisible = false })
+                }
+                entry<AppInfoRoute> {
+                    AppInfoScreen(goBack, settingsSearchVisible, onCloseSearch = { settingsSearchVisible = false })
+                }
+            },
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalMaterial3Api::class)
@@ -605,7 +609,44 @@ private fun VaultNavigation(
         ) {
             Box(Modifier.fillMaxSize()) {
                 CompositionLocalProvider(LocalProfileDisplayLabels provides profileLabels) {
-                    if (editorSessionValid) AndroidKitNavDisplay(
+                    if (editorSessionValid) SettingsScope(
+                        settingsStore = viewModel.kitSettingsStore,
+                        onSettingsStorageFailure = viewModel::settingsStorageFailed,
+                        onAppInfo = { navigation.navigate(AppInfoRoute) },
+                        settings = settings,
+                        zoneId = zoneId,
+                        restorePreview = restorePreview,
+                        message = null,
+                        onThemeChanged = viewModel::setThemeMode,
+                        onOpacityChanged = viewModel::previewFloatingSurfaceOpacityLevel,
+                        onOpacityChangeFinished = { viewModel.saveFloatingSurfaceOpacityLevel() },
+                        onLocaleChanged = onLocaleChanged,
+                        onAppLockChanged = { enabled ->
+                            activity?.let { viewModel.setAppLockEnabled(it, enabled) }
+                        },
+                        appLockChangePending = viewModel.appLockChangePending.collectAsStateWithLifecycle().value,
+                        onAppLockTimeoutChanged = viewModel::setAppLockTimeout,
+                        onAllowScreenshotsChanged = viewModel::setAllowScreenshots,
+                        onLockNow = viewModel::lockNow,
+                        onConfigureBackup = viewModel::configureBackup,
+                        onBackupNow = viewModel::backupNow,
+                        onClearBackup = viewModel::clearBackup,
+                        onPrepareRestore = viewModel::prepareRestore,
+                        onCommitRestore = { restore, confirmed ->
+                            viewModel.commitRestore(restore, confirmed)
+                            navigation.resetTo()
+                        },
+                        onDiscardRestore = viewModel::discardRestore,
+                        onDeleteVault = {
+                            viewModel.deleteVault()
+                            navigation.resetTo()
+                        },
+                        restoreRequestId = restoreRequestId,
+                        onRestoreRequestHandled = { restoreRequestId = 0L },
+                        onOpenSearch = { settingsSearchVisible = true },
+                        active = navigation.selectedDestination == TopLevelDestination.Settings,
+                    ) {
+                        AndroidKitNavDisplay(
                         backStack = navigation.currentBackStack,
                         onBack = navigation::goBack,
                         sceneStrategies = listOf(listDetailStrategy),
@@ -1566,46 +1607,10 @@ private fun VaultNavigation(
                         }
                     }
                     entry<AppInfoRoute> {
-                        AppInfoScreen(navigation::goBack, viewModel.kitSettingsStore, viewModel::settingsStorageFailed)
+                        AppInfoScreen(navigation::goBack, settingsSearchVisible, onCloseSearch = { settingsSearchVisible = false })
                     }
                     entry<SettingsRoute> {
-                        SettingsScreen(
-                            settingsStore = viewModel.kitSettingsStore,
-                            onSettingsStorageFailure = viewModel::settingsStorageFailed,
-                            onAppInfo = { navigation.navigate(AppInfoRoute) },
-                            settings = settings,
-                            zoneId = zoneId,
-                            restorePreview = restorePreview,
-                            message = null,
-                            onThemeChanged = viewModel::setThemeMode,
-                            onOpacityChanged = viewModel::previewFloatingSurfaceOpacityLevel,
-                            onOpacityChangeFinished = { viewModel.saveFloatingSurfaceOpacityLevel() },
-                            onLocaleChanged = onLocaleChanged,
-                            onAppLockChanged = { enabled ->
-                                activity?.let { viewModel.setAppLockEnabled(it, enabled) }
-                            },
-                            appLockChangePending = viewModel.appLockChangePending.collectAsStateWithLifecycle().value,
-                            onAppLockTimeoutChanged = viewModel::setAppLockTimeout,
-                            onAllowScreenshotsChanged = viewModel::setAllowScreenshots,
-                            onLockNow = viewModel::lockNow,
-                            onConfigureBackup = viewModel::configureBackup,
-                            onBackupNow = viewModel::backupNow,
-                            onClearBackup = viewModel::clearBackup,
-                            onPrepareRestore = viewModel::prepareRestore,
-                            onCommitRestore = { restore, confirmed ->
-                                viewModel.commitRestore(restore, confirmed)
-                                navigation.resetTo()
-                            },
-                            onDiscardRestore = viewModel::discardRestore,
-                            onDeleteVault = {
-                                viewModel.deleteVault()
-                                navigation.resetTo()
-                            },
-                            restoreRequestId = restoreRequestId,
-                            onRestoreRequestHandled = { restoreRequestId = 0L },
-                            controlledSearchVisible = settingsSearchVisible,
-                            onControlledSearchVisibleChange = { settingsSearchVisible = it },
-                        )
+                        SettingsScreen(searchVisible = settingsSearchVisible, onCloseSearch = { settingsSearchVisible = false })
                     }
                     entry<ManageProfilesRoute> {
                         ProfileManagementScreen(
@@ -1621,6 +1626,7 @@ private fun VaultNavigation(
                     }
                         },
                     )
+                    }
                 }
                 if (message != null) {
                     Snackbar(

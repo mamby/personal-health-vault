@@ -44,7 +44,7 @@ import net.mamby.health.settings.AppSettings
 import net.mamby.health.settings.BackupState
 import net.mamby.health.settings.ThemeMode
 import net.mamby.androidkit.compose.form.AndroidKitSettingsPage
-import net.mamby.androidkit.compose.form.AndroidKitSettingsSearchConfiguration
+import net.mamby.androidkit.compose.form.AndroidKitSettings
 import net.mamby.androidkit.compose.form.AndroidKitSettingsSearchPage
 import net.mamby.androidkit.compose.form.AndroidKitSettingsStore
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -66,7 +66,7 @@ import net.mamby.health.ui.format.localizedDateTime
 import net.mamby.health.ui.theme.UiTokens
 
 @Composable
-fun SettingsScreen(
+fun SettingsScope(
     settingsStore: AndroidKitSettingsStore,
     onSettingsStorageFailure: (Throwable) -> Unit,
     onAppInfo: () -> Unit,
@@ -74,7 +74,6 @@ fun SettingsScreen(
     zoneId: ZoneId,
     restorePreview: RestorePreview?,
     message: String?,
-    onBack: (() -> Unit)? = null,
     onThemeChanged: (ThemeMode) -> Unit,
     onOpacityChanged: (Float) -> Unit,
     onOpacityChangeFinished: () -> Unit,
@@ -93,20 +92,10 @@ fun SettingsScreen(
     onDeleteVault: () -> Unit,
     restoreRequestId: Long = 0L,
     onRestoreRequestHandled: () -> Unit = {},
-    controlledSearchVisible: Boolean? = null,
-    onControlledSearchVisibleChange: ((Boolean) -> Unit)? = null,
+    onOpenSearch: () -> Unit,
+    active: Boolean = true,
+    content: @Composable () -> Unit,
 ) {
-    require((controlledSearchVisible == null) == (onControlledSearchVisibleChange == null))
-    var localSearchVisible by rememberSaveable { mutableStateOf(false) }
-    val searchVisible = controlledSearchVisible ?: localSearchVisible
-    fun updateSearchVisibility(visible: Boolean) {
-        val onChange = onControlledSearchVisibleChange
-        if (onChange == null) localSearchVisible = visible else onChange(visible)
-    }
-    BackHandler(enabled = searchVisible) {
-        updateSearchVisibility(false)
-    }
-    val searchHistory = remember(settingsStore) { settingsStore.searchHistory("settings") }
     val context = LocalContext.current
     val systemLocaleTag = androidx.core.app.LocaleManagerCompat.getSystemLocales(context)
         .get(0)
@@ -130,8 +119,8 @@ fun SettingsScreen(
         restoreUri = uri
     }
 
-    LaunchedEffect(restoreRequestId) {
-        if (restoreRequestId > 0L) {
+    LaunchedEffect(restoreRequestId, active) {
+        if (active && restoreRequestId > 0L) {
             onRestoreRequestHandled()
             openBackup.launch(arrayOf(PortableBackupFormat.MIME_TYPE, "application/octet-stream", "application/zip"))
         }
@@ -180,11 +169,7 @@ fun SettingsScreen(
     val securityTitle = stringResource(R.string.settings_security)
     val settingsTitle = stringResource(R.string.settings_title)
     val about = appInfo()
-    val catalog = androidKitSettingsCatalog(search = AndroidKitSettingsSearchConfiguration(
-        onOpenSearch = { updateSearchVisibility(true) },
-        history = searchHistory,
-        onStorageFailure = onSettingsStorageFailure,
-    )) {
+    val catalog = androidKitSettingsCatalog {
         main(key = MainSettingsPageKey, title = settingsTitle) {
         message?.let { section(key = "message") { info(key = "message", label = it) } }
         section(key = "language") {
@@ -270,11 +255,8 @@ fun SettingsScreen(
         }
         about(key = AboutSettingsPageKey, content = about, onOpen = onAppInfo)
     }
-    if (searchVisible) {
-        AndroidKitSettingsSearchPage(catalog = catalog, onBack = { updateSearchVisibility(false) })
-    } else {
-        AndroidKitSettingsPage(catalog = catalog, pageKey = MainSettingsPageKey, onBack = onBack)
-    }
+    AndroidKitSettings(catalog, settingsStore, onOpenSearch, onSettingsStorageFailure, content)
+    if (!active) return
 
     if (backupDialog) {
         BackupConfigurationDialog(
@@ -353,30 +335,22 @@ fun SettingsScreen(
 }
 
 @Composable
-fun AppInfoScreen(
-    onBack: () -> Unit,
-    settingsStore: AndroidKitSettingsStore,
-    onSettingsStorageFailure: (Throwable) -> Unit,
-) {
-    var searchVisible by rememberSaveable { mutableStateOf(false) }
-    val searchHistory = remember(settingsStore) { settingsStore.searchHistory("about") }
-    BackHandler(enabled = searchVisible) {
-        searchVisible = false
-    }
-    val title = stringResource(R.string.settings_title)
-    val about = appInfo()
-    val catalog = androidKitSettingsCatalog(search = AndroidKitSettingsSearchConfiguration(
-        onOpenSearch = { searchVisible = true },
-        history = searchHistory,
-        onStorageFailure = onSettingsStorageFailure,
-    )) {
-        main(key = MainSettingsPageKey, title = title)
-        about(key = AboutSettingsPageKey, content = about, onOpen = {})
-    }
+fun SettingsScreen(onBack: (() -> Unit)? = null, searchVisible: Boolean, onCloseSearch: () -> Unit) {
+    SettingsDestination(MainSettingsPageKey, onBack, searchVisible, onCloseSearch)
+}
+
+@Composable
+fun AppInfoScreen(onBack: () -> Unit, searchVisible: Boolean, onCloseSearch: () -> Unit) {
+    SettingsDestination(AboutSettingsPageKey, onBack, searchVisible, onCloseSearch)
+}
+
+@Composable
+private fun SettingsDestination(pageKey: String, onBack: (() -> Unit)?, searchVisible: Boolean, onCloseSearch: () -> Unit) {
+    BackHandler(enabled = searchVisible, onBack = onCloseSearch)
     if (searchVisible) {
-        AndroidKitSettingsSearchPage(catalog = catalog, onBack = { searchVisible = false })
+        AndroidKitSettingsSearchPage(onBack = onCloseSearch)
     } else {
-        AndroidKitSettingsPage(catalog = catalog, pageKey = AboutSettingsPageKey, onBack = onBack)
+        AndroidKitSettingsPage(pageKey = pageKey, onBack = onBack)
     }
 }
 

@@ -89,6 +89,7 @@ import net.mamby.health.core.model.ScheduleTiming
 import net.mamby.health.feature.dashboard.DashboardScreen
 import net.mamby.health.feature.contacts.ContactEditorScreen
 import net.mamby.health.feature.schedule.ScheduleEditorScreen
+import net.mamby.health.feature.settings.SettingsScope
 import net.mamby.health.feature.settings.SettingsScreen
 import net.mamby.health.feature.vault.VaultScreen
 import net.mamby.health.navigation.AppNavigationState
@@ -1180,7 +1181,7 @@ class ComposeScreensInstrumentedTest {
                 }),
             )
         }
-        SettingsScreen(
+        SettingsScope(
             settingsStore = store,
             onSettingsStorageFailure = { throw it },
             onAppInfo = {},
@@ -1188,7 +1189,6 @@ class ComposeScreensInstrumentedTest {
             zoneId = ZoneOffset.UTC,
             restorePreview = null,
             message = null,
-            onBack = onBack,
             onThemeChanged = {},
                     onOpacityChanged = {},
                     onOpacityChangeFinished = {},
@@ -1204,7 +1204,10 @@ class ComposeScreensInstrumentedTest {
             onCommitRestore = { _, _ -> },
             onDiscardRestore = {},
             onDeleteVault = {},
-        )
+            onOpenSearch = {},
+        ) {
+            SettingsScreen(onBack = onBack, searchVisible = false, onCloseSearch = {})
+        }
     }
 
     @Composable
