@@ -9,11 +9,19 @@ pluginManagement {
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
-        if (providers.gradleProperty("androidKitUseMavenLocal").getOrElse("false").toBoolean()) {
-            mavenLocal {
-                content {
-                    includeGroup("net.mamby.androidkit")
+        exclusiveContent {
+            forRepository {
+                if (providers.gradleProperty("androidKitUseMavenLocal").getOrElse("false").toBoolean()) {
+                    mavenLocal()
+                } else {
+                    maven {
+                        name = "AndroidKit"
+                        url = uri("https://mamby.github.io/android-kit-docs/maven/")
+                    }
                 }
+            }
+            filter {
+                includeGroup("net.mamby.androidkit")
             }
         }
         google()

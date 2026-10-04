@@ -26,6 +26,9 @@ abstract class ValidateAndroidKitResources extends DefaultTask {
     @Input
     abstract ListProperty<String> getSupportedLocales()
 
+    @Input
+    abstract ListProperty<String> getResourceLocaleFilters()
+
     @OutputDirectory
     abstract DirectoryProperty getOutputDirectory()
 
@@ -57,6 +60,7 @@ abstract class ValidateAndroidKitResources extends DefaultTask {
             zip.entries().each { entry ->
                 if (entry.name ==~ /res\/values[^\/]*\/[^\/]+\.xml/) {
                     def folder = entry.name.split('/')[1]
+                    checkLocaleQualifier(folder, "${kit.name}!/${entry.name}", errors)
                     def locale = resourceLocale(folder) ?: 'en'
                     zip.getInputStream(entry).withCloseable { stream ->
                         elements(stream).each { element ->
@@ -81,6 +85,9 @@ abstract class ValidateAndroidKitResources extends DefaultTask {
             }
         }
         def declared = supportedLocales.get().collect { canonical(it) }.toSet()
+        resourceLocaleFilters.get().each { filter ->
+            checkLocaleQualifier('values-' + filter, "Resource locale filter ${filter}", errors)
+        }
         if (declared.isEmpty()) errors.add('Declare androidKitSupportedLocales with every supported application locale.')
         declared.each { locale ->
             checkSupported(locale, available, 'Host language declaration', errors)
@@ -141,6 +148,7 @@ abstract class ValidateAndroidKitResources extends DefaultTask {
     static void checkResource(String path, Closure open, String origin, List errors) {
         def parts = path.split('/')
         if (parts.length < 2) return
+        checkLocaleQualifier(parts[0], origin, errors)
         if (parts.last().startsWith(PREFIX)) errors.add("${origin}: resource name is reserved for AndroidKit.")
         if (!path.endsWith('.xml')) return
         // Only value declarations and locale configuration need XML inspection.
@@ -180,6 +188,17 @@ abstract class ValidateAndroidKitResources extends DefaultTask {
             return locale.toLanguageTag()
         } catch (IllformedLocaleException failure) {
             throw new GradleException("Invalid application locale: ${tag}", failure)
+        }
+    }
+
+    static void checkLocaleQualifier(String folder, String origin, List errors) {
+        // ResourcesImpl adjusts these BCP-47 tags before Android resource lookup.
+        // Keep standard tags in declarations; resource qualifiers must match the runtime.
+        def aliases = ['id': 'in', 'he': 'iw', 'yi': 'ji']
+        def qualifier = folder =~ /(?:^|-)(?:b\+)?(id|he|yi)(?=[+\-]|$)/
+        if (qualifier.find()) {
+            def language = qualifier.group(1)
+            errors.add("${origin}: incompatible Android locale qualifier ${language}; use ${aliases[language]} in resource directories and filters, keeping ${language} in language tags.")
         }
     }
 
@@ -228,6 +247,7 @@ plugins.withId('com.android.application') {
             hostResources.from(variant.sources.res.all)
             dependencyAars.from(aarFiles.files)
             dependencyAars.from(localAars)
+            resourceLocaleFilters.set(variant.androidResources.localeFilters.map { it.toList().sort() })
             supportedLocales.set(providers.gradleProperty('androidKitSupportedLocales').map {
                 it.split(',').collect { tag -> tag.trim() }.findAll { tag -> !tag.isEmpty() }
             }.orElse([]))

@@ -95,3 +95,17 @@ Current security boundaries:
 - App lock is separate from data encryption.
 - Biometric unlock must not be described as hardware-bound encryption unless that is guaranteed on every supported platform.
 - Real health data must never be committed to the repository.
+
+## Android Kit distribution
+
+Android builds resolve Android Kit `0.1.53` from the public
+[Maven repository](https://mamby.github.io/android-kit-docs/maven/).
+No private Kit checkout, Maven Local publication or GitHub credentials are
+required. See [installation](https://mamby.github.io/android-kit-docs/installation/).
+Private snapshot development can opt in with `-PandroidKitUseMavenLocal=true`
+and `-PandroidKitVersion=<published-local-snapshot>`.
+
+The resource validator is committed under `src/android/gradle`. Kit license
+notices are packaged in the application assets under `androidkit/`; the host
+remains MIT licensed. This dependency distribution changes build-time downloads
+only and does not add runtime network access to the application.
