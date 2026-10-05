@@ -43,6 +43,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableLongStateOf
@@ -191,7 +192,10 @@ import net.mamby.health.ui.theme.HealthVaultTheme
 import net.mamby.health.ui.theme.UiTokens
 
 @Composable
-fun HealthVaultApp(viewModel: AppViewModel = viewModel()) {
+fun HealthVaultApp(
+    onStatusBarThemeChanged: (Boolean) -> Unit,
+    viewModel: AppViewModel = viewModel(),
+) {
     val navigation = rememberAppNavigationState()
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val vaultState by viewModel.vaultState.collectAsStateWithLifecycle()
@@ -267,6 +271,9 @@ fun HealthVaultApp(viewModel: AppViewModel = viewModel()) {
         ThemeMode.SYSTEM -> androidx.compose.foundation.isSystemInDarkTheme()
         ThemeMode.LIGHT -> false
         ThemeMode.DARK -> true
+    }
+    SideEffect {
+        onStatusBarThemeChanged(darkTheme)
     }
     HealthVaultTheme(darkTheme = darkTheme, floatingSurfaceOpacityLevel = settings.floatingSurfaceOpacityLevel) {
         Box(Modifier.fillMaxSize()) {

@@ -6,6 +6,7 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.core.view.WindowCompat
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.flow.combine
@@ -58,7 +59,14 @@ class MainActivity : AppCompatActivity() {
         }
         deepLinkCoordinator.accept(intent)
 
-        setContent { HealthVaultApp() }
+        setContent {
+            HealthVaultApp(onStatusBarThemeChanged = ::applyStatusBarAppearance)
+        }
+    }
+
+    private fun applyStatusBarAppearance(isDarkTheme: Boolean) {
+        WindowCompat.getInsetsController(window, window.decorView)
+            .isAppearanceLightStatusBars = !isDarkTheme
     }
 
     override fun onNewIntent(intent: Intent) {
