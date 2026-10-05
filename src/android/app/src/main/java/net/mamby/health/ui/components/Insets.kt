@@ -23,21 +23,20 @@ fun PaddingValues.withScreenPadding(): PaddingValues =
 
 @Composable
 fun PaddingValues.withPagePadding(): PaddingValues =
-    withScreenPadding(topPadding = 0.dp)
+    withScreenPadding(topPadding = 0.dp, horizontalPadding = 0.dp)
 
 @Composable
-private fun PaddingValues.withScreenPadding(topPadding: Dp): PaddingValues {
+private fun PaddingValues.withScreenPadding(
+    topPadding: Dp,
+    horizontalPadding: Dp = UiTokens.ScreenPadding,
+): PaddingValues {
     val direction = LocalLayoutDirection.current
     return PaddingValues(
-        start = calculateStartPadding(direction) + UiTokens.ScreenPadding,
+        start = calculateStartPadding(direction) + horizontalPadding,
         top = calculateTopPadding() + topPadding,
-        end = calculateEndPadding(direction) + UiTokens.ScreenPadding,
+        end = calculateEndPadding(direction) + horizontalPadding,
         bottom = calculateBottomPadding() + UiTokens.ScreenPadding,
     )
 }
 
-fun Modifier.withPagePadding(): Modifier = padding(
-    start = UiTokens.ScreenPadding,
-    end = UiTokens.ScreenPadding,
-    bottom = UiTokens.ScreenPadding,
-)
+fun Modifier.withPagePadding(): Modifier = padding(bottom = UiTokens.ScreenPadding)

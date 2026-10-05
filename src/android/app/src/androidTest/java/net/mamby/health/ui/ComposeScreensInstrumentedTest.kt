@@ -112,7 +112,7 @@ import net.mamby.health.ui.components.ProfileFilterChip
 import net.mamby.health.ui.components.SwitchField
 import net.mamby.health.ui.components.appContentWindowInsets
 import net.mamby.health.ui.components.listDetailAwareBack
-import net.mamby.health.ui.components.withScreenPadding
+import net.mamby.health.ui.components.withPagePadding
 import net.mamby.health.ui.theme.HealthVaultTheme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -305,7 +305,7 @@ class ComposeScreensInstrumentedTest {
                                 .fillMaxSize()
                                 .consumeWindowInsets(padding)
                                 .testTag(SCROLLING_PAGE_TAG),
-                            contentPadding = padding.withScreenPadding(),
+                            contentPadding = padding.withPagePadding(),
                         ) {
                             item {
                                 ProfileFilterChip(
@@ -826,7 +826,7 @@ class ComposeScreensInstrumentedTest {
                                     .fillMaxSize()
                                     .consumeWindowInsets(padding)
                                     .testTag(CLEARANCE_LIST_TAG),
-                                contentPadding = padding.withScreenPadding(),
+                                contentPadding = padding.withPagePadding(),
                             ) {
                                 items((0 until 30).toList()) { index ->
                                     Box(

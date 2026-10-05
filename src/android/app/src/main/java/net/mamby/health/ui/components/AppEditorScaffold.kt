@@ -138,7 +138,6 @@ fun AppEditorScaffold(
                     .widthIn(max = UiTokens.EditorMaxWidth)
                     .verticalScroll(rememberScrollState())
                     .padding(padding)
-                    .padding(horizontal = UiTokens.ScreenPadding)
                     .padding(bottom = UiTokens.ScreenPadding)
                     .then(
                         if (isSaving) {
