@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import java.util.UUID
 import net.mamby.androidkit.compose.theme.AndroidKitCardColors
 import net.mamby.androidkit.compose.theme.AndroidKitComponentColors
+import net.mamby.androidkit.compose.theme.AndroidKitListSelectionColors
 import net.mamby.androidkit.compose.theme.AndroidKitFloatingActionButtonColors
 import net.mamby.androidkit.compose.theme.AndroidKitFloatingSurfaceColors
 import net.mamby.androidkit.compose.theme.AndroidKitTheme
@@ -230,6 +231,12 @@ fun HealthVaultTheme(
                         containerColor = colorScheme.surface,
                         contentColor = colorScheme.onSurface,
                         borderColor = colorScheme.outline,
+                        trailingContentColor = colorScheme.primary,
+                    ),
+                    listSelection = AndroidKitListSelectionColors(
+                        checkedContainerColor = colorScheme.primary,
+                        checkedContentColor = colorScheme.onPrimary,
+                        uncheckedContentColor = colorScheme.onSurfaceVariant,
                     ),
                     floatingActionButton = AndroidKitFloatingActionButtonColors(
                         surfaceColors = AndroidKitFloatingSurfaceColors(

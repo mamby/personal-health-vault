@@ -3,6 +3,13 @@ package net.mamby.health.ui
 import android.content.ClipboardManager
 import android.content.ClipDescription
 import android.view.WindowManager
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toPixelMap
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.runtime.mutableStateOf
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.semantics.SemanticsActions
@@ -10,6 +17,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.DeviceConfigurationOverride
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.ForcedSize
+import androidx.compose.ui.test.FontScale
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.test.assert
@@ -497,6 +505,54 @@ class ContactsScreenInstrumentedTest {
         clickTitleAction(R.string.common_delete)
         composeRule.onNodeWithText(composeRule.activity.getString(R.string.common_delete)).performClick()
         composeRule.runOnIdle { assertEquals(1, deletes) }
+    }
+
+    @Test
+    @OptIn(ExperimentalTestApi::class)
+    fun pinnedContactIndicatorUsesThemeColorAndReservesSpaceInBothDirections() {
+        val name = "A long contact name that wraps on a compact screen"
+        val contact = VaultContact(UUID.randomUUID(), name, updatedAt = Instant.EPOCH, isPinned = true)
+        val direction = mutableStateOf(LayoutDirection.Ltr)
+        val darkTheme = mutableStateOf(false)
+        var primary = Color.Unspecified
+        composeRule.setContent {
+            DeviceConfigurationOverride(DeviceConfigurationOverride.ForcedSize(DpSize(320.dp, 640.dp))) {
+                DeviceConfigurationOverride(DeviceConfigurationOverride.FontScale(1.5f)) {
+                    CompositionLocalProvider(LocalLayoutDirection provides direction.value) {
+                        HealthVaultTheme(darkTheme = darkTheme.value) {
+                            primary = MaterialTheme.colorScheme.primary
+                            ContactsScreen(
+                                contacts = listOf(contact), onAdd = {}, onSelected = {}, onEdit = {}, onShare = {},
+                                onSetPinned = { _, _, complete -> complete(true) },
+                                onDelete = { _, complete -> complete(true) }, onActionError = {},
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        for (dark in listOf(false, true)) {
+            for (layoutDirection in LayoutDirection.entries) {
+                composeRule.runOnIdle { darkTheme.value = dark; direction.value = layoutDirection }
+                val indicator = composeRule.onNodeWithContentDescription(
+                    composeRule.activity.getString(R.string.contact_pinned), useUnmergedTree = true,
+                ).assertIsDisplayed()
+                val title = composeRule.onNodeWithText(name, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+                val pin = indicator.fetchSemanticsNode().boundsInRoot
+                org.junit.Assert.assertTrue(
+                    if (layoutDirection == LayoutDirection.Ltr) title.right <= pin.left else pin.right <= title.left,
+                )
+                val pixels = indicator.captureToImage().toPixelMap()
+                org.junit.Assert.assertTrue((0 until pixels.height).any { y ->
+                    (0 until pixels.width).any { x ->
+                        val pixel = pixels[x, y]
+                        kotlin.math.abs(pixel.red - primary.red) < 0.03f &&
+                            kotlin.math.abs(pixel.green - primary.green) < 0.03f &&
+                            kotlin.math.abs(pixel.blue - primary.blue) < 0.03f
+                    }
+                })
+            }
+        }
     }
 
     @Test

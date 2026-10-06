@@ -236,27 +236,23 @@ fun ContactsScreen(
 
 @Composable
 private fun ContactListCard(contact: VaultContact, kitCard: Boolean) {
-    val pinSize = UiTokens.DetailActionIconSize
-    Box(Modifier.fillMaxWidth()) {
-        AndroidKitCard(
-            title = contact.name,
-            supportingText = if (kitCard) contact.firstContactValue() else null,
-            modifier = Modifier.fillMaxWidth().then(
-                if (contact.isPinned) Modifier.padding(end = pinSize / 2) else Modifier,
-            ),
-            colors = if (kitCard) AndroidKitCardColors()
-                else AndroidKitThemeTokens.cardColors.copy(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
-        ) {
-            if (!kitCard) contact.firstContactValue()?.let { Text(it) }
-        }
-        if (contact.isPinned) {
-            Icon(
-                painter = painterResource(R.drawable.ic_lucide_pin),
-                contentDescription = stringResource(R.string.contact_pinned),
-                modifier = Modifier.align(Alignment.CenterEnd).size(pinSize),
-                tint = MaterialTheme.colorScheme.primary,
-            )
-        }
+    AndroidKitCard(
+        title = contact.name,
+        supportingText = if (kitCard) contact.firstContactValue() else null,
+        modifier = Modifier.fillMaxWidth(),
+        colors = if (kitCard) AndroidKitCardColors()
+            else AndroidKitThemeTokens.cardColors.copy(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
+        trailingContent = if (contact.isPinned) {
+            {
+                Icon(
+                    painter = painterResource(R.drawable.ic_lucide_pin),
+                    contentDescription = stringResource(R.string.contact_pinned),
+                    modifier = Modifier.size(UiTokens.DetailActionIconSize),
+                )
+            }
+        } else null,
+    ) {
+        if (!kitCard) contact.firstContactValue()?.let { Text(it) }
     }
 }
 
