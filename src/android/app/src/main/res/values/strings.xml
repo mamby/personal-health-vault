@@ -17,6 +17,9 @@
     <string name="common_share">Share</string>
     <string name="common_pin">Pin</string>
     <string name="common_unpin">Unpin</string>
+    <string name="contact_pinned">Pinned contact</string>
+    <string name="delete_contacts_title">Delete selected contacts?</string>
+    <string name="delete_vault_contacts_message">All details saved for the selected contacts will be removed.</string>
     <string name="delete_vault_contact_message">All details saved for this contact will be removed.</string>
     <string name="delete_contact_phone_title">Delete phone number?</string>
     <string name="delete_contact_email_title">Delete email?</string>

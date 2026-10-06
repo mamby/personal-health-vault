@@ -17,6 +17,9 @@
     <string name="common_share">Partager</string>
     <string name="common_pin">Épingler</string>
     <string name="common_unpin">Désépingler</string>
+    <string name="contact_pinned">Contact épinglé</string>
+    <string name="delete_contacts_title">Supprimer les contacts sélectionnés ?</string>
+    <string name="delete_vault_contacts_message">Toutes les informations enregistrées pour les contacts sélectionnés seront supprimées.</string>
     <string name="delete_vault_contact_message">Toutes les informations enregistrées pour ce contact seront supprimées.</string>
     <string name="delete_contact_phone_title">Supprimer le numéro de téléphone ?</string>
     <string name="delete_contact_email_title">Supprimer l’e-mail ?</string>

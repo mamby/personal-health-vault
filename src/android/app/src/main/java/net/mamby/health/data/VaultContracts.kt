@@ -155,6 +155,10 @@ interface VaultRepository {
 
     suspend fun deleteContact(contactId: UUID)
 
+    suspend fun setContactsPinned(contactIds: Set<UUID>, pinned: Boolean)
+
+    suspend fun deleteContacts(contactIds: Set<UUID>)
+
     suspend fun upsertFamilyHistoryEntry(profileId: UUID, entry: FamilyHistoryEntry)
 
     suspend fun deleteFamilyHistoryEntry(profileId: UUID, entryId: UUID)

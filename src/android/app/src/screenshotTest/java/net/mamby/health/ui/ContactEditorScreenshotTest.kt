@@ -86,6 +86,11 @@ private fun ContactEditorPreviewContent(darkTheme: Boolean = false) {
                                 contacts = CONTACTS,
                                 onAdd = {},
                                 onSelected = {},
+                                onEdit = {},
+                                onShare = {},
+                                onSetPinned = { _, _, complete -> complete(true) },
+                                onDelete = { _, complete -> complete(true) },
+                                onActionError = {},
                             )
                         }
                     }

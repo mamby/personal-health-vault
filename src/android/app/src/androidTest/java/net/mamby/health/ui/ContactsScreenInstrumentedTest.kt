@@ -2,6 +2,7 @@ package net.mamby.health.ui
 
 import android.content.ClipboardManager
 import android.content.ClipDescription
+import android.view.WindowManager
 import androidx.compose.runtime.mutableStateOf
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.semantics.SemanticsActions
@@ -33,6 +34,8 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.longClick
+import androidx.compose.ui.test.swipeLeft
+import androidx.compose.ui.test.swipeRight
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.geometry.Offset
@@ -47,9 +50,14 @@ import net.mamby.health.feature.contacts.ContactDetailScreen
 import net.mamby.health.feature.contacts.ContactEditorScreen
 import net.mamby.health.feature.contacts.ContactsScreen
 import net.mamby.health.ui.theme.HealthVaultTheme
+import net.mamby.health.ui.components.AppNavigationSuite
+import net.mamby.health.navigation.TopLevelDestination
+import net.mamby.androidkit.compose.action.AndroidKitListSelection
+import net.mamby.androidkit.compose.presentation.rememberAndroidKitListState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Rule
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -57,6 +65,13 @@ import org.junit.runner.RunWith
 class ContactsScreenInstrumentedTest {
     @get:Rule
     val composeRule = createAndroidComposeRule<ComponentActivity>()
+
+    @Before
+    fun keepTestActivityAwake() {
+        composeRule.activityRule.scenario.onActivity {
+            it.window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+    }
 
     @Test
     fun contactFormCreatesVaultWideContactWithoutBlankValues() {
@@ -493,7 +508,11 @@ class ContactsScreenInstrumentedTest {
         composeRule.setContent {
             DeviceConfigurationOverride(DeviceConfigurationOverride.ForcedSize(DpSize(320.dp, 640.dp))) {
                 HealthVaultTheme {
-                    ContactsScreen(contacts = contacts.value, onAdd = {}, onSelected = {})
+                    ContactsScreen(
+                        contacts = contacts.value, onAdd = {}, onSelected = {}, onEdit = {}, onShare = {},
+                        onSetPinned = { _, _, complete -> complete(true) },
+                        onDelete = { _, complete -> complete(true) }, onActionError = {},
+                    )
                 }
             }
         }
@@ -514,5 +533,214 @@ class ContactsScreenInstrumentedTest {
             composeRule.onNodeWithContentDescription(more).performClick()
             composeRule.onNode(hasText(label) and hasAnyAncestor(isPopup())).performClick()
         }
+    }
+
+    @Test
+    fun contactListContextMenuOpensEditsSharesPinsAndConfirmsDeletion() {
+        val alice = VaultContact(UUID.randomUUID(), "Alice", phoneNumbers = listOf("111"), updatedAt = Instant.EPOCH)
+        val zoe = VaultContact(UUID.randomUUID(), "Zoe", updatedAt = Instant.EPOCH)
+        val contacts = mutableStateOf(listOf(alice, zoe))
+        val opened = mutableListOf<UUID>()
+        val edited = mutableListOf<UUID>()
+        val shared = mutableListOf<String>()
+        val deleted = mutableListOf<Set<UUID>>()
+        composeRule.setContent {
+            HealthVaultTheme {
+                ContactsScreen(
+                    contacts = contacts.value, onAdd = {}, onSelected = { opened += it },
+                    onEdit = { edited += it }, onShare = { shared += it }, onActionError = { error("Unexpected failure") },
+                    onSetPinned = { ids, pinned, complete ->
+                        contacts.value = contacts.value.map { if (it.id in ids) it.copy(isPinned = pinned) else it }
+                        complete(true)
+                    },
+                    onDelete = { ids, complete ->
+                        deleted += ids
+                        contacts.value = contacts.value.filterNot { it.id in ids }
+                        complete(true)
+                    },
+                )
+            }
+        }
+        fun menuAction(name: String, action: Int) {
+            composeRule.onNodeWithText(name).performTouchInput { longClick() }
+            composeRule.onNode(hasText(composeRule.activity.getString(action)) and hasAnyAncestor(isPopup())).performClick()
+        }
+        composeRule.onNodeWithText("Alice").performClick()
+        menuAction("Alice", R.string.common_open)
+        menuAction("Alice", R.string.common_edit)
+        menuAction("Alice", R.string.common_share)
+        menuAction("Zoe", R.string.common_pin)
+        composeRule.onNodeWithContentDescription(composeRule.activity.getString(R.string.contact_pinned)).assertIsDisplayed()
+        composeRule.runOnIdle {
+            assertEquals(listOf(alice.id, alice.id), opened)
+            assertEquals(listOf(alice.id), edited)
+            org.junit.Assert.assertTrue(shared.single().contains("111"))
+            org.junit.Assert.assertTrue(contacts.value.single { it.id == zoe.id }.isPinned)
+        }
+        menuAction("Zoe", R.string.common_unpin)
+        composeRule.onNodeWithContentDescription(composeRule.activity.getString(R.string.contact_pinned)).assertDoesNotExist()
+        menuAction("Alice", R.string.common_delete)
+        composeRule.runOnIdle { org.junit.Assert.assertTrue(deleted.isEmpty()) }
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.common_cancel)).performClick()
+        composeRule.onNodeWithText("Alice").assertIsDisplayed()
+        menuAction("Alice", R.string.common_delete)
+        composeRule.onNode(hasText(composeRule.activity.getString(R.string.common_delete)) and hasAnyAncestor(isDialog())).performClick()
+        composeRule.onNodeWithText("Alice").assertDoesNotExist()
+        composeRule.onNodeWithText("Zoe").assertIsDisplayed()
+        composeRule.runOnIdle { assertEquals(listOf(setOf(alice.id)), deleted) }
+    }
+
+    @Test
+    fun contactListSwipesAwaitConfirmationAndRetainCancelledOrFailedDeletes() {
+        val alice = VaultContact(UUID.randomUUID(), "Alice", updatedAt = Instant.EPOCH)
+        val contacts = mutableStateOf(listOf(alice))
+        val submitted = mutableListOf<Set<UUID>>()
+        var completion: ((Boolean) -> Unit)? = null
+        composeRule.setContent {
+            HealthVaultTheme {
+                ContactsScreen(
+                    contacts = contacts.value, onAdd = {}, onSelected = { error("Swipe must not navigate") },
+                    onEdit = {}, onShare = {}, onActionError = { error("Unexpected failure") },
+                    onSetPinned = { _, _, complete -> complete(true) },
+                    onDelete = { ids, complete -> submitted += ids; completion = complete },
+                )
+            }
+        }
+        fun confirm() = composeRule.onNode(
+            hasText(composeRule.activity.getString(R.string.common_delete)) and hasAnyAncestor(isDialog()),
+        ).performClick()
+        val row = composeRule.onNodeWithText("Alice")
+        val retainedBounds = row.fetchSemanticsNode().boundsInRoot
+        fun assertRestoredRow() {
+            assertEquals(retainedBounds, row.fetchSemanticsNode().boundsInRoot)
+            row.assertIsDisplayed().assertIsEnabled()
+        }
+
+        row.performTouchInput { swipeLeft() }
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.delete_contact_title)).assertIsDisplayed()
+        composeRule.runOnIdle { org.junit.Assert.assertTrue(submitted.isEmpty()) }
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.common_cancel)).performClick()
+        assertRestoredRow()
+
+        row.performTouchInput { swipeRight() }
+        confirm()
+        composeRule.onNodeWithText("Alice").assertIsNotEnabled()
+        composeRule.runOnIdle {
+            assertEquals(listOf(setOf(alice.id)), submitted)
+            completion!!.invoke(false)
+        }
+        assertRestoredRow()
+
+        row.performTouchInput { swipeLeft() }
+        confirm()
+        composeRule.runOnIdle {
+            contacts.value = emptyList()
+            completion!!.invoke(true)
+            assertEquals(listOf(setOf(alice.id), setOf(alice.id)), submitted)
+        }
+        composeRule.onNodeWithText("Alice").assertDoesNotExist()
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.no_contacts_title)).assertIsDisplayed()
+    }
+
+    @Test
+    fun contactListSelectionRetainsCancelledAndFailedDeletesUntilPersistenceCompletes() {
+        val alice = VaultContact(UUID.randomUUID(), "Alice", updatedAt = Instant.EPOCH)
+        val zoe = VaultContact(UUID.randomUUID(), "Zoe", updatedAt = Instant.EPOCH)
+        val contacts = mutableStateOf(listOf(alice, zoe))
+        var submitted: Set<UUID>? = null
+        var completion: ((Boolean) -> Unit)? = null
+        composeRule.setContent {
+            HealthVaultTheme {
+                ContactsScreen(
+                    contacts = contacts.value, onAdd = {}, onSelected = { error("Selection must not navigate") },
+                    onEdit = {}, onShare = {}, onActionError = { error("Unexpected failure") },
+                    onSetPinned = { _, _, complete -> complete(true) },
+                    onDelete = { ids, complete -> submitted = ids; completion = complete },
+                )
+            }
+        }
+        composeRule.onNodeWithText("Alice").performTouchInput { longClick() }
+        composeRule.onNode(hasText(composeRule.activity.getString(R.string.common_select)) and hasAnyAncestor(isPopup())).performClick()
+        composeRule.onNodeWithText("Alice").assertIsSelected()
+        composeRule.onNodeWithText("Zoe").performClick().assertIsSelected()
+        clickTitleAction(R.string.common_delete)
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.delete_contacts_title)).assertIsDisplayed()
+        composeRule.runOnIdle { assertEquals(null, submitted) }
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.common_cancel)).performClick()
+        composeRule.onNodeWithText("Alice").assertIsSelected()
+        composeRule.onNodeWithText("Zoe").assertIsSelected()
+        clickTitleAction(R.string.common_delete)
+        composeRule.onNode(hasText(composeRule.activity.getString(R.string.common_delete)) and hasAnyAncestor(isDialog())).performClick()
+        composeRule.onNodeWithText("Alice").assertIsNotEnabled()
+        composeRule.runOnIdle {
+            assertEquals(setOf(alice.id, zoe.id), submitted)
+            completion!!.invoke(false)
+        }
+        composeRule.onNodeWithText("Alice").assertIsEnabled().assertIsSelected()
+        composeRule.onNodeWithText("Zoe").assertIsSelected()
+        clickTitleAction(R.string.common_delete)
+        composeRule.onNode(hasText(composeRule.activity.getString(R.string.common_delete)) and hasAnyAncestor(isDialog())).performClick()
+        composeRule.runOnIdle {
+            contacts.value = emptyList()
+            completion!!.invoke(true)
+        }
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.no_contacts_title)).assertIsDisplayed()
+        composeRule.onNodeWithContentDescription(composeRule.activity.getString(R.string.add_contact)).assertIsDisplayed()
+    }
+
+    @Test
+    fun contactListSelectAllBulkPinUnpinAndShareUseSelectedContacts() {
+        val alice = VaultContact(UUID.randomUUID(), "Alice", updatedAt = Instant.EPOCH)
+        val zoe = VaultContact(UUID.randomUUID(), "Zoe", notes = "Family doctor", updatedAt = Instant.EPOCH)
+        val contacts = mutableStateOf(listOf(alice, zoe))
+        val pinned = mutableListOf<Pair<Set<UUID>, Boolean>>()
+        val shared = mutableListOf<String>()
+        composeRule.setContent {
+            HealthVaultTheme {
+                val listState = rememberAndroidKitListState(contacts.value.map { it.id.toString() }.toSet())
+                AppNavigationSuite(
+                    selectedDestination = TopLevelDestination.Contacts,
+                    onDestinationSelected = {},
+                    selection = AndroidKitListSelection(listState.selection, onActionError = { error("Unexpected failure") }) {},
+                ) {
+                    ContactsScreen(
+                        contacts = contacts.value, onAdd = {}, onSelected = {}, onEdit = {},
+                        onShare = { shared += it }, onActionError = { error("Unexpected failure") },
+                        onSetPinned = { ids, pin, complete ->
+                            pinned += ids to pin
+                            contacts.value = contacts.value.map { if (it.id in ids) it.copy(isPinned = pin) else it }
+                            complete(true)
+                        },
+                        onDelete = { _, complete -> complete(true) },
+                        listState = listState,
+                    )
+                }
+            }
+        }
+        fun selectAll() {
+            clickTitleAction(R.string.common_select)
+            composeRule.onNodeWithContentDescription(composeRule.activity.getString(R.string.nav_home)).assertDoesNotExist()
+            composeRule.onNodeWithContentDescription(composeRule.activity.getString(
+                net.mamby.androidkit.compose.R.string.androidkit_compose_select_all,
+            )).performClick()
+        }
+        composeRule.onNodeWithContentDescription(composeRule.activity.getString(R.string.nav_home)).assertIsDisplayed()
+        selectAll()
+        composeRule.onNodeWithContentDescription(composeRule.activity.getString(R.string.common_edit)).assertIsNotEnabled()
+        clickTitleAction(R.string.common_pin)
+        composeRule.runOnIdle { org.junit.Assert.assertTrue(contacts.value.all { it.isPinned }) }
+        selectAll()
+        clickTitleAction(R.string.common_unpin)
+        composeRule.runOnIdle { assertEquals(listOf(setOf(alice.id, zoe.id) to true, setOf(alice.id, zoe.id) to false), pinned) }
+        clickTitleAction(R.string.common_select)
+        composeRule.onNodeWithText("Zoe").performClick()
+        clickTitleAction(R.string.common_share)
+        composeRule.runOnIdle {
+            org.junit.Assert.assertTrue(shared.single().contains("Zoe"))
+            org.junit.Assert.assertTrue(shared.single().contains("Family doctor"))
+            org.junit.Assert.assertFalse(shared.single().contains("Alice"))
+        }
+        composeRule.onNodeWithContentDescription(composeRule.activity.getString(R.string.add_contact)).assertIsDisplayed()
+        composeRule.onNodeWithContentDescription(composeRule.activity.getString(R.string.nav_home)).assertIsDisplayed()
     }
 }

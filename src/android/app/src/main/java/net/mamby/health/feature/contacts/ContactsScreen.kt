@@ -5,6 +5,7 @@ import android.content.ClipDescription
 import android.os.PersistableBundle
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -17,10 +18,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
@@ -35,6 +32,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -66,12 +64,20 @@ import java.util.Locale
 import java.util.UUID
 import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.CompletableDeferred
+import net.mamby.androidkit.compose.action.AndroidKitListSelection
+import net.mamby.androidkit.compose.presentation.AndroidKitListActionResult
+import net.mamby.androidkit.compose.presentation.AndroidKitListDeleteAction
+import net.mamby.androidkit.compose.presentation.AndroidKitList
+import net.mamby.androidkit.compose.presentation.AndroidKitListState
+import net.mamby.androidkit.compose.presentation.rememberAndroidKitListState
 import net.mamby.androidkit.compose.presentation.AndroidKitSectionCard
 import net.mamby.androidkit.compose.presentation.AndroidKitCard
 import net.mamby.androidkit.compose.presentation.AndroidKitSectionCardEntry
 import net.mamby.androidkit.compose.action.AndroidKitActionFlyoutScope
 import net.mamby.androidkit.compose.layout.AndroidKitPage
 import net.mamby.androidkit.compose.theme.AndroidKitThemeTokens
+import net.mamby.androidkit.compose.theme.AndroidKitCardColors
 import net.mamby.health.R
 import net.mamby.health.core.model.VaultContact
 import net.mamby.health.ui.components.AppEditorScaffold
@@ -79,7 +85,6 @@ import net.mamby.health.ui.components.detailTitleBarActions
 import net.mamby.health.ui.components.EditorFieldPair
 import net.mamby.health.ui.components.EmptyState
 import net.mamby.health.ui.components.ConfirmDeleteDialog
-import net.mamby.health.ui.components.ListCard
 import net.mamby.health.ui.components.rememberEditorState
 import net.mamby.health.ui.components.addTitleBarAction
 import net.mamby.health.ui.components.titleBarAction
@@ -92,7 +97,16 @@ fun ContactsScreen(
     contacts: List<VaultContact>,
     onAdd: () -> Unit,
     onSelected: (UUID) -> Unit,
+    onEdit: (UUID) -> Unit,
+    onShare: (String) -> Unit,
+    onSetPinned: (Set<UUID>, Boolean, (Boolean) -> Unit) -> Unit,
+    onDelete: (Set<UUID>, (Boolean) -> Unit) -> Unit,
+    onActionError: () -> Unit,
+    listState: AndroidKitListState = rememberAndroidKitListState(
+        contacts.map { it.id.toString() }.toSet(),
+    ),
 ) {
+    val selectionState = listState.selection
     val sortedContacts = remember(contacts) {
         contacts.sortedWith(
             compareByDescending<VaultContact> { it.isPinned }
@@ -100,55 +114,167 @@ fun ContactsScreen(
                 .thenBy(VaultContact::id),
         )
     }
+    val kitCardIds = remember(sortedContacts) {
+        sortedContacts.take((sortedContacts.size + 1) / 2).map(VaultContact::id).toSet()
+    }
+    var updating by remember { mutableStateOf(false) }
+    var pendingDeletion by remember { mutableStateOf<Set<UUID>?>(null) }
+    var deletionResult by remember { mutableStateOf<CompletableDeferred<AndroidKitListActionResult>?>(null) }
+    val selectLabel = stringResource(R.string.common_select)
+    val openLabel = stringResource(R.string.common_open)
+    val editLabel = stringResource(R.string.common_edit)
+    val shareLabel = stringResource(R.string.common_share)
+    val pinLabel = stringResource(R.string.common_pin)
+    val unpinLabel = stringResource(R.string.common_unpin)
+    val deleteLabel = stringResource(R.string.common_delete)
+    val selectIcon = ImageVector.vectorResource(R.drawable.ic_lucide_check)
+    val openIcon = ImageVector.vectorResource(R.drawable.ic_lucide_external_link)
+    val editIcon = ImageVector.vectorResource(R.drawable.ic_lucide_pencil)
+    val shareIcon = ImageVector.vectorResource(R.drawable.ic_lucide_share_2)
+    val pinIcon = ImageVector.vectorResource(R.drawable.ic_lucide_pin)
+    val deleteIcon = ImageVector.vectorResource(R.drawable.ic_lucide_trash_2)
+    val shareTexts = contacts.associate { it.id.toString() to contactShareText(it) }
+    val selectedContacts = contacts.filter { it.id.toString() in selectionState.selectedIds }
+    val unpinSelection = selectedContacts.isNotEmpty() && selectedContacts.all { it.isPinned }
+    val selection = AndroidKitListSelection(selectionState, onActionError = { onActionError() }) {
+        icon(editIcon, editLabel, enabled = selectedContacts.size == 1) { ids ->
+            onEdit(UUID.fromString(ids.single()))
+            AndroidKitListActionResult.Success
+        }
+        icon(shareIcon, shareLabel) { ids ->
+            onShare(sortedContacts.filter { it.id.toString() in ids }.joinToString("\n\n") {
+                shareTexts.getValue(it.id.toString())
+            })
+            AndroidKitListActionResult.Success
+        }
+        icon(pinIcon, if (unpinSelection) unpinLabel else pinLabel) { ids ->
+            val result = CompletableDeferred<Boolean>()
+            onSetPinned(ids.map(UUID::fromString).toSet(), !unpinSelection) { result.complete(it) }
+            if (result.await()) AndroidKitListActionResult.Success else AndroidKitListActionResult.Failure()
+        }
+        icon(deleteIcon, deleteLabel, destructive = true) { ids ->
+            val result = CompletableDeferred<AndroidKitListActionResult>()
+            deletionResult = result
+            pendingDeletion = ids.map(UUID::fromString).toSet()
+            try { result.await() } finally { deletionResult = null; pendingDeletion = null }
+        }
+    }
+    DisposableEffect(selectionState) {
+        onDispose { selectionState.close() }
+    }
+    val pinContact: (VaultContact) -> Unit = { contact ->
+        updating = true
+        onSetPinned(setOf(contact.id), !contact.isPinned) { updating = false }
+    }
 
     AndroidKitPage(
         title = stringResource(R.string.contacts_title),
+        selection = selection,
         actions = listOf(
             addTitleBarAction(
                 label = stringResource(R.string.add_contact),
                 onClick = onAdd,
             ),
+            titleBarAction(
+                label = selectLabel,
+                icon = R.drawable.ic_lucide_check,
+                enabled = contacts.isNotEmpty() && !updating,
+                onClick = { selectionState.activate() },
+            ),
         ),
     ) { padding ->
-        LazyVerticalGrid(
-            columns = GridCells.Adaptive(UiTokens.CardMinWidth),
-            modifier = Modifier
-                .fillMaxSize()
-                .consumeWindowInsets(padding),
-            contentPadding = padding.withPagePadding(),
-            horizontalArrangement = Arrangement.spacedBy(UiTokens.ContentSpacing),
-            verticalArrangement = Arrangement.spacedBy(UiTokens.ContentSpacing),
-        ) {
-            if (sortedContacts.isEmpty()) {
-                item(span = { GridItemSpan(maxLineSpan) }) {
-                    EmptyState(
-                        title = stringResource(R.string.no_contacts_title),
-                        body = stringResource(R.string.no_contacts_body),
-                    )
-                }
-            } else {
-                // Temporary presentation comparison; the first half uses Kit cards.
-                itemsIndexed(sortedContacts, key = { _, contact -> contact.id }) { index, contact ->
-                    if (index < (sortedContacts.size + 1) / 2) {
-                        AndroidKitCard(
-                            title = contact.name,
-                            supportingText = contact.firstContactValue(),
-                            onClick = { onSelected(contact.id) },
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {}
-                    } else {
-                        ListCard(
-                            title = contact.name,
-                            onClick = { onSelected(contact.id) },
-                        ) {
-                            contact.firstContactValue()?.let { Text(it) }
-                        }
-                    }
-                }
+        if (sortedContacts.isEmpty()) {
+            EmptyState(
+                title = stringResource(R.string.no_contacts_title),
+                body = stringResource(R.string.no_contacts_body),
+                modifier = Modifier.padding(padding).consumeWindowInsets(padding),
+            )
+        } else {
+            // Temporary presentation comparison; the first half uses Kit cards.
+            AndroidKitList(
+                items = sortedContacts,
+                key = { it.id.toString() },
+                state = listState,
+                modifier = Modifier.fillMaxSize().consumeWindowInsets(padding),
+                contentPadding = padding,
+                enabled = { !updating && pendingDeletion == null },
+                onItemClick = { onSelected(it.id) },
+                contextMenu = { contact -> {
+                    item(openLabel, icon = openIcon, onClick = { onSelected(contact.id) })
+                    item(editLabel, icon = editIcon, onClick = { onEdit(contact.id) })
+                    item(shareLabel, icon = shareIcon, onClick = { onShare(shareTexts.getValue(contact.id.toString())) })
+                    item(if (contact.isPinned) unpinLabel else pinLabel, icon = pinIcon, onClick = { pinContact(contact) })
+                    separator()
+                    item(selectLabel, icon = selectIcon, onClick = { selectionState.activate(setOf(contact.id.toString())) })
+                } },
+                deleteAction = { contact -> AndroidKitListDeleteAction({ pendingDeletion = setOf(contact.id) }) },
+            ) { contact ->
+                ContactListCard(contact, contact.id in kitCardIds)
             }
         }
     }
+    pendingDeletion?.let { ids ->
+        ConfirmDeleteDialog(
+            title = stringResource(if (ids.size == 1) R.string.delete_contact_title else R.string.delete_contacts_title),
+            message = stringResource(if (ids.size == 1) R.string.delete_vault_contact_message else R.string.delete_vault_contacts_message),
+            onDismiss = {
+                deletionResult?.complete(AndroidKitListActionResult.Cancelled)
+                pendingDeletion = null
+            },
+            onConfirm = {
+                pendingDeletion = null
+                updating = true
+                val result = deletionResult
+                onDelete(ids) { succeeded ->
+                    updating = false
+                    result?.complete(if (succeeded) AndroidKitListActionResult.Success else AndroidKitListActionResult.Failure())
+                }
+            },
+        )
+    }
 }
+
+@Composable
+private fun ContactListCard(contact: VaultContact, kitCard: Boolean) {
+    val pinSize = UiTokens.DetailActionIconSize
+    Box(Modifier.fillMaxWidth()) {
+        AndroidKitCard(
+            title = contact.name,
+            supportingText = if (kitCard) contact.firstContactValue() else null,
+            modifier = Modifier.fillMaxWidth().then(
+                if (contact.isPinned) Modifier.padding(end = pinSize / 2) else Modifier,
+            ),
+            colors = if (kitCard) AndroidKitCardColors()
+                else AndroidKitThemeTokens.cardColors.copy(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
+        ) {
+            if (!kitCard) contact.firstContactValue()?.let { Text(it) }
+        }
+        if (contact.isPinned) {
+            Icon(
+                painter = painterResource(R.drawable.ic_lucide_pin),
+                contentDescription = stringResource(R.string.contact_pinned),
+                modifier = Modifier.align(Alignment.CenterEnd).size(pinSize),
+                tint = MaterialTheme.colorScheme.primary,
+            )
+        }
+    }
+}
+
+@Composable
+private fun contactShareText(contact: VaultContact): String = buildList {
+    add(contact.name)
+    listOf(
+        stringResource(R.string.contact_phone_numbers) to contact.phoneNumbers,
+        stringResource(R.string.contact_email_addresses) to contact.emailAddresses,
+        stringResource(R.string.contact_websites) to contact.websites,
+        stringResource(R.string.contact_addresses) to contact.addresses,
+        stringResource(R.string.common_notes) to listOfNotNull(contact.notes),
+    ).forEach { (label, values) ->
+        values.filter(String::isNotBlank).takeIf { it.isNotEmpty() }?.let {
+            add("$label:\n${it.joinToString("\n")}")
+        }
+    }
+}.joinToString("\n\n")
 
 @Composable
 fun ContactDetailScreen(
@@ -180,20 +306,7 @@ fun ContactDetailScreen(
             clipboard.setClipEntry(ClipEntry(clipData))
         }
     }
-    val shareText = buildList {
-        add(contact.name)
-        listOf(
-            stringResource(R.string.contact_phone_numbers) to contact.phoneNumbers,
-            stringResource(R.string.contact_email_addresses) to contact.emailAddresses,
-            stringResource(R.string.contact_websites) to contact.websites,
-            stringResource(R.string.contact_addresses) to contact.addresses,
-            stringResource(R.string.common_notes) to listOfNotNull(contact.notes),
-        ).forEach { (label, values) ->
-            values.filter(String::isNotBlank).takeIf { it.isNotEmpty() }?.let {
-                add("$label:\n${it.joinToString("\n")}")
-            }
-        }
-    }.joinToString("\n\n")
+    val shareText = contactShareText(contact)
 
     AndroidKitPage(
         title = stringResource(R.string.contact_title),

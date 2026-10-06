@@ -300,6 +300,43 @@ class DefaultVaultRepositoryTest {
     }
 
     @Test
+    fun contactBulkPinAndDeleteCommitOnceAndPreserveUnselectedContactsOnFailure() = runTest {
+        val store = FakeVaultStore()
+        val repository = repository(store, FakeDocumentBlobStore())
+        repository.initialize()
+        val contacts = listOf("Alice", "Samira", "Zoe").map {
+            VaultContact(UUID.randomUUID(), it, updatedAt = Instant.EPOCH)
+        }
+        contacts.forEach { repository.upsertContact(it) }
+        val ids = contacts.take(2).map { it.id }.toSet()
+        val original = repository.exportSnapshot()
+        val saves = store.saveCount
+
+        store.failNextSave = true
+        assertTrue(runCatching { repository.setContactsPinned(ids, true) }.exceptionOrNull() is TestStorageFailure)
+        assertEquals(original, repository.exportSnapshot())
+        assertEquals(original, store.stored)
+
+        repository.setContactsPinned(ids, true)
+        val pinned = repository.exportSnapshot()
+        assertEquals(original.revision + 1, pinned.revision)
+        assertEquals(saves + 1, store.saveCount)
+        assertTrue(pinned.contacts.take(2).all { it.isPinned })
+        assertEquals(original.contacts.last(), pinned.contacts.last())
+
+        store.failNextSave = true
+        assertTrue(runCatching { repository.deleteContacts(ids) }.exceptionOrNull() is TestStorageFailure)
+        assertEquals(pinned, repository.exportSnapshot())
+        assertEquals(pinned, store.stored)
+
+        repository.deleteContacts(ids)
+        val deleted = repository.exportSnapshot()
+        assertEquals(pinned.revision + 1, deleted.revision)
+        assertEquals(saves + 2, store.saveCount)
+        assertEquals(listOf(original.contacts.last()), deleted.contacts)
+    }
+
+    @Test
     fun documentDeletionCleansDirectiveReferencesAtomicallyWithOneRevision() = runTest {
         val repository = repository(FakeVaultStore(), FakeDocumentBlobStore())
         repository.initialize()

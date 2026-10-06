@@ -56,6 +56,8 @@ open class StubVaultRepository : VaultRepository {
     override suspend fun deleteCustomMeasurementType(profileId: UUID, typeId: UUID): Unit = unused()
     override suspend fun upsertContact(contact: VaultContact): Unit = unused()
     override suspend fun deleteContact(contactId: UUID): Unit = unused()
+    override suspend fun setContactsPinned(contactIds: Set<UUID>, pinned: Boolean): Unit = unused()
+    override suspend fun deleteContacts(contactIds: Set<UUID>): Unit = unused()
     override suspend fun upsertFamilyHistoryEntry(profileId: UUID, entry: FamilyHistoryEntry): Unit = unused()
     override suspend fun deleteFamilyHistoryEntry(profileId: UUID, entryId: UUID): Unit = unused()
     override suspend fun upsertCareDirective(profileId: UUID, directive: CareDirective): Unit = unused()

@@ -12,6 +12,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import net.mamby.androidkit.compose.navigation.AndroidKitFloatingNavigation
 import net.mamby.androidkit.compose.navigation.AndroidKitFloatingNavigationItem
+import net.mamby.androidkit.compose.action.AndroidKitListSelection
 import net.mamby.health.navigation.TopLevelDestination
 
 @Composable
@@ -19,6 +20,7 @@ fun AppNavigationSuite(
     selectedDestination: TopLevelDestination,
     onDestinationSelected: (TopLevelDestination) -> Unit,
     navigationVisible: Boolean = true,
+    selection: AndroidKitListSelection? = null,
     content: @Composable () -> Unit,
 ) {
     if (!navigationVisible) {
@@ -39,6 +41,7 @@ fun AppNavigationSuite(
         onSelected = onDestinationSelected,
         modifier = Modifier.fillMaxSize(),
         compactVisibleDestinationCount = TopLevelDestination.compactPrimary.size,
+        selection = selection,
         content = content,
     )
 }

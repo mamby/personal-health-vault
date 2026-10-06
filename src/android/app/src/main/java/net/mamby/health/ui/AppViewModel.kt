@@ -391,6 +391,16 @@ class AppViewModel @Inject constructor(
         vaultRepository.deleteContact(id)
     }
 
+    fun setContactsPinned(ids: Set<UUID>, pinned: Boolean, onResult: (Boolean) -> Unit) =
+        launchOperation(onResult = onResult) {
+            vaultRepository.setContactsPinned(ids, pinned)
+        }
+
+    fun deleteContacts(ids: Set<UUID>, onResult: (Boolean) -> Unit) =
+        launchOperation(onResult = onResult) {
+            vaultRepository.deleteContacts(ids)
+        }
+
     fun upsertFamilyHistoryEntry(profileId: UUID, entry: FamilyHistoryEntry) =
         upsertFamilyHistoryEntry(profileId, entry) {}
 

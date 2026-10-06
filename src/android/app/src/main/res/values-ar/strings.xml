@@ -17,6 +17,9 @@
     <string name="common_share">مشاركة</string>
     <string name="common_pin">تثبيت</string>
     <string name="common_unpin">إلغاء التثبيت</string>
+    <string name="contact_pinned">جهة اتصال مثبتة</string>
+    <string name="delete_contacts_title">حذف جهات الاتصال المحددة؟</string>
+    <string name="delete_vault_contacts_message">ستُحذف جميع التفاصيل المحفوظة لجهات الاتصال المحددة.</string>
     <string name="delete_vault_contact_message">ستُحذف جميع التفاصيل المحفوظة لجهة الاتصال هذه.</string>
     <string name="delete_contact_phone_title">حذف رقم الهاتف؟</string>
     <string name="delete_contact_email_title">حذف البريد الإلكتروني؟</string>

@@ -390,6 +390,16 @@ class DefaultVaultRepository @Inject constructor(
         vault.copy(contacts = vault.contacts.filterNot { it.id == contactId })
     }
 
+    override suspend fun setContactsPinned(contactIds: Set<UUID>, pinned: Boolean) = mutateVault { vault, now ->
+        vault.copy(contacts = vault.contacts.map { contact ->
+            if (contact.id in contactIds) contact.copy(isPinned = pinned, updatedAt = now) else contact
+        })
+    }
+
+    override suspend fun deleteContacts(contactIds: Set<UUID>) = mutateVault { vault, _ ->
+        vault.copy(contacts = vault.contacts.filterNot { it.id in contactIds })
+    }
+
     override suspend fun upsertFamilyHistoryEntry(profileId: UUID, entry: FamilyHistoryEntry) =
         mutateProfile(profileId) { record, now ->
             val existing = record.familyHistory.firstOrNull { it.id == entry.id }

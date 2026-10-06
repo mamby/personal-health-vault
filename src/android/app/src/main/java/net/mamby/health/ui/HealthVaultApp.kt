@@ -179,6 +179,8 @@ import net.mamby.health.security.AppLockState
 import net.mamby.health.settings.AppSettings
 import net.mamby.health.settings.ThemeMode
 import net.mamby.androidkit.compose.layout.AndroidKitPage
+import net.mamby.androidkit.compose.presentation.rememberAndroidKitListState
+import net.mamby.androidkit.compose.action.AndroidKitListSelection
 import net.mamby.androidkit.compose.layout.AndroidKitLockPage
 import net.mamby.health.ui.components.AppNavigationSuite
 import net.mamby.health.ui.components.EditorBackgroundPane
@@ -444,6 +446,13 @@ private fun VaultNavigation(
     onLocaleChanged: (String) -> Unit,
 ) {
     val currentVault by rememberUpdatedState(vault)
+    val contactListState = rememberAndroidKitListState(
+        vault.contacts.map { it.id.toString() }.toSet(),
+        selectionAvailable = when (navigation.currentBackStack.lastOrNull()) {
+            ContactsRoute, is ContactDetailRoute -> true
+            else -> false
+        },
+    )
     val context = LocalContext.current
     val resources = LocalResources.current
     val profileLabels = disambiguatedProfileLabels(vault.profiles.map { it.profile }) { profile, ordinal, _ ->
@@ -611,6 +620,7 @@ private fun VaultNavigation(
         AppNavigationSuite(
             selectedDestination = navigation.selectedDestination,
             onDestinationSelected = ::selectTopLevelDestination,
+            selection = AndroidKitListSelection(contactListState.selection, onActionError = {}) {},
             navigationVisible = navigation.isAtRoot &&
                 !(navigation.selectedDestination == TopLevelDestination.Settings && settingsSearchVisible),
         ) {
@@ -977,6 +987,27 @@ private fun VaultNavigation(
                                     )
                                 },
                                 onSelected = { id -> navigation.navigate(ContactDetailRoute(id.toString())) },
+                                onEdit = { id ->
+                                    navigation.navigate(
+                                        ContactEditorRoute(
+                                            sessionId = viewModel.createEditorSession(),
+                                            id = id.toString(),
+                                        ),
+                                    )
+                                },
+                                onShare = { text ->
+                                    context.launchContactAction(
+                                        Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
+                                            type = "text/plain"
+                                            putExtra(Intent.EXTRA_TEXT, text)
+                                        }, null),
+                                        viewModel::showContactActionUnavailable,
+                                    )
+                                },
+                                onSetPinned = viewModel::setContactsPinned,
+                                onDelete = viewModel::deleteContacts,
+                                onActionError = viewModel::showContactActionUnavailable,
+                                listState = contactListState,
                             )
                         }
                     }
