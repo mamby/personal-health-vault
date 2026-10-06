@@ -331,7 +331,7 @@ fun ContactDetailScreen(
                     ContactField.Notes -> R.string.delete_contact_notes_title
                 },
             ),
-            message = stringResource(R.string.delete_contact_value_message, removal.value),
+            message = removal.value.takeUnless { removal.field == ContactField.Notes },
             onDismiss = { pendingRemoval = null },
             onConfirm = {
                 pendingRemoval = null

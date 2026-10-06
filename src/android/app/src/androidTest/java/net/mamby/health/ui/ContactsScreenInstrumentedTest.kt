@@ -22,6 +22,7 @@ import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.isPopup
+import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -389,6 +390,12 @@ class ContactsScreenInstrumentedTest {
                 if (action == R.string.common_delete) {
                     composeRule.onNodeWithText(composeRule.activity.getString(deletionTitles[index]))
                         .assertIsDisplayed()
+                    val dialogValue = composeRule.onNode(hasText(value) and hasAnyAncestor(isDialog()))
+                    if (index == deletionTitles.lastIndex) {
+                        dialogValue.assertDoesNotExist()
+                    } else {
+                        dialogValue.assertIsDisplayed()
+                    }
                     composeRule.runOnIdle { assertEquals(emptyList<VaultContact>(), updates) }
                     composeRule.onNodeWithText(composeRule.activity.getString(R.string.common_cancel)).performClick()
                 }
@@ -466,6 +473,9 @@ class ContactsScreenInstrumentedTest {
         composeRule.runOnIdle { assertEquals(null, contact.value.notes) }
 
         clickTitleAction(R.string.common_delete)
+        composeRule.onNodeWithText(
+            composeRule.activity.getString(R.string.delete_vault_contact_message),
+        ).assertIsDisplayed()
         composeRule.runOnIdle { assertEquals(0, deletes) }
         composeRule.onNodeWithText(composeRule.activity.getString(R.string.common_cancel)).performClick()
         composeRule.runOnIdle { assertEquals(0, deletes) }

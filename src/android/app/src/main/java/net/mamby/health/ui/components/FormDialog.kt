@@ -59,7 +59,7 @@ fun FormDialog(
 @Composable
 fun ConfirmDeleteDialog(
     title: String,
-    message: String,
+    message: String?,
     onDismiss: () -> Unit,
     onConfirm: () -> Unit,
 ) {
@@ -68,7 +68,7 @@ fun ConfirmDeleteDialog(
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         tonalElevation = UiTokens.DialogTonalElevation,
         title = { Text(title) },
-        text = { Text(message) },
+        text = if (message != null) { { Text(message) } } else null,
         confirmButton = {
             Button(
                 onClick = onConfirm,
