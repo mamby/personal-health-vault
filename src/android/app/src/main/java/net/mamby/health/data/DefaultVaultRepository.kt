@@ -105,6 +105,7 @@ class DefaultVaultRepository @Inject constructor(
                 id = id,
                 displayName = normalizedName,
                 lastUpdatedAt = now,
+                createdAt = now,
             ),
         )
         val next = current.vault.copy(profiles = current.vault.profiles + record).nextRevision(now)
@@ -117,7 +118,21 @@ class DefaultVaultRepository @Inject constructor(
         require(profile.id == profileId) { "Profile identifier cannot be changed." }
         require(profile.displayName.isNotBlank()) { "Profile name is required." }
         mutateProfile(profileId) { record, now ->
-            record.copy(profile = profile.copy(displayName = profile.displayName.trim(), lastUpdatedAt = now))
+            record.copy(
+                profile = profile.copy(
+                    displayName = profile.displayName.trim(),
+                    lastUpdatedAt = now,
+                    createdAt = record.profile.createdAt,
+                    emergencyContacts = profile.emergencyContacts.map { contact ->
+                        val existing = record.profile.emergencyContacts.firstOrNull { it.id == contact.id }
+                        val updated = contact.copy(
+                            createdAt = if (existing == null) now else existing.createdAt,
+                            updatedAt = existing?.updatedAt,
+                        )
+                        if (updated == existing) updated else updated.copy(updatedAt = now)
+                    },
+                ),
+            )
         }
     }
 
@@ -137,9 +152,14 @@ class DefaultVaultRepository @Inject constructor(
 
     override suspend fun upsertEmergencyContact(profileId: UUID, contact: EmergencyContact) =
         mutateProfile(profileId) { record, now ->
+            val existing = record.profile.emergencyContacts.firstOrNull { it.id == contact.id }
+            val updated = contact.copy(
+                createdAt = if (existing == null) now else existing.createdAt,
+                updatedAt = now,
+            )
             record.copy(
                 profile = record.profile.copy(
-                    emergencyContacts = record.profile.emergencyContacts.upsert(contact, EmergencyContact::id),
+                    emergencyContacts = record.profile.emergencyContacts.upsert(updated, EmergencyContact::id),
                     lastUpdatedAt = now,
                 ),
             )
@@ -178,6 +198,7 @@ class DefaultVaultRepository @Inject constructor(
             sizeBytes = imported.sizeBytes,
             originalFileName = imported.displayName,
             updatedAt = now,
+            createdAt = now,
         )
         var staged: StagedDocumentBlob? = null
         var committed = false
@@ -212,6 +233,7 @@ class DefaultVaultRepository @Inject constructor(
                 sizeBytes = existing.sizeBytes,
                 originalFileName = existing.originalFileName,
                 updatedAt = now,
+                createdAt = existing.createdAt,
             )
             record.copy(documents = record.documents.upsert(updated, MedicalDocument::id))
         }
@@ -242,7 +264,12 @@ class DefaultVaultRepository @Inject constructor(
 
     override suspend fun upsertMedication(profileId: UUID, medication: Medication) =
         mutateProfile(profileId) { record, now ->
-            record.copy(medications = record.medications.upsert(medication.copy(updatedAt = now), Medication::id))
+            val existing = record.medications.firstOrNull { it.id == medication.id }
+            val updated = medication.copy(
+                updatedAt = now,
+                createdAt = if (existing == null) now else existing.createdAt,
+            )
+            record.copy(medications = record.medications.upsert(updated, Medication::id))
         }
 
     override suspend fun deleteMedication(profileId: UUID, medicationId: UUID) =
@@ -251,7 +278,11 @@ class DefaultVaultRepository @Inject constructor(
         }
 
     override suspend fun upsertSchedule(schedule: Schedule) = mutateVault { vault, now ->
-        val normalized = schedule.copy(updatedAt = now).normalized()
+        val existing = vault.schedules.firstOrNull { it.id == schedule.id }
+        val normalized = schedule.copy(
+            updatedAt = now,
+            createdAt = if (existing == null) now else existing.createdAt,
+        ).normalized()
         vault.copy(schedules = vault.schedules.upsert(normalized, Schedule::id))
     }
 
@@ -261,7 +292,12 @@ class DefaultVaultRepository @Inject constructor(
 
     override suspend fun upsertVaccination(profileId: UUID, vaccination: Vaccination) =
         mutateProfile(profileId) { record, now ->
-            record.copy(vaccinations = record.vaccinations.upsert(vaccination.copy(updatedAt = now), Vaccination::id))
+            val existing = record.vaccinations.firstOrNull { it.id == vaccination.id }
+            val updated = vaccination.copy(
+                updatedAt = now,
+                createdAt = if (existing == null) now else existing.createdAt,
+            )
+            record.copy(vaccinations = record.vaccinations.upsert(updated, Vaccination::id))
         }
 
     override suspend fun deleteVaccination(profileId: UUID, vaccinationId: UUID) =
@@ -287,9 +323,13 @@ class DefaultVaultRepository @Inject constructor(
 
     override suspend fun upsertMeasurement(profileId: UUID, measurement: HealthMeasurement) =
         mutateProfile(profileId) { record, now ->
+            val existing = record.measurements.firstOrNull { it.id == measurement.id }
             record.copy(
                 measurements = record.measurements.upsert(
-                    measurement.copy(updatedAt = now),
+                    measurement.copy(
+                        updatedAt = now,
+                        createdAt = if (existing == null) now else existing.createdAt,
+                    ),
                     HealthMeasurement::id,
                 ),
             )
@@ -302,10 +342,12 @@ class DefaultVaultRepository @Inject constructor(
 
     override suspend fun upsertCustomMeasurementType(profileId: UUID, type: CustomMeasurementType) =
         mutateProfile(profileId) { record, now ->
+            val existing = record.customMeasurementTypes.firstOrNull { it.id == type.id }
             val normalized = type.copy(
                 name = type.name.trim(),
                 suggestedUnit = type.suggestedUnit.trim(),
                 updatedAt = now,
+                createdAt = if (existing == null) now else existing.createdAt,
             )
             record.copy(
                 customMeasurementTypes = record.customMeasurementTypes.upsert(
@@ -328,6 +370,7 @@ class DefaultVaultRepository @Inject constructor(
         }
 
     override suspend fun upsertContact(contact: VaultContact) = mutateVault { vault, now ->
+        val existing = vault.contacts.firstOrNull { it.id == contact.id }
         val normalized = contact.copy(
             name = contact.name.trim(),
             phoneNumbers = contact.phoneNumbers.normalizedContactValues(),
@@ -338,6 +381,7 @@ class DefaultVaultRepository @Inject constructor(
             addresses = contact.addresses.normalizedContactValues(),
             notes = contact.notes?.trim()?.takeIf(String::isNotEmpty),
             updatedAt = now,
+            createdAt = if (existing == null) now else existing.createdAt,
         )
         vault.copy(contacts = vault.contacts.upsert(normalized, VaultContact::id))
     }
@@ -348,11 +392,13 @@ class DefaultVaultRepository @Inject constructor(
 
     override suspend fun upsertFamilyHistoryEntry(profileId: UUID, entry: FamilyHistoryEntry) =
         mutateProfile(profileId) { record, now ->
+            val existing = record.familyHistory.firstOrNull { it.id == entry.id }
             val normalized = entry.copy(
                 relationship = entry.relationship.trim(),
                 condition = entry.condition.trim(),
                 notes = entry.notes?.trim()?.takeIf(String::isNotEmpty),
                 updatedAt = now,
+                createdAt = if (existing == null) now else existing.createdAt,
             )
             record.copy(familyHistory = record.familyHistory.upsert(normalized, FamilyHistoryEntry::id))
         }
@@ -364,11 +410,13 @@ class DefaultVaultRepository @Inject constructor(
 
     override suspend fun upsertCareDirective(profileId: UUID, directive: CareDirective) =
         mutateProfile(profileId) { record, now ->
+            val existing = record.directives.firstOrNull { it.id == directive.id }
             val normalized = directive.copy(
                 title = directive.title.trim(),
                 text = directive.text.trim(),
                 relatedDocumentIds = directive.relatedDocumentIds.distinct(),
                 updatedAt = now,
+                createdAt = if (existing == null) now else existing.createdAt,
             )
             record.copy(directives = record.directives.upsert(normalized, CareDirective::id))
         }
@@ -380,6 +428,7 @@ class DefaultVaultRepository @Inject constructor(
 
     override suspend fun upsertHealthIdentifier(profileId: UUID, identifier: HealthIdentifier) =
         mutateProfile(profileId) { record, now ->
+            val existing = record.healthIdentifiers.firstOrNull { it.id == identifier.id }
             val normalized = identifier.copy(
                 label = identifier.label.trim(),
                 value = identifier.value.trim(),
@@ -387,6 +436,7 @@ class DefaultVaultRepository @Inject constructor(
                 country = identifier.country?.trim()?.takeIf(String::isNotEmpty),
                 notes = identifier.notes?.trim()?.takeIf(String::isNotEmpty),
                 updatedAt = now,
+                createdAt = if (existing == null) now else existing.createdAt,
             )
             record.copy(
                 healthIdentifiers = record.healthIdentifiers.upsert(normalized, HealthIdentifier::id),
@@ -402,7 +452,12 @@ class DefaultVaultRepository @Inject constructor(
         profileId: UUID,
         category: CustomDocumentCategory,
     ) = mutateProfile(profileId) { record, now ->
-        val normalized = category.copy(name = category.name.trim(), updatedAt = now)
+        val existing = record.customDocumentCategories.firstOrNull { it.id == category.id }
+        val normalized = category.copy(
+            name = category.name.trim(),
+            updatedAt = now,
+            createdAt = if (existing == null) now else existing.createdAt,
+        )
         record.copy(
             customDocumentCategories = record.customDocumentCategories.upsert(
                 normalized,

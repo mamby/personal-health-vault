@@ -8,24 +8,33 @@ import java.time.ZoneOffset
 import java.util.UUID
 import kotlinx.coroutines.test.runTest
 import net.mamby.health.core.model.BuiltInDocumentCategory
+import net.mamby.health.core.model.BuiltInMeasurementType
 import net.mamby.health.core.model.CareDirective
 import net.mamby.health.core.model.CareDirectiveKind
 import net.mamby.health.core.model.CustomDocumentCategory
 import net.mamby.health.core.model.CustomMeasurementType
 import net.mamby.health.core.model.DocumentCategoryRef
+import net.mamby.health.core.model.EmergencyContact
+import net.mamby.health.core.model.FamilyHistoryEntry
+import net.mamby.health.core.model.HealthIdentifier
+import net.mamby.health.core.model.HealthIdentifierKind
 import net.mamby.health.core.model.HealthNote
 import net.mamby.health.core.model.HealthMeasurement
 import net.mamby.health.core.model.MeasurementReading
 import net.mamby.health.core.model.MeasurementTypeRef
+import net.mamby.health.core.model.MeasurementUnit
 import net.mamby.health.core.model.MeasurementUnitRef
 import net.mamby.health.core.model.asReference
 import net.mamby.health.core.model.HealthVault
 import net.mamby.health.core.model.Medication
+import net.mamby.health.core.model.MedicalDocument
 import net.mamby.health.core.model.Schedule
 import net.mamby.health.core.model.ScheduleTiming
 import net.mamby.health.core.model.VaultContact
+import net.mamby.health.core.model.Vaccination
 import net.mamby.health.core.model.profileRecord
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -267,6 +276,7 @@ class DefaultVaultRepositoryTest {
                 addresses = listOf("12 Main St\nParis"),
                 notes = "Family doctor",
                 updatedAt = now,
+                createdAt = now,
             ),
             stored.contacts.single(),
         )
@@ -445,7 +455,228 @@ class DefaultVaultRepositoryTest {
     private fun repository(
         store: FakeVaultStore,
         blobs: FakeDocumentBlobStore,
+        clock: Clock = this.clock,
     ) = DefaultVaultRepository(store, blobs, clock, UuidGenerator(UUID::randomUUID))
+
+    @Test
+    fun creationTimesSurviveEditorInputSerializationAndRestoreWhileModificationTimesAdvance() = runTest {
+        val store = FakeVaultStore()
+        val repository = repository(store, FakeDocumentBlobStore())
+        repository.initialize()
+        val profileId = repository.addProfile("Owner")
+        val document = repository.importDocument(
+            profileId,
+            MedicalDocumentDraft(
+                "Report",
+                BuiltInDocumentCategory.REPORTS.asReference(),
+                LocalDate.of(2026, 7, 1),
+                "Clinic",
+            ),
+            importedPdf(),
+        )
+        val input = timestampFixture(profileId).let { vault ->
+            vault.copy(
+                profiles = listOf(
+                    vault.profiles.single().copy(documents = listOf(document.copy(createdAt = null))),
+                ),
+            )
+        }
+        saveTimestampFixture(repository, input)
+        val created = repository.exportSnapshot()
+        itemTimestamps(created).forEach { (kind, timestamps) ->
+            assertEquals("$kind creation", now, timestamps.first)
+            assertEquals("$kind modification", now, timestamps.second)
+        }
+        assertEquals(14, itemTimestamps(created).size)
+
+        val encoded = VaultCodec.encode(created)
+        val decoded = VaultCodec.decode(encoded).vault
+        assertEquals(created, decoded)
+        val editedAt = now.plusSeconds(3_600)
+        val restored = repository(FakeVaultStore(), FakeDocumentBlobStore(), Clock.fixed(editedAt, ZoneOffset.UTC))
+        restored.initialize()
+        restored.restore(
+            decoded,
+            listOf(
+                RestoreDocumentBlob(document.blobId, document.sizeBytes) {
+                    "%PDF-private".byteInputStream()
+                },
+            ),
+        )
+        assertEquals(created, restored.exportSnapshot())
+        saveTimestampFixture(restored, input)
+
+        itemTimestamps(restored.exportSnapshot()).forEach { (kind, timestamps) ->
+            assertEquals("$kind creation after edit", now, timestamps.first)
+            assertEquals("$kind modification after edit", editedAt, timestamps.second)
+        }
+    }
+
+    @Test
+    fun existingSchemaV1WithoutTimestampsRemainsReadableAndUnknownCreationStaysUnknownOnEdit() = runTest {
+        val old = timestampFixture(UUID.randomUUID())
+        val encoded = VaultCodec.encode(old)
+        val source = encoded.decodeToString()
+        assertFalse(source.contains("\"createdAt\""))
+        val decoded = VaultCodec.decode(encoded).vault
+        assertEquals(old, decoded)
+        assertEquals(null, decoded.profiles.single().profile.emergencyContacts.single().updatedAt)
+        val store = FakeVaultStore().apply { stored = decoded }
+        val repository = repository(store, FakeDocumentBlobStore())
+        repository.initialize()
+
+        saveTimestampFixture(repository, decoded)
+
+        itemTimestamps(repository.exportSnapshot()).forEach { (kind, timestamps) ->
+            assertEquals("$kind historical creation", if (kind == "note") now else null, timestamps.first)
+            assertEquals("$kind modification after edit", now, timestamps.second)
+        }
+    }
+
+    @Test
+    fun profileEditsPreserveUnchangedEmergencyContactDatesAndStampChangedContacts() = runTest {
+        val store = FakeVaultStore()
+        val repository = repository(store, FakeDocumentBlobStore())
+        repository.initialize()
+        val profileId = repository.addProfile("Owner")
+        repository.upsertEmergencyContact(profileId, EmergencyContact(UUID.randomUUID(), "Sam", "Sibling", "123"))
+        val profile = repository.exportSnapshot().profiles.single().profile
+        val savedContact = profile.emergencyContacts.single()
+        val editedAt = now.plusSeconds(3_600)
+        val editor = repository(store, FakeDocumentBlobStore(), Clock.fixed(editedAt, ZoneOffset.UTC))
+        editor.initialize()
+        editor.updateProfile(
+            profileId,
+            profile.copy(
+                displayName = "Renamed",
+                emergencyContacts = listOf(savedContact.copy(createdAt = null, updatedAt = null)),
+            ),
+        )
+        assertEquals(savedContact, editor.exportSnapshot().profiles.single().profile.emergencyContacts.single())
+
+        editor.updateProfile(
+            profileId,
+            profile.copy(emergencyContacts = listOf(savedContact.copy(phoneNumber = "456", createdAt = null))),
+        )
+        val changed = editor.exportSnapshot().profiles.single().profile.emergencyContacts.single()
+        assertEquals(now, changed.createdAt)
+        assertEquals(editedAt, changed.updatedAt)
+        assertEquals("456", changed.phoneNumber)
+    }
+
+    private fun timestampFixture(profileId: UUID): HealthVault {
+        val root = HealthVault.withProfile(now, profileId, "Owner")
+        val record = root.profiles.single().copy(
+            profile = root.profiles.single().profile.copy(
+                createdAt = null,
+                emergencyContacts = listOf(EmergencyContact(UUID.randomUUID(), "Sam", "Sibling", "123")),
+            ),
+            documents = listOf(
+                MedicalDocument(
+                    id = UUID.randomUUID(),
+                    title = "Report",
+                    category = BuiltInDocumentCategory.REPORTS.asReference(),
+                    documentDate = LocalDate.of(2026, 7, 1),
+                    source = "Clinic",
+                    blobId = UUID.randomUUID(),
+                    mimeType = "application/pdf",
+                    sizeBytes = 12,
+                    updatedAt = Instant.EPOCH,
+                ),
+            ),
+            medications = listOf(
+                Medication(UUID.randomUUID(), "Medication", "5 mg", "Daily", updatedAt = Instant.EPOCH),
+            ),
+            vaccinations = listOf(
+                Vaccination(UUID.randomUUID(), "Vaccination", LocalDate.of(2026, 7, 1), updatedAt = Instant.EPOCH),
+            ),
+            measurements = listOf(
+                HealthMeasurement(
+                    UUID.randomUUID(),
+                    MeasurementTypeRef.BuiltIn(BuiltInMeasurementType.WEIGHT),
+                    MeasurementReading.Scalar(72.0, MeasurementUnitRef.BuiltIn(MeasurementUnit.KILOGRAM)),
+                    now.minusSeconds(86_400),
+                    updatedAt = Instant.EPOCH,
+                ),
+            ),
+            familyHistory = listOf(
+                FamilyHistoryEntry(UUID.randomUUID(), "Parent", "Condition", updatedAt = Instant.EPOCH),
+            ),
+            directives = listOf(
+                CareDirective(
+                    UUID.randomUUID(),
+                    CareDirectiveKind.CARE_PREFERENCE,
+                    "Preference",
+                    "Text",
+                    LocalDate.of(2026, 7, 1),
+                    updatedAt = Instant.EPOCH,
+                ),
+            ),
+            healthIdentifiers = listOf(
+                HealthIdentifier(
+                    UUID.randomUUID(),
+                    HealthIdentifierKind.PATIENT,
+                    "Patient number",
+                    "123",
+                    updatedAt = Instant.EPOCH,
+                ),
+            ),
+            customDocumentCategories = listOf(CustomDocumentCategory(UUID.randomUUID(), "Custom", Instant.EPOCH)),
+            customMeasurementTypes = listOf(CustomMeasurementType(UUID.randomUUID(), "Waist", "cm", Instant.EPOCH)),
+        )
+        return root.copy(
+            profiles = listOf(record),
+            notes = listOf(HealthNote(UUID.randomUUID(), "Note", "Body", now, Instant.EPOCH)),
+            schedules = listOf(
+                Schedule(
+                    UUID.randomUUID(),
+                    "Schedule",
+                    ScheduleTiming.AllDay(LocalDate.of(2026, 8, 1)),
+                    updatedAt = Instant.EPOCH,
+                ),
+            ),
+            contacts = listOf(VaultContact(UUID.randomUUID(), "Contact", updatedAt = Instant.EPOCH)),
+        )
+    }
+
+    private suspend fun saveTimestampFixture(repository: DefaultVaultRepository, vault: HealthVault) {
+        val record = vault.profiles.single()
+        val profileId = record.profile.id
+        repository.updateProfile(profileId, record.profile.copy(createdAt = Instant.EPOCH))
+        record.profile.emergencyContacts.forEach { repository.upsertEmergencyContact(profileId, it) }
+        record.documents.forEach { repository.updateDocument(profileId, it) }
+        record.medications.forEach { repository.upsertMedication(profileId, it) }
+        record.vaccinations.forEach { repository.upsertVaccination(profileId, it) }
+        record.measurements.forEach { repository.upsertMeasurement(profileId, it) }
+        record.familyHistory.forEach { repository.upsertFamilyHistoryEntry(profileId, it) }
+        record.directives.forEach { repository.upsertCareDirective(profileId, it) }
+        record.healthIdentifiers.forEach { repository.upsertHealthIdentifier(profileId, it) }
+        record.customDocumentCategories.forEach { repository.upsertCustomDocumentCategory(profileId, it) }
+        record.customMeasurementTypes.forEach { repository.upsertCustomMeasurementType(profileId, it) }
+        vault.notes.forEach { repository.upsertHealthNote(it) }
+        vault.schedules.forEach { repository.upsertSchedule(it) }
+        vault.contacts.forEach { repository.upsertContact(it) }
+    }
+
+    private fun itemTimestamps(vault: HealthVault): Map<String, Pair<Instant?, Instant?>> {
+        val record = vault.profiles.single()
+        return buildMap {
+            put("profile", record.profile.let { it.createdAt to it.lastUpdatedAt })
+            put("emergency contact", record.profile.emergencyContacts.single().let { it.createdAt to it.updatedAt })
+            put("document", record.documents.single().let { it.createdAt to it.updatedAt })
+            put("medication", record.medications.single().let { it.createdAt to it.updatedAt })
+            put("vaccination", record.vaccinations.single().let { it.createdAt to it.updatedAt })
+            put("measurement", record.measurements.single().let { it.createdAt to it.updatedAt })
+            put("family history", record.familyHistory.single().let { it.createdAt to it.updatedAt })
+            put("directive", record.directives.single().let { it.createdAt to it.updatedAt })
+            put("identifier", record.healthIdentifiers.single().let { it.createdAt to it.updatedAt })
+            put("document category", record.customDocumentCategories.single().let { it.createdAt to it.updatedAt })
+            put("measurement type", record.customMeasurementTypes.single().let { it.createdAt to it.updatedAt })
+            put("note", vault.notes.single().let { it.notedAt to it.updatedAt })
+            put("schedule", vault.schedules.single().let { it.createdAt to it.updatedAt })
+            put("contact", vault.contacts.single().let { it.createdAt to it.updatedAt })
+        }
+    }
 
     private fun importedPdf(): ImportedDocumentData {
         val content = "%PDF-private".encodeToByteArray()

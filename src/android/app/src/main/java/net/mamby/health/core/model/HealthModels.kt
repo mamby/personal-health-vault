@@ -53,6 +53,7 @@ data class CustomDocumentCategory(
     val id: UUID,
     val name: String,
     val updatedAt: Instant,
+    val createdAt: Instant? = null,
 )
 
 @Serializable
@@ -154,6 +155,7 @@ data class CustomMeasurementType(
     val name: String,
     val suggestedUnit: String,
     val updatedAt: Instant,
+    val createdAt: Instant? = null,
 )
 
 @Serializable
@@ -164,6 +166,7 @@ data class HealthMeasurement(
     val measuredAt: Instant,
     val notes: String? = null,
     val updatedAt: Instant,
+    val createdAt: Instant? = null,
 )
 
 @Serializable
@@ -186,6 +189,7 @@ data class VaultContact(
     val notes: String? = null,
     val updatedAt: Instant,
     val isPinned: Boolean = false,
+    val createdAt: Instant? = null,
 )
 
 @Serializable
@@ -196,6 +200,7 @@ data class FamilyHistoryEntry(
     val ageAtOnsetYears: Int? = null,
     val notes: String? = null,
     val updatedAt: Instant,
+    val createdAt: Instant? = null,
 )
 
 @Serializable
@@ -215,6 +220,7 @@ data class CareDirective(
     val recordedOn: LocalDate,
     val relatedDocumentIds: List<UUID> = emptyList(),
     val updatedAt: Instant,
+    val createdAt: Instant? = null,
 )
 
 @Serializable
@@ -236,6 +242,7 @@ data class HealthIdentifier(
     val country: String? = null,
     val notes: String? = null,
     val updatedAt: Instant,
+    val createdAt: Instant? = null,
 )
 
 @Serializable
@@ -245,6 +252,8 @@ data class EmergencyContact(
     val relationship: String,
     val phoneNumber: String,
     val notes: String? = null,
+    val createdAt: Instant? = null,
+    val updatedAt: Instant? = null,
 )
 
 @Serializable
@@ -257,6 +266,7 @@ data class HealthProfile(
     val surgeries: List<String> = emptyList(),
     val emergencyContacts: List<EmergencyContact> = emptyList(),
     val lastUpdatedAt: Instant,
+    val createdAt: Instant? = null,
 )
 
 @Serializable
@@ -273,6 +283,7 @@ data class MedicalDocument(
     val sizeBytes: Long,
     val originalFileName: String? = null,
     val updatedAt: Instant,
+    val createdAt: Instant? = null,
 )
 
 @Serializable
@@ -295,6 +306,7 @@ data class Medication(
     val remindersEnabled: Boolean = false,
     val notes: String? = null,
     val updatedAt: Instant,
+    val createdAt: Instant? = null,
 )
 
 @Serializable
@@ -376,6 +388,7 @@ data class Schedule(
     val location: String? = null,
     val notes: String? = null,
     val updatedAt: Instant,
+    val createdAt: Instant? = null,
 )
 
 @Serializable
@@ -388,6 +401,7 @@ data class Vaccination(
     val nextDueOn: LocalDate? = null,
     val notes: String? = null,
     val updatedAt: Instant,
+    val createdAt: Instant? = null,
 )
 
 data class HealthSummary(
@@ -451,6 +465,7 @@ data class HealthVault(
                         id = profileId,
                         displayName = displayName,
                         lastUpdatedAt = now,
+                        createdAt = now,
                     ),
                 ),
             ),

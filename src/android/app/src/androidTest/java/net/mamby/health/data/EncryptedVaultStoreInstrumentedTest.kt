@@ -253,6 +253,7 @@ class EncryptedVaultStoreInstrumentedTest {
         sizeBytes = sizeBytes,
         originalFileName = "$title.pdf",
         updatedAt = NOW,
+        createdAt = NOW.minusSeconds(86_400),
     )
 
     private fun source(

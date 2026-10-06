@@ -114,12 +114,13 @@ class PortableBackupContainerTest {
             mimeType = "application/pdf",
             sizeBytes = documentBytes.size.toLong(),
             updatedAt = now,
+            createdAt = now.minusSeconds(86_400),
         )
         val vault = HealthVault(
             revision = 12,
             profiles = listOf(
                 ProfileRecord(
-                    HealthProfile(profileId, "Owner", lastUpdatedAt = now),
+                    HealthProfile(profileId, "Owner", lastUpdatedAt = now, createdAt = now.minusSeconds(86_400)),
                     documents = listOf(document),
                     directives = listOf(
                         CareDirective(
@@ -130,6 +131,7 @@ class PortableBackupContainerTest {
                             LocalDate.of(2026, 7, 30),
                             listOf(documentId),
                             now,
+                            createdAt = now.minusSeconds(3_600),
                         ),
                     ),
                 ),
@@ -142,6 +144,7 @@ class PortableBackupContainerTest {
                     websites = listOf("https://example.com"),
                     addresses = listOf("12 Main St\nParis"),
                     updatedAt = now,
+                    createdAt = now.minusSeconds(3_600),
                 ),
             ),
             updatedAt = now,
