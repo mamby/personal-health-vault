@@ -68,16 +68,15 @@ import kotlinx.coroutines.CompletableDeferred
 import net.mamby.androidkit.compose.action.AndroidKitListSelection
 import net.mamby.androidkit.compose.presentation.AndroidKitListActionResult
 import net.mamby.androidkit.compose.presentation.AndroidKitListDeleteAction
+import net.mamby.androidkit.compose.presentation.AndroidKitListPinAction
 import net.mamby.androidkit.compose.presentation.AndroidKitList
 import net.mamby.androidkit.compose.presentation.AndroidKitListState
 import net.mamby.androidkit.compose.presentation.rememberAndroidKitListState
 import net.mamby.androidkit.compose.presentation.AndroidKitSectionCard
-import net.mamby.androidkit.compose.presentation.AndroidKitCard
 import net.mamby.androidkit.compose.presentation.AndroidKitSectionCardEntry
 import net.mamby.androidkit.compose.action.AndroidKitActionFlyoutScope
 import net.mamby.androidkit.compose.layout.AndroidKitPage
 import net.mamby.androidkit.compose.theme.AndroidKitThemeTokens
-import net.mamby.androidkit.compose.theme.AndroidKitCardColors
 import net.mamby.health.R
 import net.mamby.health.core.model.VaultContact
 import net.mamby.health.ui.components.AppEditorScaffold
@@ -109,13 +108,9 @@ fun ContactsScreen(
     val selectionState = listState.selection
     val sortedContacts = remember(contacts) {
         contacts.sortedWith(
-            compareByDescending<VaultContact> { it.isPinned }
-                .thenBy { it.name.lowercase(Locale.getDefault()) }
+            compareBy<VaultContact> { it.name.lowercase(Locale.getDefault()) }
                 .thenBy(VaultContact::id),
         )
-    }
-    val kitCardIds = remember(sortedContacts) {
-        sortedContacts.take((sortedContacts.size + 1) / 2).map(VaultContact::id).toSet()
     }
     var updating by remember { mutableStateOf(false) }
     var pendingDeletion by remember { mutableStateOf<Set<UUID>?>(null) }
@@ -127,7 +122,6 @@ fun ContactsScreen(
     val pinLabel = stringResource(R.string.common_pin)
     val unpinLabel = stringResource(R.string.common_unpin)
     val deleteLabel = stringResource(R.string.common_delete)
-    val selectIcon = ImageVector.vectorResource(R.drawable.ic_lucide_check)
     val openIcon = ImageVector.vectorResource(R.drawable.ic_lucide_external_link)
     val editIcon = ImageVector.vectorResource(R.drawable.ic_lucide_pencil)
     val shareIcon = ImageVector.vectorResource(R.drawable.ic_lucide_share_2)
@@ -142,9 +136,11 @@ fun ContactsScreen(
             AndroidKitListActionResult.Success
         }
         icon(shareIcon, shareLabel) { ids ->
-            onShare(sortedContacts.filter { it.id.toString() in ids }.joinToString("\n\n") {
-                shareTexts.getValue(it.id.toString())
-            })
+            onShare(
+                sortedContacts.filter { it.id.toString() in ids }
+                    .sortedByDescending { it.isPinned }
+                    .joinToString("\n\n") { shareTexts.getValue(it.id.toString()) },
+            )
             AndroidKitListActionResult.Success
         }
         icon(pinIcon, if (unpinSelection) unpinLabel else pinLabel) { ids ->
@@ -162,11 +158,6 @@ fun ContactsScreen(
     DisposableEffect(selectionState) {
         onDispose { selectionState.close() }
     }
-    val pinContact: (VaultContact) -> Unit = { contact ->
-        updating = true
-        onSetPinned(setOf(contact.id), !contact.isPinned) { updating = false }
-    }
-
     AndroidKitPage(
         title = stringResource(R.string.contacts_title),
         selection = selection,
@@ -190,26 +181,32 @@ fun ContactsScreen(
                 modifier = Modifier.padding(padding).consumeWindowInsets(padding),
             )
         } else {
-            // Temporary presentation comparison; the first half uses Kit cards.
             AndroidKitList(
                 items = sortedContacts,
                 key = { it.id.toString() },
                 state = listState,
                 modifier = Modifier.fillMaxSize().consumeWindowInsets(padding),
                 contentPadding = padding,
+                normalItemPadding = PaddingValues(AndroidKitThemeTokens.dimensions.spaceMedium),
                 enabled = { !updating && pendingDeletion == null },
                 onItemClick = { onSelected(it.id) },
                 contextMenu = { contact -> {
                     item(openLabel, icon = openIcon, onClick = { onSelected(contact.id) })
                     item(editLabel, icon = editIcon, onClick = { onEdit(contact.id) })
                     item(shareLabel, icon = shareIcon, onClick = { onShare(shareTexts.getValue(contact.id.toString())) })
-                    item(if (contact.isPinned) unpinLabel else pinLabel, icon = pinIcon, onClick = { pinContact(contact) })
-                    separator()
-                    item(selectLabel, icon = selectIcon, onClick = { selectionState.activate(setOf(contact.id.toString())) })
                 } },
+                pinAction = { contact ->
+                    AndroidKitListPinAction(
+                        pinned = contact.isPinned,
+                        onPinnedChange = { pinned ->
+                            updating = true
+                            onSetPinned(setOf(contact.id), pinned) { updating = false }
+                        },
+                    )
+                },
                 deleteAction = { contact -> AndroidKitListDeleteAction({ pendingDeletion = setOf(contact.id) }) },
             ) { contact ->
-                ContactListCard(contact, contact.id in kitCardIds)
+                ContactListItem(contact)
             }
         }
     }
@@ -235,24 +232,15 @@ fun ContactsScreen(
 }
 
 @Composable
-private fun ContactListCard(contact: VaultContact, kitCard: Boolean) {
-    AndroidKitCard(
-        title = contact.name,
-        supportingText = if (kitCard) contact.firstContactValue() else null,
+private fun ContactListItem(contact: VaultContact) {
+    Column(
         modifier = Modifier.fillMaxWidth(),
-        colors = if (kitCard) AndroidKitCardColors()
-            else AndroidKitThemeTokens.cardColors.copy(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
-        trailingContent = if (contact.isPinned) {
-            {
-                Icon(
-                    painter = painterResource(R.drawable.ic_lucide_pin),
-                    contentDescription = stringResource(R.string.contact_pinned),
-                    modifier = Modifier.size(UiTokens.DetailActionIconSize),
-                )
-            }
-        } else null,
+        verticalArrangement = Arrangement.spacedBy(AndroidKitThemeTokens.dimensions.spaceSmall),
     ) {
-        if (!kitCard) contact.firstContactValue()?.let { Text(it) }
+        Text(contact.name, style = MaterialTheme.typography.titleMedium)
+        contact.firstContactValue()?.let {
+            Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
     }
 }
 

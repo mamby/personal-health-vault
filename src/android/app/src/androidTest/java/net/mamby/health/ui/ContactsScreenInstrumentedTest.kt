@@ -13,6 +13,7 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.runtime.mutableStateOf
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.DeviceConfigurationOverride
 import androidx.compose.ui.test.ExperimentalTestApi
@@ -41,6 +42,9 @@ import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.performMouseInput
+import androidx.compose.ui.test.MouseButton
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeRight
@@ -509,18 +513,18 @@ class ContactsScreenInstrumentedTest {
 
     @Test
     @OptIn(ExperimentalTestApi::class)
-    fun pinnedContactIndicatorUsesThemeColorAndReservesSpaceInBothDirections() {
+    fun pinnedContactSectionUsesThemeColorAndPrecedesContentInBothDirections() {
         val name = "A long contact name that wraps on a compact screen"
         val contact = VaultContact(UUID.randomUUID(), name, updatedAt = Instant.EPOCH, isPinned = true)
         val direction = mutableStateOf(LayoutDirection.Ltr)
         val darkTheme = mutableStateOf(false)
-        var primary = Color.Unspecified
+        var secondary = Color.Unspecified
         composeRule.setContent {
             DeviceConfigurationOverride(DeviceConfigurationOverride.ForcedSize(DpSize(320.dp, 640.dp))) {
                 DeviceConfigurationOverride(DeviceConfigurationOverride.FontScale(1.5f)) {
                     CompositionLocalProvider(LocalLayoutDirection provides direction.value) {
                         HealthVaultTheme(darkTheme = darkTheme.value) {
-                            primary = MaterialTheme.colorScheme.primary
+                            secondary = MaterialTheme.colorScheme.onSurfaceVariant
                             ContactsScreen(
                                 contacts = listOf(contact), onAdd = {}, onSelected = {}, onEdit = {}, onShare = {},
                                 onSetPinned = { _, _, complete -> complete(true) },
@@ -534,21 +538,19 @@ class ContactsScreenInstrumentedTest {
         for (dark in listOf(false, true)) {
             for (layoutDirection in LayoutDirection.entries) {
                 composeRule.runOnIdle { darkTheme.value = dark; direction.value = layoutDirection }
-                val indicator = composeRule.onNodeWithContentDescription(
-                    composeRule.activity.getString(R.string.contact_pinned), useUnmergedTree = true,
-                ).assertIsDisplayed()
+                val heading = composeRule.onNodeWithText(
+                    composeRule.activity.getString(net.mamby.androidkit.compose.R.string.androidkit_compose_pinned),
+                ).assertIsDisplayed().assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
                 val title = composeRule.onNodeWithText(name, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
-                val pin = indicator.fetchSemanticsNode().boundsInRoot
-                org.junit.Assert.assertTrue(
-                    if (layoutDirection == LayoutDirection.Ltr) title.right <= pin.left else pin.right <= title.left,
-                )
-                val pixels = indicator.captureToImage().toPixelMap()
+                org.junit.Assert.assertTrue(heading.fetchSemanticsNode().boundsInRoot.bottom <= title.top)
+                composeRule.onNodeWithContentDescription(composeRule.activity.getString(R.string.contact_pinned)).assertDoesNotExist()
+                val pixels = heading.captureToImage().toPixelMap()
                 org.junit.Assert.assertTrue((0 until pixels.height).any { y ->
                     (0 until pixels.width).any { x ->
                         val pixel = pixels[x, y]
-                        kotlin.math.abs(pixel.red - primary.red) < 0.03f &&
-                            kotlin.math.abs(pixel.green - primary.green) < 0.03f &&
-                            kotlin.math.abs(pixel.blue - primary.blue) < 0.03f
+                        kotlin.math.abs(pixel.red - secondary.red) < 0.03f &&
+                            kotlin.math.abs(pixel.green - secondary.green) < 0.03f &&
+                            kotlin.math.abs(pixel.blue - secondary.blue) < 0.03f
                     }
                 })
             }
@@ -618,23 +620,27 @@ class ContactsScreenInstrumentedTest {
             }
         }
         fun menuAction(name: String, action: Int) {
-            composeRule.onNodeWithText(name).performTouchInput { longClick() }
+            composeRule.onNodeWithText(name).performMouseInput { click(button = MouseButton.Secondary) }
             composeRule.onNode(hasText(composeRule.activity.getString(action)) and hasAnyAncestor(isPopup())).performClick()
         }
         composeRule.onNodeWithText("Alice").performClick()
         menuAction("Alice", R.string.common_open)
         menuAction("Alice", R.string.common_edit)
         menuAction("Alice", R.string.common_share)
-        menuAction("Zoe", R.string.common_pin)
-        composeRule.onNodeWithContentDescription(composeRule.activity.getString(R.string.contact_pinned)).assertIsDisplayed()
+        menuAction("Zoe", net.mamby.androidkit.compose.R.string.androidkit_compose_pin)
+        composeRule.onNodeWithText(composeRule.activity.getString(
+            net.mamby.androidkit.compose.R.string.androidkit_compose_pinned,
+        )).assertIsDisplayed()
         composeRule.runOnIdle {
             assertEquals(listOf(alice.id, alice.id), opened)
             assertEquals(listOf(alice.id), edited)
             org.junit.Assert.assertTrue(shared.single().contains("111"))
             org.junit.Assert.assertTrue(contacts.value.single { it.id == zoe.id }.isPinned)
         }
-        menuAction("Zoe", R.string.common_unpin)
-        composeRule.onNodeWithContentDescription(composeRule.activity.getString(R.string.contact_pinned)).assertDoesNotExist()
+        menuAction("Zoe", net.mamby.androidkit.compose.R.string.androidkit_compose_unpin)
+        composeRule.onNodeWithText(composeRule.activity.getString(
+            net.mamby.androidkit.compose.R.string.androidkit_compose_pinned,
+        )).assertDoesNotExist()
         menuAction("Alice", R.string.common_delete)
         composeRule.runOnIdle { org.junit.Assert.assertTrue(deleted.isEmpty()) }
         composeRule.onNodeWithText(composeRule.activity.getString(R.string.common_cancel)).performClick()
@@ -716,7 +722,6 @@ class ContactsScreenInstrumentedTest {
             }
         }
         composeRule.onNodeWithText("Alice").performTouchInput { longClick() }
-        composeRule.onNode(hasText(composeRule.activity.getString(R.string.common_select)) and hasAnyAncestor(isPopup())).performClick()
         composeRule.onNodeWithText("Alice").assertIsSelected()
         composeRule.onNodeWithText("Zoe").performClick().assertIsSelected()
         clickTitleAction(R.string.common_delete)

@@ -1,5 +1,14 @@
 # Third-party notices
 
+## Google Material Symbols
+
+The list Pin/Unpin icons adapt Google's Material Symbols
+[`keep`](https://github.com/google/material-design-icons/blob/master/symbols/web/keep/materialsymbolsoutlined/keep_24px.svg)
+and [`keep_off`](https://github.com/google/material-design-icons/blob/master/symbols/web/keep_off/materialsymbolsoutlined/keep_off_24px.svg).
+The original SVG path data is represented in Android vector drawables. These
+icons use the [Apache License, Version 2.0](compose/src/main/resources/META-INF/LICENSE-MATERIAL-SYMBOLS),
+which is included with their notice in the Compose artifact.
+
 ## Lucide
 
 The component chrome icons `ArrowLeft`, `ChevronRight`, `Ellipsis`, and `X`
