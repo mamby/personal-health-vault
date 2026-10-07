@@ -126,6 +126,7 @@ fun ContactsScreen(
     val editIcon = ImageVector.vectorResource(R.drawable.ic_lucide_pencil)
     val shareIcon = ImageVector.vectorResource(R.drawable.ic_lucide_share_2)
     val pinIcon = ImageVector.vectorResource(R.drawable.ic_lucide_pin)
+    val unpinIcon = ImageVector.vectorResource(R.drawable.ic_lucide_pin_off)
     val deleteIcon = ImageVector.vectorResource(R.drawable.ic_lucide_trash_2)
     val shareTexts = contacts.associate { it.id.toString() to contactShareText(it) }
     val selectedContacts = contacts.filter { it.id.toString() in selectionState.selectedIds }
@@ -143,7 +144,7 @@ fun ContactsScreen(
             )
             AndroidKitListActionResult.Success
         }
-        icon(pinIcon, if (unpinSelection) unpinLabel else pinLabel) { ids ->
+        icon(if (unpinSelection) unpinIcon else pinIcon, if (unpinSelection) unpinLabel else pinLabel) { ids ->
             val result = CompletableDeferred<Boolean>()
             onSetPinned(ids.map(UUID::fromString).toSet(), !unpinSelection) { result.complete(it) }
             if (result.await()) AndroidKitListActionResult.Success else AndroidKitListActionResult.Failure()
@@ -303,7 +304,7 @@ fun ContactDetailScreen(
             ),
             titleBarAction(
                 label = stringResource(if (contact.isPinned) R.string.common_unpin else R.string.common_pin),
-                icon = R.drawable.ic_lucide_pin,
+                icon = if (contact.isPinned) R.drawable.ic_lucide_pin_off else R.drawable.ic_lucide_pin,
                 enabled = !updating,
                 onClick = {
                     updating = true
