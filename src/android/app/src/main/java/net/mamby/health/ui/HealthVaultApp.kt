@@ -102,6 +102,7 @@ import net.mamby.health.feature.notes.HealthNoteEditorScreen
 import net.mamby.health.feature.contacts.ContactDetailScreen
 import net.mamby.health.feature.contacts.ContactEditorScreen
 import net.mamby.health.feature.contacts.ContactsScreen
+import net.mamby.health.feature.contacts.rememberContactListOptionsState
 import net.mamby.health.feature.records.HealthRecordsHubScreen
 import net.mamby.health.feature.profiles.ProfileManagementScreen
 import net.mamby.health.feature.profiles.ProfileOwnerGateScreen
@@ -446,8 +447,9 @@ private fun VaultNavigation(
     onLocaleChanged: (String) -> Unit,
 ) {
     val currentVault by rememberUpdatedState(vault)
+    val contactListOptionsState = rememberContactListOptionsState()
     val contactListState = rememberAndroidKitListState(
-        vault.contacts.map { it.id.toString() }.toSet(),
+        vault.contacts.filter(contactListOptionsState.options::matches).map { it.id.toString() }.toSet(),
         selectionAvailable = when (navigation.currentBackStack.lastOrNull()) {
             ContactsRoute, is ContactDetailRoute -> true
             else -> false
@@ -1007,6 +1009,7 @@ private fun VaultNavigation(
                                 onSetPinned = viewModel::setContactsPinned,
                                 onDelete = viewModel::deleteContacts,
                                 onActionError = viewModel::showContactActionUnavailable,
+                                optionsState = contactListOptionsState,
                                 listState = contactListState,
                             )
                         }

@@ -4,12 +4,14 @@ import android.content.ClipData
 import android.content.ClipDescription
 import android.os.PersistableBundle
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -29,6 +31,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -50,6 +53,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
@@ -101,16 +105,16 @@ fun ContactsScreen(
     onSetPinned: (Set<UUID>, Boolean, (Boolean) -> Unit) -> Unit,
     onDelete: (Set<UUID>, (Boolean) -> Unit) -> Unit,
     onActionError: () -> Unit,
+    optionsState: ContactListOptionsState = rememberContactListOptionsState(),
     listState: AndroidKitListState = rememberAndroidKitListState(
-        contacts.map { it.id.toString() }.toSet(),
+        contacts.filter(optionsState.options::matches).map { it.id.toString() }.toSet(),
     ),
 ) {
     val selectionState = listState.selection
-    val sortedContacts = remember(contacts) {
-        contacts.sortedWith(
-            compareBy<VaultContact> { it.name.lowercase(Locale.getDefault()) }
-                .thenBy(VaultContact::id),
-        )
+    val options = optionsState.options
+    val locale = LocalConfiguration.current.locales[0]
+    val sortedContacts = remember(contacts, options, locale) {
+        options.applyTo(contacts, locale)
     }
     var updating by remember { mutableStateOf(false) }
     var pendingDeletion by remember { mutableStateOf<Set<UUID>?>(null) }
@@ -129,7 +133,7 @@ fun ContactsScreen(
     val unpinIcon = ImageVector.vectorResource(R.drawable.ic_lucide_pin_off)
     val deleteIcon = ImageVector.vectorResource(R.drawable.ic_lucide_trash_2)
     val shareTexts = contacts.associate { it.id.toString() to contactShareText(it) }
-    val selectedContacts = contacts.filter { it.id.toString() in selectionState.selectedIds }
+    val selectedContacts = sortedContacts.filter { it.id.toString() in selectionState.selectedIds }
     val unpinSelection = selectedContacts.isNotEmpty() && selectedContacts.all { it.isPinned }
     val selection = AndroidKitListSelection(selectionState, onActionError = { onActionError() }) {
         icon(editIcon, editLabel, enabled = selectedContacts.size == 1) { ids ->
@@ -170,44 +174,77 @@ fun ContactsScreen(
             titleBarAction(
                 label = selectLabel,
                 icon = R.drawable.ic_lucide_check,
-                enabled = contacts.isNotEmpty() && !updating,
+                enabled = sortedContacts.isNotEmpty() && !updating,
                 onClick = { selectionState.activate() },
             ),
+        ) + contactListActions(
+            options = options,
+            enabled = !updating && pendingDeletion == null,
+            onChange = { optionsState.options = it },
         ),
     ) { padding ->
-        if (sortedContacts.isEmpty()) {
-            EmptyState(
-                title = stringResource(R.string.no_contacts_title),
-                body = stringResource(R.string.no_contacts_body),
-                modifier = Modifier.padding(padding).consumeWindowInsets(padding),
+        val layoutDirection = LocalLayoutDirection.current
+        Scaffold(
+            modifier = Modifier.fillMaxSize().consumeWindowInsets(padding),
+            // The Kit page already supplies system and chrome clearance.
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            topBar = {
+                ContactListSummary(
+                    options = options,
+                    visibleCount = sortedContacts.size,
+                    totalCount = contacts.size,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.background)
+                        .padding(
+                            start = padding.calculateStartPadding(layoutDirection),
+                            top = padding.calculateTopPadding(),
+                            end = padding.calculateEndPadding(layoutDirection),
+                            bottom = AndroidKitThemeTokens.dimensions.spaceSmall,
+                        ),
+                )
+            },
+        ) { summaryPadding ->
+            val listPadding = PaddingValues(
+                start = padding.calculateStartPadding(layoutDirection),
+                top = summaryPadding.calculateTopPadding(),
+                end = padding.calculateEndPadding(layoutDirection),
+                bottom = padding.calculateBottomPadding(),
             )
-        } else {
-            AndroidKitList(
-                items = sortedContacts,
-                key = { it.id.toString() },
-                state = listState,
-                modifier = Modifier.fillMaxSize().consumeWindowInsets(padding),
-                contentPadding = padding,
-                normalItemPadding = PaddingValues(AndroidKitThemeTokens.dimensions.spaceMedium),
-                enabled = { !updating && pendingDeletion == null },
-                onItemClick = { onSelected(it.id) },
-                contextMenu = { contact -> {
-                    item(openLabel, icon = openIcon, onClick = { onSelected(contact.id) })
-                    item(editLabel, icon = editIcon, onClick = { onEdit(contact.id) })
-                    item(shareLabel, icon = shareIcon, onClick = { onShare(shareTexts.getValue(contact.id.toString())) })
-                } },
-                pinAction = { contact ->
-                    AndroidKitListPinAction(
-                        pinned = contact.isPinned,
-                        onPinnedChange = { pinned ->
-                            updating = true
-                            onSetPinned(setOf(contact.id), pinned) { updating = false }
-                        },
-                    )
-                },
-                deleteAction = { contact -> AndroidKitListDeleteAction({ pendingDeletion = setOf(contact.id) }) },
-            ) { contact ->
-                ContactListItem(contact)
+            if (sortedContacts.isEmpty()) {
+                EmptyState(
+                    title = stringResource(if (contacts.isEmpty()) R.string.no_contacts_title else R.string.contacts_no_matches_title),
+                    body = stringResource(if (contacts.isEmpty()) R.string.no_contacts_body else R.string.contacts_no_matches_body),
+                    modifier = Modifier.padding(listPadding).consumeWindowInsets(listPadding),
+                )
+            } else {
+                AndroidKitList(
+                    items = sortedContacts,
+                    key = { it.id.toString() },
+                    state = listState,
+                    modifier = Modifier.fillMaxSize().consumeWindowInsets(listPadding),
+                    contentPadding = listPadding,
+                    normalItemPadding = PaddingValues(AndroidKitThemeTokens.dimensions.spaceMedium),
+                    enabled = { !updating && pendingDeletion == null },
+                    onItemClick = { onSelected(it.id) },
+                    contextMenu = { contact -> {
+                        item(openLabel, icon = openIcon, onClick = { onSelected(contact.id) })
+                        item(editLabel, icon = editIcon, onClick = { onEdit(contact.id) })
+                        item(shareLabel, icon = shareIcon, onClick = { onShare(shareTexts.getValue(contact.id.toString())) })
+                    } },
+                    pinAction = { contact ->
+                        AndroidKitListPinAction(
+                            pinned = contact.isPinned,
+                            onPinnedChange = { pinned ->
+                                updating = true
+                                onSetPinned(setOf(contact.id), pinned) { updating = false }
+                            },
+                        )
+                    },
+                    deleteAction = { contact -> AndroidKitListDeleteAction({ pendingDeletion = setOf(contact.id) }) },
+                ) { contact ->
+                    ContactListItem(contact)
+                }
             }
         }
     }
