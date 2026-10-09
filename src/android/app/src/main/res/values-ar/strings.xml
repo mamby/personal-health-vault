@@ -516,7 +516,6 @@
     <string name="contacts_filter_has_address">يحتوي على عنوان</string>
     <string name="contacts_clear_filters">مسح عوامل التصفية</string>
     <string name="contacts_clear_filters_count">مسح عوامل التصفية (%1$s)</string>
-    <string name="contacts_selected_option">%1$s (محدد)</string>
     <string name="contacts_no_matches_title">لا توجد جهات اتصال مطابقة</string>
     <string name="contacts_no_matches_body">غيّر عوامل التصفية أو امسحها لعرض جهات الاتصال.</string>
     <string name="contacts_list_sort_ascending">%1$s ↑</string>

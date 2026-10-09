@@ -21,38 +21,38 @@ internal fun contactListActions(
     onChange: (ContactListOptions) -> Unit,
 ): List<AndroidKitPageActionItem> {
     val fields = listOf(
-        Triple(ContactSortField.Name, R.string.contact_name, R.drawable.ic_lucide_list),
-        Triple(ContactSortField.DateAdded, R.string.contacts_sort_date_added, R.drawable.ic_lucide_calendar_days),
-        Triple(ContactSortField.LastModified, R.string.contacts_sort_last_modified, R.drawable.ic_lucide_calendar_days),
+        Triple(ContactSortField.Name, R.string.contact_name, R.drawable.ic_lucide_case_sensitive),
+        Triple(ContactSortField.DateAdded, R.string.contacts_sort_date_added, R.drawable.ic_lucide_calendar_plus),
+        Triple(ContactSortField.LastModified, R.string.contacts_sort_last_modified, R.drawable.ic_lucide_calendar_clock),
     ).map { (field, label, icon) ->
         choiceAction(stringResource(label), icon, options.sortField == field, enabled) {
             onChange(options.withSortField(field))
         }
     }
     val directions = listOf(
-        ContactSortDirection.Ascending to R.string.contacts_sort_ascending,
-        ContactSortDirection.Descending to R.string.contacts_sort_descending,
-    ).map { (direction, label) ->
-        choiceAction(stringResource(label), R.drawable.ic_lucide_list, options.sortDirection == direction, enabled) {
+        Triple(ContactSortDirection.Ascending, R.string.contacts_sort_ascending, R.drawable.ic_lucide_arrow_up_narrow_wide),
+        Triple(ContactSortDirection.Descending, R.string.contacts_sort_descending, R.drawable.ic_lucide_arrow_down_wide_narrow),
+    ).map { (direction, label, icon) ->
+        choiceAction(stringResource(label), icon, options.sortDirection == direction, enabled) {
             onChange(options.copy(sortDirection = direction))
         }
     }
     val sortLabel = stringResource(R.string.contacts_sort_title)
-    val sortIcon = ImageVector.vectorResource(R.drawable.ic_lucide_list)
+    val sortIcon = ImageVector.vectorResource(R.drawable.ic_lucide_arrow_down_up)
     return buildList {
         add(AndroidKitPageActionSeparator)
         add(AndroidKitSubmenuAction(label = sortLabel, icon = sortIcon, enabled = enabled) {
             fields.forEach { action ->
-                item(label = action.label, icon = action.icon, enabled = action.enabled, onClick = action.onClick)
+                item(label = action.label, icon = action.icon, selected = action.selected, enabled = action.enabled, onClick = action.onClick)
             }
             separator()
             directions.forEach { action ->
-                item(label = action.label, icon = action.icon, enabled = action.enabled, onClick = action.onClick)
+                item(label = action.label, icon = action.icon, selected = action.selected, enabled = action.enabled, onClick = action.onClick)
             }
         })
         add(AndroidKitPageActionSeparator)
         listOf(
-            Triple(ContactPinFilter.All, R.string.contacts_filter_all, R.drawable.ic_lucide_list),
+            Triple(ContactPinFilter.All, R.string.contacts_filter_all, R.drawable.ic_lucide_users),
             Triple(ContactPinFilter.Pinned, R.string.contacts_filter_pinned, R.drawable.ic_lucide_pin),
             Triple(ContactPinFilter.Unpinned, R.string.contacts_filter_unpinned, R.drawable.ic_lucide_pin_off),
         ).forEach { (filter, label, icon) ->
@@ -94,9 +94,10 @@ private fun choiceAction(
     selected: Boolean,
     enabled: Boolean,
     onClick: () -> Unit,
-): AndroidKitPageAction = titleBarAction(
-    label = if (selected) stringResource(R.string.contacts_selected_option, label) else label,
-    icon = if (selected) R.drawable.ic_lucide_check else icon,
+): AndroidKitPageAction = AndroidKitPageAction(
+    label = label,
+    icon = ImageVector.vectorResource(icon),
+    selected = selected,
     enabled = enabled,
     onClick = onClick,
 )

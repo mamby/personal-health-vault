@@ -1,23 +1,18 @@
 package net.mamby.health.feature.contacts
 
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.semantics.contentDescription
 import java.text.NumberFormat
+import net.mamby.androidkit.compose.presentation.AndroidKitListSummary
 import net.mamby.health.R
 
 @Composable
-internal fun ContactListSummary(
+internal fun contactListSummary(
     options: ContactListOptions,
     visibleCount: Int,
     totalCount: Int,
-    modifier: Modifier = Modifier,
-) {
+): AndroidKitListSummary {
     val field = stringResource(when (options.sortField) {
         ContactSortField.Name -> R.string.contact_name
         ContactSortField.DateAdded -> R.string.contacts_sort_date_added
@@ -53,10 +48,8 @@ internal fun ContactListSummary(
     val separator = stringResource(R.string.contacts_list_summary_separator)
     val text = (listOf(sort) + filters + count).joinToString(separator)
     val description = (listOf(spokenSort) + filters + count).joinToString(separator)
-    Text(
+    return AndroidKitListSummary(
         text = text,
-        modifier = modifier.clearAndSetSemantics { contentDescription = description },
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        contentDescription = description,
     )
 }

@@ -510,7 +510,6 @@
     <string name="contacts_filter_has_address">Avec adresse</string>
     <string name="contacts_clear_filters">Effacer les filtres</string>
     <string name="contacts_clear_filters_count">Effacer les filtres (%1$s)</string>
-    <string name="contacts_selected_option">%1$s (sélectionné)</string>
     <string name="contacts_no_matches_title">Aucun contact correspondant</string>
     <string name="contacts_no_matches_body">Modifiez ou effacez les filtres pour afficher les contacts.</string>
     <string name="contacts_list_sort_ascending">%1$s ↑</string>

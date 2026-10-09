@@ -508,7 +508,6 @@
     <string name="contacts_filter_has_address">Has address</string>
     <string name="contacts_clear_filters">Clear filters</string>
     <string name="contacts_clear_filters_count">Clear filters (%1$s)</string>
-    <string name="contacts_selected_option">%1$s (selected)</string>
     <string name="contacts_no_matches_title">No matching contacts</string>
     <string name="contacts_no_matches_body">Change or clear the filters to see contacts.</string>
     <string name="contacts_list_sort_ascending">%1$s ↑</string>

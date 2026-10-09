@@ -4,14 +4,12 @@ import android.content.ClipData
 import android.content.ClipDescription
 import android.os.PersistableBundle
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -31,7 +29,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -74,6 +71,7 @@ import net.mamby.androidkit.compose.presentation.AndroidKitListActionResult
 import net.mamby.androidkit.compose.presentation.AndroidKitListDeleteAction
 import net.mamby.androidkit.compose.presentation.AndroidKitListPinAction
 import net.mamby.androidkit.compose.presentation.AndroidKitList
+import net.mamby.androidkit.compose.presentation.AndroidKitListSummaryText
 import net.mamby.androidkit.compose.presentation.AndroidKitListState
 import net.mamby.androidkit.compose.presentation.rememberAndroidKitListState
 import net.mamby.androidkit.compose.presentation.AndroidKitSectionCard
@@ -183,68 +181,48 @@ fun ContactsScreen(
             onChange = { optionsState.options = it },
         ),
     ) { padding ->
-        val layoutDirection = LocalLayoutDirection.current
-        Scaffold(
-            modifier = Modifier.fillMaxSize().consumeWindowInsets(padding),
-            // The Kit page already supplies system and chrome clearance.
-            contentWindowInsets = WindowInsets(0, 0, 0, 0),
-            topBar = {
-                ContactListSummary(
-                    options = options,
-                    visibleCount = sortedContacts.size,
-                    totalCount = contacts.size,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.background)
-                        .padding(
-                            start = padding.calculateStartPadding(layoutDirection),
-                            top = padding.calculateTopPadding(),
-                            end = padding.calculateEndPadding(layoutDirection),
-                            bottom = AndroidKitThemeTokens.dimensions.spaceSmall,
-                        ),
-                )
-            },
-        ) { summaryPadding ->
-            val listPadding = PaddingValues(
-                start = padding.calculateStartPadding(layoutDirection),
-                top = summaryPadding.calculateTopPadding(),
-                end = padding.calculateEndPadding(layoutDirection),
-                bottom = padding.calculateBottomPadding(),
-            )
-            if (sortedContacts.isEmpty()) {
+        val summary = contactListSummary(options, sortedContacts.size, contacts.size)
+        if (sortedContacts.isEmpty()) {
+            Column(
+                modifier = Modifier.fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(padding)
+                    .consumeWindowInsets(padding),
+            ) {
+                AndroidKitListSummaryText(summary)
                 EmptyState(
                     title = stringResource(if (contacts.isEmpty()) R.string.no_contacts_title else R.string.contacts_no_matches_title),
                     body = stringResource(if (contacts.isEmpty()) R.string.no_contacts_body else R.string.contacts_no_matches_body),
-                    modifier = Modifier.padding(listPadding).consumeWindowInsets(listPadding),
                 )
-            } else {
-                AndroidKitList(
-                    items = sortedContacts,
-                    key = { it.id.toString() },
-                    state = listState,
-                    modifier = Modifier.fillMaxSize().consumeWindowInsets(listPadding),
-                    contentPadding = listPadding,
-                    normalItemPadding = PaddingValues(AndroidKitThemeTokens.dimensions.spaceMedium),
-                    enabled = { !updating && pendingDeletion == null },
-                    onItemClick = { onSelected(it.id) },
-                    contextMenu = { contact -> {
-                        item(openLabel, icon = openIcon, onClick = { onSelected(contact.id) })
-                        item(editLabel, icon = editIcon, onClick = { onEdit(contact.id) })
-                        item(shareLabel, icon = shareIcon, onClick = { onShare(shareTexts.getValue(contact.id.toString())) })
-                    } },
-                    pinAction = { contact ->
-                        AndroidKitListPinAction(
-                            pinned = contact.isPinned,
-                            onPinnedChange = { pinned ->
-                                updating = true
-                                onSetPinned(setOf(contact.id), pinned) { updating = false }
-                            },
-                        )
-                    },
-                    deleteAction = { contact -> AndroidKitListDeleteAction({ pendingDeletion = setOf(contact.id) }) },
-                ) { contact ->
-                    ContactListItem(contact)
-                }
+            }
+        } else {
+            AndroidKitList(
+                items = sortedContacts,
+                key = { it.id.toString() },
+                state = listState,
+                modifier = Modifier.fillMaxSize().consumeWindowInsets(padding),
+                contentPadding = padding,
+                summary = summary,
+                normalItemPadding = PaddingValues(AndroidKitThemeTokens.dimensions.spaceMedium),
+                enabled = { !updating && pendingDeletion == null },
+                onItemClick = { onSelected(it.id) },
+                contextMenu = { contact -> {
+                    item(openLabel, icon = openIcon, onClick = { onSelected(contact.id) })
+                    item(editLabel, icon = editIcon, onClick = { onEdit(contact.id) })
+                    item(shareLabel, icon = shareIcon, onClick = { onShare(shareTexts.getValue(contact.id.toString())) })
+                } },
+                pinAction = { contact ->
+                    AndroidKitListPinAction(
+                        pinned = contact.isPinned,
+                        onPinnedChange = { pinned ->
+                            updating = true
+                            onSetPinned(setOf(contact.id), pinned) { updating = false }
+                        },
+                    )
+                },
+                deleteAction = { contact -> AndroidKitListDeleteAction({ pendingDeletion = setOf(contact.id) }) },
+            ) { contact ->
+                ContactListItem(contact)
             }
         }
     }

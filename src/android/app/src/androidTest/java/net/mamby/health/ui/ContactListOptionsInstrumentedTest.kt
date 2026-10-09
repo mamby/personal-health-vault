@@ -21,11 +21,14 @@ import androidx.compose.ui.test.ForcedSize
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.isPopup
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
@@ -33,6 +36,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -74,6 +78,20 @@ class ContactListOptionsInstrumentedTest {
     }
 
     @Test
+    fun filterSummaryScrollsAwayWithContactsAndReturnsAtTheStart() {
+        val contacts = (1L..30L).map { contact(it, "Contact ${it.toString().padStart(2, '0')}") }
+        composeRule.setContent { ContactList(contacts) }
+        val summary = assertInlineSummary(shown = 30, total = 30)
+        val list = composeRule.onNode(hasScrollToIndexAction())
+        list.performScrollToIndex(14)
+        summary.assertIsNotDisplayed()
+        composeRule.onNodeWithText("Contact 14").assertIsDisplayed()
+        list.performScrollToIndex(0)
+        summary.assertIsDisplayed()
+        composeRule.onNodeWithText("Contact 01").assertIsDisplayed()
+    }
+
+    @Test
     fun titleBarMenuSortsAllThreeFieldsBothWaysAndKeepsPinnedFirst() {
         val alice = contact(1, "Alice", added = 30, modified = 20)
         val beatrice = contact(2, "Beatrice", added = 10, modified = 30)
@@ -95,8 +113,10 @@ class ContactListOptionsInstrumentedTest {
             assertInlineSummary(field, R.string.contacts_sort_descending, shown = 4, total = 4)
         }
         openSortMenu()
-        composeRule.onNodeWithText(selectedLabel(R.string.contacts_sort_last_modified)).assertIsDisplayed()
-        composeRule.onNodeWithText(selectedLabel(R.string.contacts_sort_descending)).assertIsDisplayed()
+        menuOption(R.string.contacts_sort_last_modified).assertIsDisplayed().assertIsSelected()
+        menuOption(R.string.contacts_sort_descending).assertIsDisplayed().assertIsSelected()
+        menuOption(R.string.contact_name).assertIsNotSelected()
+        menuOption(R.string.contacts_sort_ascending).assertIsNotSelected()
     }
 
     @Test
@@ -115,6 +135,10 @@ class ContactListOptionsInstrumentedTest {
         composeRule.onNodeWithText("Bob").assertIsDisplayed()
         composeRule.onNodeWithText("Alice").assertDoesNotExist()
         composeRule.onNodeWithText("Charlie").assertDoesNotExist()
+        openMenu()
+        menuOption(R.string.contacts_filter_has_email).performScrollTo().assertIsSelected()
+        menuOption(R.string.contacts_filter_has_phone).performScrollTo().assertIsSelected().performClick()
+        chooseMenuOption(R.string.contacts_filter_has_phone)
         val fieldFilters = listOf(
             R.string.contacts_filter_has_phone,
             R.string.contacts_filter_has_email,
@@ -140,7 +164,7 @@ class ContactListOptionsInstrumentedTest {
         openMenu()
         composeRule.onNodeWithText(composeRule.activity.getString(R.string.contacts_filter_has_email))
             .performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText(selectedLabel(R.string.contacts_filter_has_email)).assertDoesNotExist()
+        menuOption(R.string.contacts_filter_has_email).assertIsNotSelected()
     }
 
     @Test
@@ -297,13 +321,11 @@ class ContactListOptionsInstrumentedTest {
         } else {
             openMenu()
         }
-        composeRule.onNode(
-            (hasText(uiContext.getString(labelId)) or hasText(selectedLabel(labelId))) and hasAnyAncestor(isPopup()),
-        ).performScrollTo().performClick()
+        menuOption(labelId).performScrollTo().performClick()
     }
 
-    private fun selectedLabel(labelId: Int): String = uiContext.getString(
-        R.string.contacts_selected_option, uiContext.getString(labelId),
+    private fun menuOption(labelId: Int): SemanticsNodeInteraction = composeRule.onNode(
+        hasText(uiContext.getString(labelId)) and hasAnyAncestor(isPopup()),
     )
 
     private fun openSortMenu() {
