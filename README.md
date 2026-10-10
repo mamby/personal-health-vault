@@ -98,7 +98,7 @@ Current security boundaries:
 
 ## Android Kit distribution
 
-Android builds resolve Android Kit `0.1.65` from the public
+Android builds resolve Android Kit `0.1.67` from the public
 [Maven repository](https://mamby.github.io/android-kit-docs/maven/).
 No private Kit checkout, Maven Local publication or GitHub credentials are
 required. See [installation](https://mamby.github.io/android-kit-docs/installation/).
