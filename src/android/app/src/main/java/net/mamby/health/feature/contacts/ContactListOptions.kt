@@ -15,21 +15,17 @@ enum class ContactSortField { Name, DateAdded, LastModified }
 
 enum class ContactSortDirection { Ascending, Descending }
 
-enum class ContactPinFilter { All, Pinned, Unpinned }
-
 data class ContactListOptions(
     val sortField: ContactSortField = ContactSortField.Name,
     val sortDirection: ContactSortDirection = ContactSortDirection.Ascending,
-    val pinFilter: ContactPinFilter = ContactPinFilter.All,
     val hasPhone: Boolean = false,
     val hasEmail: Boolean = false,
     val hasAddress: Boolean = false,
 ) {
     val hasFilters: Boolean
-        get() = pinFilter != ContactPinFilter.All || hasPhone || hasEmail || hasAddress
+        get() = hasPhone || hasEmail || hasAddress
 
     fun clearFilters(): ContactListOptions = copy(
-        pinFilter = ContactPinFilter.All,
         hasPhone = false,
         hasEmail = false,
         hasAddress = false,
@@ -46,12 +42,7 @@ data class ContactListOptions(
         )
 
     fun matches(contact: VaultContact): Boolean =
-        when (pinFilter) {
-            ContactPinFilter.All -> true
-            ContactPinFilter.Pinned -> contact.isPinned
-            ContactPinFilter.Unpinned -> !contact.isPinned
-        } &&
-            (!hasPhone || contact.phoneNumbers.any(String::isNotBlank)) &&
+        (!hasPhone || contact.phoneNumbers.any(String::isNotBlank)) &&
             (!hasEmail || contact.emailAddresses.any(String::isNotBlank)) &&
             (!hasAddress || contact.addresses.any(String::isNotBlank))
 

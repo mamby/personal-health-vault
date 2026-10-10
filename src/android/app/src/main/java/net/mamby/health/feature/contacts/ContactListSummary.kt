@@ -29,11 +29,6 @@ internal fun contactListSummary(
         stringResource(if (ascending) R.string.contacts_sort_ascending else R.string.contacts_sort_descending),
     )
     val filters = buildList {
-        when (options.pinFilter) {
-            ContactPinFilter.All -> Unit
-            ContactPinFilter.Pinned -> add(stringResource(R.string.contacts_filter_pinned))
-            ContactPinFilter.Unpinned -> add(stringResource(R.string.contacts_filter_unpinned))
-        }
         if (options.hasPhone) add(stringResource(R.string.contacts_filter_has_phone))
         if (options.hasEmail) add(stringResource(R.string.contacts_filter_has_email))
         if (options.hasAddress) add(stringResource(R.string.contacts_filter_has_address))

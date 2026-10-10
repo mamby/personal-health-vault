@@ -509,8 +509,6 @@
     <string name="contacts_sort_ascending">تصاعدي</string>
     <string name="contacts_sort_descending">تنازلي</string>
     <string name="contacts_filter_all">جميع جهات الاتصال</string>
-    <string name="contacts_filter_pinned">المثبتة</string>
-    <string name="contacts_filter_unpinned">غير المثبتة</string>
     <string name="contacts_filter_has_phone">يحتوي على رقم هاتف</string>
     <string name="contacts_filter_has_email">يحتوي على بريد إلكتروني</string>
     <string name="contacts_filter_has_address">يحتوي على عنوان</string>

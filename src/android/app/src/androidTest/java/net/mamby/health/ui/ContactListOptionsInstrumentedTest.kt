@@ -123,7 +123,7 @@ class ContactListOptionsInstrumentedTest {
     fun titleBarFiltersCombineShowEmptyResultsAndResetWithoutChangingSort() {
         val alice = contact(1, "Alice").copy(isPinned = true, phoneNumbers = listOf("111"))
         val bob = contact(2, "Bob").copy(
-            phoneNumbers = listOf("222"), emailAddresses = listOf("bob@example.test"), addresses = listOf("Paris"),
+            emailAddresses = listOf("bob@example.test"), addresses = listOf("Paris"),
         )
         val charlie = contact(3, "Charlie").copy(emailAddresses = listOf("charlie@example.test"), addresses = listOf("Lyon"))
         composeRule.setContent { ContactList(listOf(alice, bob, charlie)) }
@@ -132,7 +132,8 @@ class ContactListOptionsInstrumentedTest {
         chooseMenuOption(R.string.contacts_filter_has_phone)
         chooseMenuOption(R.string.contacts_filter_has_email)
         chooseMenuOption(R.string.contacts_filter_has_address)
-        composeRule.onNodeWithText("Bob").assertIsDisplayed()
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.contacts_no_matches_title)).assertIsDisplayed()
+        composeRule.onNodeWithText("Bob").assertDoesNotExist()
         composeRule.onNodeWithText("Alice").assertDoesNotExist()
         composeRule.onNodeWithText("Charlie").assertDoesNotExist()
         openMenu()
@@ -145,26 +146,23 @@ class ContactListOptionsInstrumentedTest {
             R.string.contacts_filter_has_address,
         )
         assertInlineSummary(
-            direction = R.string.contacts_sort_descending, filters = fieldFilters, shown = 1, total = 3,
+            direction = R.string.contacts_sort_descending, filters = fieldFilters, shown = 0, total = 3,
         )
-        chooseMenuOption(R.string.contacts_filter_pinned)
-        composeRule.onNodeWithText(composeRule.activity.getString(R.string.contacts_no_matches_title)).assertIsDisplayed()
-        assertInlineSummary(
-            direction = R.string.contacts_sort_descending,
-            filters = listOf(R.string.contacts_filter_pinned) + fieldFilters,
-            shown = 0, total = 3,
-        )
-        chooseMenuOption(R.string.contacts_filter_unpinned)
-        composeRule.onNodeWithText("Bob").assertIsDisplayed()
         chooseMenuOption(R.string.contacts_filter_has_phone)
         assertOrder(listOf("Charlie", "Bob"))
-        clearFilters(count = 3)
+        clearFilters(count = 2)
         assertOrder(listOf("Alice", "Charlie", "Bob"))
         assertInlineSummary(direction = R.string.contacts_sort_descending, shown = 3, total = 3)
         openMenu()
         composeRule.onNodeWithText(composeRule.activity.getString(R.string.contacts_filter_has_email))
             .performScrollTo().assertIsDisplayed()
         menuOption(R.string.contacts_filter_has_email).assertIsNotSelected()
+        menuOption(R.string.contacts_filter_all).performScrollTo().assertIsSelected()
+        menuOption(R.string.contacts_filter_has_email).performScrollTo().performClick()
+        openMenu()
+        menuOption(R.string.contacts_filter_all).performScrollTo().assertIsNotSelected().performClick()
+        assertOrder(listOf("Alice", "Charlie", "Bob"))
+        assertInlineSummary(direction = R.string.contacts_sort_descending, shown = 3, total = 3)
     }
 
     @Test

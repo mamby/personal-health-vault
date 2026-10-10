@@ -51,15 +51,9 @@ internal fun contactListActions(
             }
         })
         add(AndroidKitPageActionSeparator)
-        listOf(
-            Triple(ContactPinFilter.All, R.string.contacts_filter_all, R.drawable.ic_lucide_users),
-            Triple(ContactPinFilter.Pinned, R.string.contacts_filter_pinned, R.drawable.ic_lucide_pin),
-            Triple(ContactPinFilter.Unpinned, R.string.contacts_filter_unpinned, R.drawable.ic_lucide_pin_off),
-        ).forEach { (filter, label, icon) ->
-            add(choiceAction(stringResource(label), icon, options.pinFilter == filter, enabled) {
-                onChange(options.copy(pinFilter = filter))
-            })
-        }
+        add(choiceAction(stringResource(R.string.contacts_filter_all), R.drawable.ic_lucide_users, !options.hasFilters, enabled) {
+            onChange(options.clearFilters())
+        })
         add(AndroidKitPageActionSeparator)
         add(choiceAction(stringResource(R.string.contacts_filter_has_phone), R.drawable.ic_lucide_phone, options.hasPhone, enabled) {
             onChange(options.copy(hasPhone = !options.hasPhone))
@@ -71,7 +65,7 @@ internal fun contactListActions(
             onChange(options.copy(hasAddress = !options.hasAddress))
         })
         val count = listOf(
-            options.pinFilter != ContactPinFilter.All, options.hasPhone, options.hasEmail, options.hasAddress,
+            options.hasPhone, options.hasEmail, options.hasAddress,
         ).count { it }
         add(titleBarAction(
             label = if (options.hasFilters) {

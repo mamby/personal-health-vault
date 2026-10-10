@@ -73,7 +73,7 @@ class ContactListOptionsTest {
     }
 
     @Test
-    fun filtersCombinePinStatusAndNonblankFieldsWithoutMutatingContacts() {
+    fun filtersCombineNonblankFieldsRegardlessOfPinStatusWithoutMutatingContacts() {
         val complete = contact(1, "Complete").copy(
             phoneNumbers = listOf("111"),
             emailAddresses = listOf("person@example.test"),
@@ -87,14 +87,6 @@ class ContactListOptionsTest {
         val original = contacts.toList()
         val fields = ContactListOptions(hasPhone = true, hasEmail = true, hasAddress = true)
         assertEquals(listOf(complete, pinnedComplete), fields.applyTo(contacts, Locale.ENGLISH))
-        assertEquals(
-            listOf(pinnedComplete),
-            fields.copy(pinFilter = ContactPinFilter.Pinned).applyTo(contacts, Locale.ENGLISH),
-        )
-        assertEquals(
-            listOf(complete),
-            fields.copy(pinFilter = ContactPinFilter.Unpinned).applyTo(contacts, Locale.ENGLISH),
-        )
         assertEquals(original, contacts)
     }
 

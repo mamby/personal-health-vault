@@ -501,8 +501,6 @@
     <string name="contacts_sort_ascending">Ascending</string>
     <string name="contacts_sort_descending">Descending</string>
     <string name="contacts_filter_all">All contacts</string>
-    <string name="contacts_filter_pinned">Pinned</string>
-    <string name="contacts_filter_unpinned">Unpinned</string>
     <string name="contacts_filter_has_phone">Has phone number</string>
     <string name="contacts_filter_has_email">Has email address</string>
     <string name="contacts_filter_has_address">Has address</string>
