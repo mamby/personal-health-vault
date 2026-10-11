@@ -77,6 +77,17 @@ preserves existing behavior and minimizes scope.
 
 ## Localization and accessibility
 
+For icon conversions, preserve the upstream SVG geometry, viewport, stroke width,
+caps, joins, and element boundaries exactly. Keep each SVG element in a separate
+vector path, including elements with relative commands. Preserve intentional
+cropped viewports at their original scale. Record the upstream commit revision
+and register the converted icon and pinned SVG in `test/icons/sources.json`.
+Mark converted vectors with `Converted from SVG:` and their source revision
+(existing Lucide provenance comments are also recognized). Run
+`python test/icons/verify_icons.py` and review rendered comparisons before
+accepting a conversion. CI enforces the registered conversion contracts.
+Do not regenerate source hashes merely to make a failed check pass.
+
 - Every user-facing string must exist in English, French, and Arabic with identical resource IDs and format placeholders.
 - Preserve right-to-left behavior and use locale-aware dates, times, numbers, and lists.
 - Support font scaling, screen readers, keyboard input, orientation changes, tablets, and foldables.

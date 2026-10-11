@@ -1,0 +1,247 @@
+{
+  "sources": {
+    "0ea8780434e2b4527dc860b18ff94883d080b59c/arrow-down-up": {
+      "file": "upstream/0ea8780434e2b4527dc860b18ff94883d080b59c/arrow-down-up.svg",
+      "revision": "0ea8780434e2b4527dc860b18ff94883d080b59c",
+      "url": "https://raw.githubusercontent.com/lucide-icons/lucide/0ea8780434e2b4527dc860b18ff94883d080b59c/icons/arrow-down-up.svg",
+      "sha256": "36118b38f0c1dfe84b91da00de91ab9e99c070e30e853d661deb580cf171ab32"
+    },
+    "0ea8780434e2b4527dc860b18ff94883d080b59c/arrow-down-wide-narrow": {
+      "file": "upstream/0ea8780434e2b4527dc860b18ff94883d080b59c/arrow-down-wide-narrow.svg",
+      "revision": "0ea8780434e2b4527dc860b18ff94883d080b59c",
+      "url": "https://raw.githubusercontent.com/lucide-icons/lucide/0ea8780434e2b4527dc860b18ff94883d080b59c/icons/arrow-down-wide-narrow.svg",
+      "sha256": "f3900e07a9662640da27932d925214e72080b751f0f02de25402479f166fd226"
+    },
+    "0ea8780434e2b4527dc860b18ff94883d080b59c/arrow-left": {
+      "file": "upstream/0ea8780434e2b4527dc860b18ff94883d080b59c/arrow-left.svg",
+      "revision": "0ea8780434e2b4527dc860b18ff94883d080b59c",
+      "url": "https://raw.githubusercontent.com/lucide-icons/lucide/0ea8780434e2b4527dc860b18ff94883d080b59c/icons/arrow-left.svg",
+      "sha256": "c5f4b88076108eb1a0d95336e1aa7e7bb1419a3a92af96f6247d88cd3456f933"
+    },
+    "0ea8780434e2b4527dc860b18ff94883d080b59c/arrow-up-narrow-wide": {
+      "file": "upstream/0ea8780434e2b4527dc860b18ff94883d080b59c/arrow-up-narrow-wide.svg",
+      "revision": "0ea8780434e2b4527dc860b18ff94883d080b59c",
+      "url": "https://raw.githubusercontent.com/lucide-icons/lucide/0ea8780434e2b4527dc860b18ff94883d080b59c/icons/arrow-up-narrow-wide.svg",
+      "sha256": "96118fd95305adb649d4a2b43f5c6a042195f58638ffa971b21bf05b61b7b046"
+    },
+    "0ea8780434e2b4527dc860b18ff94883d080b59c/calendar-clock": {
+      "file": "upstream/0ea8780434e2b4527dc860b18ff94883d080b59c/calendar-clock.svg",
+      "revision": "0ea8780434e2b4527dc860b18ff94883d080b59c",
+      "url": "https://raw.githubusercontent.com/lucide-icons/lucide/0ea8780434e2b4527dc860b18ff94883d080b59c/icons/calendar-clock.svg",
+      "sha256": "e79abf954950f4aceff01f3567ca055683afae96b8f05bb08f12fbead953a220"
+    },
+    "0ea8780434e2b4527dc860b18ff94883d080b59c/calendar-days": {
+      "file": "upstream/0ea8780434e2b4527dc860b18ff94883d080b59c/calendar-days.svg",
+      "revision": "0ea8780434e2b4527dc860b18ff94883d080b59c",
+      "url": "https://raw.githubusercontent.com/lucide-icons/lucide/0ea8780434e2b4527dc860b18ff94883d080b59c/icons/calendar-days.svg",
+      "sha256": "b7be7b5d7ec5d391cb45e30d35782321bdf108b91c939bf4f42885754177c80b"
+    },
+    "0ea8780434e2b4527dc860b18ff94883d080b59c/calendar-plus": {
+      "file": "upstream/0ea8780434e2b4527dc860b18ff94883d080b59c/calendar-plus.svg",
+      "revision": "0ea8780434e2b4527dc860b18ff94883d080b59c",
+      "url": "https://raw.githubusercontent.com/lucide-icons/lucide/0ea8780434e2b4527dc860b18ff94883d080b59c/icons/calendar-plus.svg",
+      "sha256": "25ac202053428f7ef0db08db5d63a0cc2a75a1d9df4bef435bb39ab8ed6ffcd4"
+    },
+    "0ea8780434e2b4527dc860b18ff94883d080b59c/case-sensitive": {
+      "file": "upstream/0ea8780434e2b4527dc860b18ff94883d080b59c/case-sensitive.svg",
+      "revision": "0ea8780434e2b4527dc860b18ff94883d080b59c",
+      "url": "https://raw.githubusercontent.com/lucide-icons/lucide/0ea8780434e2b4527dc860b18ff94883d080b59c/icons/case-sensitive.svg",
+      "sha256": "e8a9193e0f577cf50dcec3649dee38cd46accab08c1cb53a52e98ec244156372"
+    },
+    "0ea8780434e2b4527dc860b18ff94883d080b59c/check": {
+      "file": "upstream/0ea8780434e2b4527dc860b18ff94883d080b59c/check.svg",
+      "revision": "0ea8780434e2b4527dc860b18ff94883d080b59c",
+      "url": "https://raw.githubusercontent.com/lucide-icons/lucide/0ea8780434e2b4527dc860b18ff94883d080b59c/icons/check.svg",
+      "sha256": "7f33acc9a77a61659531044525fc008edebe215bf4dcf1c789c8674ad3277db0"
+    },
+    "0ea8780434e2b4527dc860b18ff94883d080b59c/chevron-down": {
+      "file": "upstream/0ea8780434e2b4527dc860b18ff94883d080b59c/chevron-down.svg",
+      "revision": "0ea8780434e2b4527dc860b18ff94883d080b59c",
+      "url": "https://raw.githubusercontent.com/lucide-icons/lucide/0ea8780434e2b4527dc860b18ff94883d080b59c/icons/chevron-down.svg",
+      "sha256": "66ea878e72ed3488bb3b464c39dfdccee8d1f78e560dccea40e5e12da0e87e87"
+    },
+    "0ea8780434e2b4527dc860b18ff94883d080b59c/copy": {
+      "file": "upstream/0ea8780434e2b4527dc860b18ff94883d080b59c/copy.svg",
+      "revision": "0ea8780434e2b4527dc860b18ff94883d080b59c",
+      "url": "https://raw.githubusercontent.com/lucide-icons/lucide/0ea8780434e2b4527dc860b18ff94883d080b59c/icons/copy.svg",
+      "sha256": "ea80e566c7a12628a447cb53179b19aea4f60b9143e2becd0d0f20bf260e5718"
+    },
+    "0ea8780434e2b4527dc860b18ff94883d080b59c/ellipsis": {
+      "file": "upstream/0ea8780434e2b4527dc860b18ff94883d080b59c/ellipsis.svg",
+      "revision": "0ea8780434e2b4527dc860b18ff94883d080b59c",
+      "url": "https://raw.githubusercontent.com/lucide-icons/lucide/0ea8780434e2b4527dc860b18ff94883d080b59c/icons/ellipsis.svg",
+      "sha256": "4f495cc72013ffdfec677f03b33a150f7b4dd741979283fd6853a09024bca112"
+    },
+    "0ea8780434e2b4527dc860b18ff94883d080b59c/external-link": {
+      "file": "upstream/0ea8780434e2b4527dc860b18ff94883d080b59c/external-link.svg",
+      "revision": "0ea8780434e2b4527dc860b18ff94883d080b59c",
+      "url": "https://raw.githubusercontent.com/lucide-icons/lucide/0ea8780434e2b4527dc860b18ff94883d080b59c/icons/external-link.svg",
+      "sha256": "3891241b8c3bfc3a8a930078f26ffc5a7e9763da6d0162ace2050b28d4c1d1fe"
+    },
+    "0ea8780434e2b4527dc860b18ff94883d080b59c/heart-pulse": {
+      "file": "upstream/0ea8780434e2b4527dc860b18ff94883d080b59c/heart-pulse.svg",
+      "revision": "0ea8780434e2b4527dc860b18ff94883d080b59c",
+      "url": "https://raw.githubusercontent.com/lucide-icons/lucide/0ea8780434e2b4527dc860b18ff94883d080b59c/icons/heart-pulse.svg",
+      "sha256": "103d6b99ac9ab53c5861317673880ae5d6e2491efa7a40e8b89ecac449842df2"
+    },
+    "0ea8780434e2b4527dc860b18ff94883d080b59c/house": {
+      "file": "upstream/0ea8780434e2b4527dc860b18ff94883d080b59c/house.svg",
+      "revision": "0ea8780434e2b4527dc860b18ff94883d080b59c",
+      "url": "https://raw.githubusercontent.com/lucide-icons/lucide/0ea8780434e2b4527dc860b18ff94883d080b59c/icons/house.svg",
+      "sha256": "28216c479005731ef5e382e7d8627eda2b129b019eb1f3d9de9f5915576d448e"
+    },
+    "0ea8780434e2b4527dc860b18ff94883d080b59c/info": {
+      "file": "upstream/0ea8780434e2b4527dc860b18ff94883d080b59c/info.svg",
+      "revision": "0ea8780434e2b4527dc860b18ff94883d080b59c",
+      "url": "https://raw.githubusercontent.com/lucide-icons/lucide/0ea8780434e2b4527dc860b18ff94883d080b59c/icons/info.svg",
+      "sha256": "bc977a64eb96f3e9c1041ffd09a3fceb70e3e65c02b571f76064062ed31f3cb9"
+    },
+    "0ea8780434e2b4527dc860b18ff94883d080b59c/list": {
+      "file": "upstream/0ea8780434e2b4527dc860b18ff94883d080b59c/list.svg",
+      "revision": "0ea8780434e2b4527dc860b18ff94883d080b59c",
+      "url": "https://raw.githubusercontent.com/lucide-icons/lucide/0ea8780434e2b4527dc860b18ff94883d080b59c/icons/list.svg",
+      "sha256": "ff97a7379eb962ddc3863bb59f0f45875ac8da91aac8a38a67361e7118d2d627"
+    },
+    "0ea8780434e2b4527dc860b18ff94883d080b59c/lock": {
+      "file": "upstream/0ea8780434e2b4527dc860b18ff94883d080b59c/lock.svg",
+      "revision": "0ea8780434e2b4527dc860b18ff94883d080b59c",
+      "url": "https://raw.githubusercontent.com/lucide-icons/lucide/0ea8780434e2b4527dc860b18ff94883d080b59c/icons/lock.svg",
+      "sha256": "d2cfe60cac8deaef36442b5c8218c1e61abe18222784b2a370ea090d13fca840"
+    },
+    "0ea8780434e2b4527dc860b18ff94883d080b59c/mail": {
+      "file": "upstream/0ea8780434e2b4527dc860b18ff94883d080b59c/mail.svg",
+      "revision": "0ea8780434e2b4527dc860b18ff94883d080b59c",
+      "url": "https://raw.githubusercontent.com/lucide-icons/lucide/0ea8780434e2b4527dc860b18ff94883d080b59c/icons/mail.svg",
+      "sha256": "3236a51d5b8ce9b0528cf2e6ad07e527bd636dded6f5a9d656072052b99caea8"
+    },
+    "0ea8780434e2b4527dc860b18ff94883d080b59c/map-pin": {
+      "file": "upstream/0ea8780434e2b4527dc860b18ff94883d080b59c/map-pin.svg",
+      "revision": "0ea8780434e2b4527dc860b18ff94883d080b59c",
+      "url": "https://raw.githubusercontent.com/lucide-icons/lucide/0ea8780434e2b4527dc860b18ff94883d080b59c/icons/map-pin.svg",
+      "sha256": "16f1042a62f1bda20ebab8bfc1cb79c0be285c980dea6c2c733a17902631405b"
+    },
+    "0ea8780434e2b4527dc860b18ff94883d080b59c/pencil": {
+      "file": "upstream/0ea8780434e2b4527dc860b18ff94883d080b59c/pencil.svg",
+      "revision": "0ea8780434e2b4527dc860b18ff94883d080b59c",
+      "url": "https://raw.githubusercontent.com/lucide-icons/lucide/0ea8780434e2b4527dc860b18ff94883d080b59c/icons/pencil.svg",
+      "sha256": "7e1ca7a6f5c1eb949671df762f2baadd32f5bd841d43153c3a15279af7d78d0c"
+    },
+    "0ea8780434e2b4527dc860b18ff94883d080b59c/phone": {
+      "file": "upstream/0ea8780434e2b4527dc860b18ff94883d080b59c/phone.svg",
+      "revision": "0ea8780434e2b4527dc860b18ff94883d080b59c",
+      "url": "https://raw.githubusercontent.com/lucide-icons/lucide/0ea8780434e2b4527dc860b18ff94883d080b59c/icons/phone.svg",
+      "sha256": "bd59dd10667cbe410a69e2fbbf4d9645d08abe862c8d89082bd4f533957859a8"
+    },
+    "0ea8780434e2b4527dc860b18ff94883d080b59c/pill": {
+      "file": "upstream/0ea8780434e2b4527dc860b18ff94883d080b59c/pill.svg",
+      "revision": "0ea8780434e2b4527dc860b18ff94883d080b59c",
+      "url": "https://raw.githubusercontent.com/lucide-icons/lucide/0ea8780434e2b4527dc860b18ff94883d080b59c/icons/pill.svg",
+      "sha256": "cf28e85117f308eb1d33b8ccd07f5dca5d6796bd1d76ab531d010b2dfc514949"
+    },
+    "0ea8780434e2b4527dc860b18ff94883d080b59c/pin": {
+      "file": "upstream/0ea8780434e2b4527dc860b18ff94883d080b59c/pin.svg",
+      "revision": "0ea8780434e2b4527dc860b18ff94883d080b59c",
+      "url": "https://raw.githubusercontent.com/lucide-icons/lucide/0ea8780434e2b4527dc860b18ff94883d080b59c/icons/pin.svg",
+      "sha256": "55e8e5e04bcb671179fc1dd589abf09cf6a1e71301ff14eb739419cfab6011e7"
+    },
+    "0ea8780434e2b4527dc860b18ff94883d080b59c/pin-off": {
+      "file": "upstream/0ea8780434e2b4527dc860b18ff94883d080b59c/pin-off.svg",
+      "revision": "0ea8780434e2b4527dc860b18ff94883d080b59c",
+      "url": "https://raw.githubusercontent.com/lucide-icons/lucide/0ea8780434e2b4527dc860b18ff94883d080b59c/icons/pin-off.svg",
+      "sha256": "149a4fb01201562c05dd7eb53573090cd3a0ba5b111686c45e2df8c6cd04a3be"
+    },
+    "0ea8780434e2b4527dc860b18ff94883d080b59c/plus": {
+      "file": "upstream/0ea8780434e2b4527dc860b18ff94883d080b59c/plus.svg",
+      "revision": "0ea8780434e2b4527dc860b18ff94883d080b59c",
+      "url": "https://raw.githubusercontent.com/lucide-icons/lucide/0ea8780434e2b4527dc860b18ff94883d080b59c/icons/plus.svg",
+      "sha256": "7f6af73bf1ff6c4bca3f18351c8d1bdec6749c0c2530c4de5da85d520c21df17"
+    },
+    "0ea8780434e2b4527dc860b18ff94883d080b59c/search": {
+      "file": "upstream/0ea8780434e2b4527dc860b18ff94883d080b59c/search.svg",
+      "revision": "0ea8780434e2b4527dc860b18ff94883d080b59c",
+      "url": "https://raw.githubusercontent.com/lucide-icons/lucide/0ea8780434e2b4527dc860b18ff94883d080b59c/icons/search.svg",
+      "sha256": "283d371c2e433817bb9c0c8310caa6c77fa4177c0f4f1168d9c83b97af7389dc"
+    },
+    "0ea8780434e2b4527dc860b18ff94883d080b59c/settings": {
+      "file": "upstream/0ea8780434e2b4527dc860b18ff94883d080b59c/settings.svg",
+      "revision": "0ea8780434e2b4527dc860b18ff94883d080b59c",
+      "url": "https://raw.githubusercontent.com/lucide-icons/lucide/0ea8780434e2b4527dc860b18ff94883d080b59c/icons/settings.svg",
+      "sha256": "0ae27fd0f81999229e3127ac96c5b32edfea448e291d509e76212b917551d66b"
+    },
+    "0ea8780434e2b4527dc860b18ff94883d080b59c/share-2": {
+      "file": "upstream/0ea8780434e2b4527dc860b18ff94883d080b59c/share-2.svg",
+      "revision": "0ea8780434e2b4527dc860b18ff94883d080b59c",
+      "url": "https://raw.githubusercontent.com/lucide-icons/lucide/0ea8780434e2b4527dc860b18ff94883d080b59c/icons/share-2.svg",
+      "sha256": "de283acf45610a564ade56bc55bb94e7cf4040bc942efe9163fd98cdfe07672c"
+    },
+    "0ea8780434e2b4527dc860b18ff94883d080b59c/sliders-horizontal": {
+      "file": "upstream/0ea8780434e2b4527dc860b18ff94883d080b59c/sliders-horizontal.svg",
+      "revision": "0ea8780434e2b4527dc860b18ff94883d080b59c",
+      "url": "https://raw.githubusercontent.com/lucide-icons/lucide/0ea8780434e2b4527dc860b18ff94883d080b59c/icons/sliders-horizontal.svg",
+      "sha256": "e43a00e5eb684e6cbb61083bed2528d7a3fa5f265693eb2b5f314cd432aa65f4"
+    },
+    "70562c1ee1c4fdcf736fe97bc893fb8511927934/sticky-notes": {
+      "file": "upstream/70562c1ee1c4fdcf736fe97bc893fb8511927934/sticky-notes.svg",
+      "revision": "70562c1ee1c4fdcf736fe97bc893fb8511927934",
+      "url": "https://raw.githubusercontent.com/lucide-icons/lucide/70562c1ee1c4fdcf736fe97bc893fb8511927934/icons/sticky-notes.svg",
+      "sha256": "bee88a3319a81ab1d64ee813e993ca8fc3eab4dbffd22d697c8eb268fa28f1cd"
+    },
+    "0ea8780434e2b4527dc860b18ff94883d080b59c/trash-2": {
+      "file": "upstream/0ea8780434e2b4527dc860b18ff94883d080b59c/trash-2.svg",
+      "revision": "0ea8780434e2b4527dc860b18ff94883d080b59c",
+      "url": "https://raw.githubusercontent.com/lucide-icons/lucide/0ea8780434e2b4527dc860b18ff94883d080b59c/icons/trash-2.svg",
+      "sha256": "27299f69ad7c6272be64b1b8e2d48cbd6dcf0ef0d4f92827a1affa945c91700e"
+    },
+    "0ea8780434e2b4527dc860b18ff94883d080b59c/users": {
+      "file": "upstream/0ea8780434e2b4527dc860b18ff94883d080b59c/users.svg",
+      "revision": "0ea8780434e2b4527dc860b18ff94883d080b59c",
+      "url": "https://raw.githubusercontent.com/lucide-icons/lucide/0ea8780434e2b4527dc860b18ff94883d080b59c/icons/users.svg",
+      "sha256": "eeed488a1ec95ba730dd69996536fb65061d6ea273afb2429ae47e65eebf401c"
+    },
+    "0ea8780434e2b4527dc860b18ff94883d080b59c/x": {
+      "file": "upstream/0ea8780434e2b4527dc860b18ff94883d080b59c/x.svg",
+      "revision": "0ea8780434e2b4527dc860b18ff94883d080b59c",
+      "url": "https://raw.githubusercontent.com/lucide-icons/lucide/0ea8780434e2b4527dc860b18ff94883d080b59c/icons/x.svg",
+      "sha256": "4a9cdab38fbb96162e7dace28e33f4ca0e49d8963a6162abc3d4691b7d675117"
+    }
+  },
+  "vector_globs": [
+    "src/android/app/src/main/res/drawable*/**/*.xml"
+  ],
+  "vectors": {
+    "src/android/app/src/main/res/drawable/ic_lucide_arrow_down_up.xml": "0ea8780434e2b4527dc860b18ff94883d080b59c/arrow-down-up",
+    "src/android/app/src/main/res/drawable/ic_lucide_arrow_down_wide_narrow.xml": "0ea8780434e2b4527dc860b18ff94883d080b59c/arrow-down-wide-narrow",
+    "src/android/app/src/main/res/drawable/ic_lucide_arrow_left.xml": "0ea8780434e2b4527dc860b18ff94883d080b59c/arrow-left",
+    "src/android/app/src/main/res/drawable/ic_lucide_arrow_up_narrow_wide.xml": "0ea8780434e2b4527dc860b18ff94883d080b59c/arrow-up-narrow-wide",
+    "src/android/app/src/main/res/drawable/ic_lucide_calendar_clock.xml": "0ea8780434e2b4527dc860b18ff94883d080b59c/calendar-clock",
+    "src/android/app/src/main/res/drawable/ic_lucide_calendar_days.xml": "0ea8780434e2b4527dc860b18ff94883d080b59c/calendar-days",
+    "src/android/app/src/main/res/drawable/ic_lucide_calendar_plus.xml": "0ea8780434e2b4527dc860b18ff94883d080b59c/calendar-plus",
+    "src/android/app/src/main/res/drawable/ic_lucide_case_sensitive.xml": "0ea8780434e2b4527dc860b18ff94883d080b59c/case-sensitive",
+    "src/android/app/src/main/res/drawable/ic_lucide_check.xml": "0ea8780434e2b4527dc860b18ff94883d080b59c/check",
+    "src/android/app/src/main/res/drawable/ic_lucide_chevron_down.xml": "0ea8780434e2b4527dc860b18ff94883d080b59c/chevron-down",
+    "src/android/app/src/main/res/drawable/ic_lucide_copy.xml": "0ea8780434e2b4527dc860b18ff94883d080b59c/copy",
+    "src/android/app/src/main/res/drawable/ic_lucide_ellipsis.xml": "0ea8780434e2b4527dc860b18ff94883d080b59c/ellipsis",
+    "src/android/app/src/main/res/drawable/ic_lucide_external_link.xml": "0ea8780434e2b4527dc860b18ff94883d080b59c/external-link",
+    "src/android/app/src/main/res/drawable/ic_lucide_heart_pulse.xml": "0ea8780434e2b4527dc860b18ff94883d080b59c/heart-pulse",
+    "src/android/app/src/main/res/drawable/ic_lucide_house.xml": "0ea8780434e2b4527dc860b18ff94883d080b59c/house",
+    "src/android/app/src/main/res/drawable/ic_lucide_info.xml": "0ea8780434e2b4527dc860b18ff94883d080b59c/info",
+    "src/android/app/src/main/res/drawable/ic_lucide_list.xml": "0ea8780434e2b4527dc860b18ff94883d080b59c/list",
+    "src/android/app/src/main/res/drawable/ic_lucide_lock.xml": "0ea8780434e2b4527dc860b18ff94883d080b59c/lock",
+    "src/android/app/src/main/res/drawable/ic_lucide_mail.xml": "0ea8780434e2b4527dc860b18ff94883d080b59c/mail",
+    "src/android/app/src/main/res/drawable/ic_lucide_map_pin.xml": "0ea8780434e2b4527dc860b18ff94883d080b59c/map-pin",
+    "src/android/app/src/main/res/drawable/ic_lucide_pencil.xml": "0ea8780434e2b4527dc860b18ff94883d080b59c/pencil",
+    "src/android/app/src/main/res/drawable/ic_lucide_phone.xml": "0ea8780434e2b4527dc860b18ff94883d080b59c/phone",
+    "src/android/app/src/main/res/drawable/ic_lucide_pill.xml": "0ea8780434e2b4527dc860b18ff94883d080b59c/pill",
+    "src/android/app/src/main/res/drawable/ic_lucide_pin.xml": "0ea8780434e2b4527dc860b18ff94883d080b59c/pin",
+    "src/android/app/src/main/res/drawable/ic_lucide_pin_off.xml": "0ea8780434e2b4527dc860b18ff94883d080b59c/pin-off",
+    "src/android/app/src/main/res/drawable/ic_lucide_plus.xml": "0ea8780434e2b4527dc860b18ff94883d080b59c/plus",
+    "src/android/app/src/main/res/drawable/ic_lucide_search.xml": "0ea8780434e2b4527dc860b18ff94883d080b59c/search",
+    "src/android/app/src/main/res/drawable/ic_lucide_settings.xml": "0ea8780434e2b4527dc860b18ff94883d080b59c/settings",
+    "src/android/app/src/main/res/drawable/ic_lucide_share_2.xml": "0ea8780434e2b4527dc860b18ff94883d080b59c/share-2",
+    "src/android/app/src/main/res/drawable/ic_lucide_sliders_horizontal.xml": "0ea8780434e2b4527dc860b18ff94883d080b59c/sliders-horizontal",
+    "src/android/app/src/main/res/drawable/ic_lucide_sticky_notes.xml": "70562c1ee1c4fdcf736fe97bc893fb8511927934/sticky-notes",
+    "src/android/app/src/main/res/drawable/ic_lucide_trash_2.xml": "0ea8780434e2b4527dc860b18ff94883d080b59c/trash-2",
+    "src/android/app/src/main/res/drawable/ic_lucide_users.xml": "0ea8780434e2b4527dc860b18ff94883d080b59c/users",
+    "src/android/app/src/main/res/drawable/ic_lucide_x.xml": "0ea8780434e2b4527dc860b18ff94883d080b59c/x"
+  }
+}
