@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Lucide search; source revision 0ea8780434e2b4527dc860b18ff94883d080b59c. Keep SVG elements separate. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
@@ -6,7 +7,14 @@
     android:viewportHeight="24">
     <path
         android:fillColor="@android:color/transparent"
-        android:pathData="M21,21l-4.34,-4.34 M19,11A8,8 0,1 1,3,11A8,8 0,1 1,19,11Z"
+        android:pathData="m21 21-4.34-4.34"
+        android:strokeColor="@android:color/black"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="2" />
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M19 11A8 8 0 1 1 3 11A8 8 0 1 1 19 11Z"
         android:strokeColor="@android:color/black"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
