@@ -111,8 +111,15 @@ fun ContactsScreen(
     val selectionState = listState.selection
     val options = optionsState.options
     val locale = LocalConfiguration.current.locales[0]
-    val sortedContacts = remember(contacts, options, locale) {
-        options.applyTo(contacts, locale)
+    val nameSortLabel = stringResource(R.string.contact_name)
+    val addedSortLabel = stringResource(R.string.contacts_sort_date_added)
+    val modifiedSortLabel = stringResource(R.string.contacts_sort_last_modified)
+    val sort = remember(options, nameSortLabel, addedSortLabel, modifiedSortLabel) {
+        options.sort(nameSortLabel, addedSortLabel, modifiedSortLabel)
+    }
+    val filteredContacts = remember(contacts, options) { contacts.filter(options::matches) }
+    val sortedContacts = remember(filteredContacts, sort, locale) {
+        sort.sortedItems(filteredContacts, { it.id.toString() }, locale)
     }
     var updating by remember { mutableStateOf(false) }
     var pendingDeletion by remember { mutableStateOf<Set<UUID>?>(null) }
@@ -177,11 +184,12 @@ fun ContactsScreen(
             ),
         ) + contactListActions(
             options = options,
+            sort = sort,
             enabled = !updating && pendingDeletion == null,
             onChange = { optionsState.options = it },
         ),
     ) { padding ->
-        val summary = contactListSummary(options, sortedContacts.size, contacts.size)
+        val summary = contactListSummary(options, sort, sortedContacts.size, contacts.size)
         if (sortedContacts.isEmpty()) {
             Column(
                 modifier = Modifier.fillMaxSize()
@@ -197,12 +205,13 @@ fun ContactsScreen(
             }
         } else {
             AndroidKitList(
-                items = sortedContacts,
+                items = filteredContacts,
                 key = { it.id.toString() },
                 state = listState,
                 modifier = Modifier.fillMaxSize().consumeWindowInsets(padding),
                 contentPadding = padding,
                 summary = summary,
+                sort = sort,
                 normalItemPadding = PaddingValues(AndroidKitThemeTokens.dimensions.spaceMedium),
                 enabled = { !updating && pendingDeletion == null },
                 onItemClick = { onSelected(it.id) },

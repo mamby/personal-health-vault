@@ -6,14 +6,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import java.text.Collator
 import java.time.Instant
 import java.util.Locale
 import net.mamby.health.core.model.VaultContact
+import net.mamby.androidkit.compose.presentation.AndroidKitListSort
+import net.mamby.androidkit.compose.presentation.AndroidKitListSortDirection
+import net.mamby.androidkit.compose.presentation.AndroidKitListSortField
+import net.mamby.androidkit.compose.presentation.AndroidKitListSortOrder
 
 enum class ContactSortField { Name, DateAdded, LastModified }
 
-enum class ContactSortDirection { Ascending, Descending }
+typealias ContactSortDirection = AndroidKitListSortDirection
 
 data class ContactListOptions(
     val sortField: ContactSortField = ContactSortField.Name,
@@ -31,42 +34,27 @@ data class ContactListOptions(
         hasAddress = false,
     )
 
-    fun withSortField(field: ContactSortField): ContactListOptions =
-        if (field == sortField) this else copy(
-            sortField = field,
-            sortDirection = if (field == ContactSortField.Name) {
-                ContactSortDirection.Ascending
-            } else {
-                ContactSortDirection.Descending
-            },
-        )
-
     fun matches(contact: VaultContact): Boolean =
         (!hasPhone || contact.phoneNumbers.any(String::isNotBlank)) &&
             (!hasEmail || contact.emailAddresses.any(String::isNotBlank)) &&
             (!hasAddress || contact.addresses.any(String::isNotBlank))
 
     fun applyTo(contacts: List<VaultContact>, locale: Locale): List<VaultContact> {
-        val collator = Collator.getInstance(locale).apply {
-            strength = Collator.SECONDARY
-            decomposition = Collator.CANONICAL_DECOMPOSITION
-        }
-        val byName = compareBy<VaultContact, String>(collator, VaultContact::name)
-        val byDate = if (sortDirection == ContactSortDirection.Ascending) {
-            naturalOrder<Instant>()
-        } else {
-            reverseOrder<Instant>()
-        }
-        val comparator = when (sortField) {
-            ContactSortField.Name ->
-                if (sortDirection == ContactSortDirection.Ascending) byName else byName.reversed()
-            ContactSortField.DateAdded ->
-                compareBy<VaultContact, Instant?>(nullsLast(byDate), VaultContact::createdAt).then(byName)
-            ContactSortField.LastModified ->
-                compareBy<VaultContact, Instant>(byDate, VaultContact::updatedAt).then(byName)
-        }.thenBy(VaultContact::id)
-        // AndroidKit owns pin grouping and preserves this order inside each section.
-        return contacts.filter(::matches).sortedWith(comparator)
+        return sort(ContactSortField.Name.name, ContactSortField.DateAdded.name, ContactSortField.LastModified.name)
+            .sortedItems(contacts.filter(::matches), { it.id.toString() }, locale)
+    }
+
+    fun sort(name: String, added: String, modified: String): AndroidKitListSort<VaultContact> {
+        val byName = AndroidKitListSortField.Text<VaultContact>(ContactSortField.Name.name, name, value = VaultContact::name)
+        return AndroidKitListSort(
+            fields = listOf(
+                byName,
+                AndroidKitListSortField.DateTime<VaultContact, Instant>(ContactSortField.DateAdded.name, added, value = VaultContact::createdAt),
+                AndroidKitListSortField.DateTime<VaultContact, Instant>(ContactSortField.LastModified.name, modified, value = VaultContact::updatedAt),
+            ),
+            order = AndroidKitListSortOrder(sortField.name, sortDirection),
+            tieBreakers = listOf(byName),
+        )
     }
 }
 

@@ -5,29 +5,19 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import java.text.NumberFormat
 import net.mamby.androidkit.compose.presentation.AndroidKitListSummary
+import net.mamby.androidkit.compose.presentation.AndroidKitListSort
+import net.mamby.androidkit.compose.presentation.androidKitListSortSummary
+import net.mamby.health.core.model.VaultContact
 import net.mamby.health.R
 
 @Composable
 internal fun contactListSummary(
     options: ContactListOptions,
+    listSort: AndroidKitListSort<VaultContact>,
     visibleCount: Int,
     totalCount: Int,
 ): AndroidKitListSummary {
-    val field = stringResource(when (options.sortField) {
-        ContactSortField.Name -> R.string.contact_name
-        ContactSortField.DateAdded -> R.string.contacts_sort_date_added
-        ContactSortField.LastModified -> R.string.contacts_sort_last_modified
-    })
-    val ascending = options.sortDirection == ContactSortDirection.Ascending
-    val sort = stringResource(
-        if (ascending) R.string.contacts_list_sort_ascending else R.string.contacts_list_sort_descending,
-        field,
-    )
-    val spokenSort = stringResource(
-        R.string.contacts_list_sort_description,
-        field,
-        stringResource(if (ascending) R.string.contacts_sort_ascending else R.string.contacts_sort_descending),
-    )
+    val sort = androidKitListSortSummary(listSort)
     val filters = buildList {
         if (options.hasPhone) add(stringResource(R.string.contacts_filter_has_phone))
         if (options.hasEmail) add(stringResource(R.string.contacts_filter_has_email))
@@ -41,8 +31,8 @@ internal fun contactListSummary(
         numbers.format(totalCount),
     )
     val separator = stringResource(R.string.contacts_list_summary_separator)
-    val text = (listOf(sort) + filters + count).joinToString(separator)
-    val description = (listOf(spokenSort) + filters + count).joinToString(separator)
+    val text = (listOf(sort.text) + filters + count).joinToString(separator)
+    val description = (listOf(sort.contentDescription) + filters + count).joinToString(separator)
     return AndroidKitListSummary(
         text = text,
         contentDescription = description,

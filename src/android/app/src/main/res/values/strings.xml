@@ -496,10 +496,7 @@
     <string name="health_notes_title">Health notes</string>
     <string name="contacts_title">Contacts</string>
     <string name="contacts_sort_date_added">Date added</string>
-    <string name="contacts_sort_title">Sort</string>
     <string name="contacts_sort_last_modified">Last modified</string>
-    <string name="contacts_sort_ascending">Ascending</string>
-    <string name="contacts_sort_descending">Descending</string>
     <string name="contacts_filter_all">All contacts</string>
     <string name="contacts_filter_has_phone">Has phone number</string>
     <string name="contacts_filter_has_email">Has email address</string>
@@ -508,9 +505,6 @@
     <string name="contacts_clear_filters_count">Clear filters (%1$s)</string>
     <string name="contacts_no_matches_title">No matching contacts</string>
     <string name="contacts_no_matches_body">Change or clear the filters to see contacts.</string>
-    <string name="contacts_list_sort_ascending">%1$s ↑</string>
-    <string name="contacts_list_sort_descending">%1$s ↓</string>
-    <string name="contacts_list_sort_description">%1$s, %2$s</string>
     <string name="contacts_list_result_count">Showing %1$s of %2$s</string>
     <string name="contacts_list_summary_separator">" · "</string>
     <string name="documents_hub_body">%1$d encrypted documents, including invoices and receipts</string>

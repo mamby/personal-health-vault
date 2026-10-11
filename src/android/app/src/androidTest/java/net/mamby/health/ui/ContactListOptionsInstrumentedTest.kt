@@ -48,6 +48,8 @@ import java.util.UUID
 import net.mamby.androidkit.compose.action.AndroidKitListSelection
 import net.mamby.androidkit.compose.presentation.rememberAndroidKitListState
 import net.mamby.health.R
+import net.mamby.androidkit.compose.R as KitR
+import net.mamby.androidkit.compose.presentation.AndroidKitListSortDirection
 import net.mamby.health.core.model.VaultContact
 import net.mamby.health.feature.contacts.ContactsScreen
 import net.mamby.health.feature.contacts.rememberContactListOptionsState
@@ -67,6 +69,7 @@ class ContactListOptionsInstrumentedTest {
     @get:Rule
     val composeRule = createAndroidComposeRule<ComponentActivity>()
     private val now = Instant.parse("2026-10-08T12:00:00Z")
+    private var currentSortField: Int = R.string.contact_name
     private var localizedContext: Context? = null
     private val uiContext: Context get() = localizedContext ?: composeRule.activity
 
@@ -105,18 +108,18 @@ class ContactListOptionsInstrumentedTest {
         )
         cases.forEach { (field, ascending) ->
             chooseMenuOption(field)
-            chooseMenuOption(R.string.contacts_sort_ascending)
+            chooseMenuOption(AndroidKitListSortDirection.Ascending)
             assertOrder(listOf("Priority contact") + ascending)
-            assertInlineSummary(field, R.string.contacts_sort_ascending, shown = 4, total = 4)
-            chooseMenuOption(R.string.contacts_sort_descending)
+            assertInlineSummary(field, AndroidKitListSortDirection.Ascending, shown = 4, total = 4)
+            chooseMenuOption(AndroidKitListSortDirection.Descending)
             assertOrder(listOf("Priority contact") + ascending.reversed())
-            assertInlineSummary(field, R.string.contacts_sort_descending, shown = 4, total = 4)
+            assertInlineSummary(field, AndroidKitListSortDirection.Descending, shown = 4, total = 4)
         }
         openSortMenu()
         menuOption(R.string.contacts_sort_last_modified).assertIsDisplayed().assertIsSelected()
-        menuOption(R.string.contacts_sort_descending).assertIsDisplayed().assertIsSelected()
+        menuOption(AndroidKitListSortDirection.Descending).assertIsDisplayed().assertIsSelected()
         menuOption(R.string.contact_name).assertIsNotSelected()
-        menuOption(R.string.contacts_sort_ascending).assertIsNotSelected()
+        menuOption(AndroidKitListSortDirection.Ascending).assertIsNotSelected()
     }
 
     @Test
@@ -128,7 +131,7 @@ class ContactListOptionsInstrumentedTest {
         val charlie = contact(3, "Charlie").copy(emailAddresses = listOf("charlie@example.test"), addresses = listOf("Lyon"))
         composeRule.setContent { ContactList(listOf(alice, bob, charlie)) }
         assertInlineSummary(shown = 3, total = 3)
-        chooseMenuOption(R.string.contacts_sort_descending)
+        chooseMenuOption(AndroidKitListSortDirection.Descending)
         chooseMenuOption(R.string.contacts_filter_has_phone)
         chooseMenuOption(R.string.contacts_filter_has_email)
         chooseMenuOption(R.string.contacts_filter_has_address)
@@ -146,13 +149,13 @@ class ContactListOptionsInstrumentedTest {
             R.string.contacts_filter_has_address,
         )
         assertInlineSummary(
-            direction = R.string.contacts_sort_descending, filters = fieldFilters, shown = 0, total = 3,
+            direction = AndroidKitListSortDirection.Descending, filters = fieldFilters, shown = 0, total = 3,
         )
         chooseMenuOption(R.string.contacts_filter_has_phone)
         assertOrder(listOf("Charlie", "Bob"))
         clearFilters(count = 2)
         assertOrder(listOf("Alice", "Charlie", "Bob"))
-        assertInlineSummary(direction = R.string.contacts_sort_descending, shown = 3, total = 3)
+        assertInlineSummary(direction = AndroidKitListSortDirection.Descending, shown = 3, total = 3)
         openMenu()
         composeRule.onNodeWithText(composeRule.activity.getString(R.string.contacts_filter_has_email))
             .performScrollTo().assertIsDisplayed()
@@ -162,7 +165,7 @@ class ContactListOptionsInstrumentedTest {
         openMenu()
         menuOption(R.string.contacts_filter_all).performScrollTo().assertIsNotSelected().performClick()
         assertOrder(listOf("Alice", "Charlie", "Bob"))
-        assertInlineSummary(direction = R.string.contacts_sort_descending, shown = 3, total = 3)
+        assertInlineSummary(direction = AndroidKitListSortDirection.Descending, shown = 3, total = 3)
     }
 
     @Test
@@ -214,12 +217,12 @@ class ContactListOptionsInstrumentedTest {
                 }
             }
         }
-        chooseMenuOption(R.string.contacts_sort_descending)
+        chooseMenuOption(AndroidKitListSortDirection.Descending)
         chooseMenuOption(R.string.contacts_filter_has_phone)
         composeRule.onNodeWithText("Alice").assertIsDisplayed()
         composeRule.onNodeWithText("Bob").assertDoesNotExist()
         val summary = assertInlineSummary(
-            direction = R.string.contacts_sort_descending,
+            direction = AndroidKitListSortDirection.Descending,
             filters = listOf(R.string.contacts_filter_has_phone), shown = 1, total = 2,
         ).fetchSemanticsNode().boundsInRoot
         val row = composeRule.onNodeWithText("Alice", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
@@ -267,7 +270,7 @@ class ContactListOptionsInstrumentedTest {
             chooseMenuOption(R.string.contacts_sort_date_added)
             chooseMenuOption(R.string.contacts_filter_has_phone)
             val summary = assertInlineSummary(
-                field = R.string.contacts_sort_date_added, direction = R.string.contacts_sort_descending,
+                field = R.string.contacts_sort_date_added, direction = AndroidKitListSortDirection.Descending,
                 filters = listOf(R.string.contacts_filter_has_phone), shown = 3, total = 12,
             ).fetchSemanticsNode().boundsInRoot
             val row = composeRule.onNodeWithText("Contact 1", useUnmergedTree = true)
@@ -275,7 +278,7 @@ class ContactListOptionsInstrumentedTest {
             assertTrue(summary.bottom <= row.top)
             clearFilters(count = 1)
             assertInlineSummary(
-                field = R.string.contacts_sort_date_added, direction = R.string.contacts_sort_descending,
+                field = R.string.contacts_sort_date_added, direction = AndroidKitListSortDirection.Descending,
                 shown = 12, total = 12,
             )
         }
@@ -313,9 +316,9 @@ class ContactListOptionsInstrumentedTest {
     private fun chooseMenuOption(labelId: Int) {
         if (labelId in listOf(
             R.string.contact_name, R.string.contacts_sort_date_added, R.string.contacts_sort_last_modified,
-            R.string.contacts_sort_ascending, R.string.contacts_sort_descending,
         )) {
             openSortMenu()
+            currentSortField = labelId
         } else {
             openMenu()
         }
@@ -326,10 +329,29 @@ class ContactListOptionsInstrumentedTest {
         hasText(uiContext.getString(labelId)) and hasAnyAncestor(isPopup()),
     )
 
+    private fun chooseMenuOption(direction: AndroidKitListSortDirection) {
+        openSortMenu()
+        menuOption(direction).performScrollTo().performClick()
+    }
+
+    private fun menuOption(direction: AndroidKitListSortDirection): SemanticsNodeInteraction = composeRule.onNode(
+        hasText(directionLabel(direction)) and hasAnyAncestor(isPopup()),
+    )
+
+    private fun directionLabel(direction: AndroidKitListSortDirection, field: Int = currentSortField): String {
+        val ascending = direction == AndroidKitListSortDirection.Ascending
+        val resource = if (field == R.string.contact_name) {
+            if (ascending) KitR.string.androidkit_compose_sort_text_ascending else KitR.string.androidkit_compose_sort_text_descending
+        } else {
+            if (ascending) KitR.string.androidkit_compose_sort_date_ascending else KitR.string.androidkit_compose_sort_date_descending
+        }
+        return uiContext.getString(resource)
+    }
+
     private fun openSortMenu() {
         openMenu()
         composeRule.onNode(
-            hasText(uiContext.getString(R.string.contacts_sort_title)) and hasAnyAncestor(isPopup()),
+            hasText(uiContext.getString(KitR.string.androidkit_compose_sort)) and hasAnyAncestor(isPopup()),
         ).performScrollTo().performClick()
     }
 
@@ -370,14 +392,14 @@ class ContactListOptionsInstrumentedTest {
 
     private fun assertInlineSummary(
         field: Int = R.string.contact_name,
-        direction: Int = R.string.contacts_sort_ascending,
+        direction: AndroidKitListSortDirection = AndroidKitListSortDirection.Ascending,
         filters: List<Int> = listOf(R.string.contacts_filter_all),
         shown: Int,
         total: Int,
     ): SemanticsNodeInteraction {
         val numbers = NumberFormat.getIntegerInstance(uiContext.resources.configuration.locales[0])
         val description = (listOf(uiContext.getString(
-            R.string.contacts_list_sort_description, uiContext.getString(field), uiContext.getString(direction),
+            KitR.string.androidkit_compose_sort_description, uiContext.getString(field), directionLabel(direction, field),
         )) + filters.map(uiContext::getString) + uiContext.getString(
             R.string.contacts_list_result_count, numbers.format(shown), numbers.format(total),
         )).joinToString(uiContext.getString(R.string.contacts_list_summary_separator))

@@ -7,7 +7,9 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import java.text.NumberFormat
-import net.mamby.androidkit.compose.action.AndroidKitSubmenuAction
+import net.mamby.androidkit.compose.presentation.AndroidKitListSort
+import net.mamby.androidkit.compose.presentation.androidKitListSortAction
+import net.mamby.health.core.model.VaultContact
 import net.mamby.androidkit.compose.layout.AndroidKitPageAction
 import net.mamby.androidkit.compose.layout.AndroidKitPageActionItem
 import net.mamby.androidkit.compose.layout.AndroidKitPageActionSeparator
@@ -17,39 +19,16 @@ import net.mamby.health.ui.components.titleBarAction
 @Composable
 internal fun contactListActions(
     options: ContactListOptions,
+    sort: AndroidKitListSort<VaultContact>,
     enabled: Boolean,
     onChange: (ContactListOptions) -> Unit,
 ): List<AndroidKitPageActionItem> {
-    val fields = listOf(
-        Triple(ContactSortField.Name, R.string.contact_name, R.drawable.ic_lucide_case_sensitive),
-        Triple(ContactSortField.DateAdded, R.string.contacts_sort_date_added, R.drawable.ic_lucide_calendar_plus),
-        Triple(ContactSortField.LastModified, R.string.contacts_sort_last_modified, R.drawable.ic_lucide_calendar_clock),
-    ).map { (field, label, icon) ->
-        choiceAction(stringResource(label), icon, options.sortField == field, enabled) {
-            onChange(options.withSortField(field))
-        }
+    val sortAction = androidKitListSortAction(sort, enabled) { order ->
+        onChange(options.copy(sortField = ContactSortField.valueOf(order.fieldId), sortDirection = order.direction))
     }
-    val directions = listOf(
-        Triple(ContactSortDirection.Ascending, R.string.contacts_sort_ascending, R.drawable.ic_lucide_arrow_up_narrow_wide),
-        Triple(ContactSortDirection.Descending, R.string.contacts_sort_descending, R.drawable.ic_lucide_arrow_down_wide_narrow),
-    ).map { (direction, label, icon) ->
-        choiceAction(stringResource(label), icon, options.sortDirection == direction, enabled) {
-            onChange(options.copy(sortDirection = direction))
-        }
-    }
-    val sortLabel = stringResource(R.string.contacts_sort_title)
-    val sortIcon = ImageVector.vectorResource(R.drawable.ic_lucide_arrow_down_up)
     return buildList {
         add(AndroidKitPageActionSeparator)
-        add(AndroidKitSubmenuAction(label = sortLabel, icon = sortIcon, enabled = enabled) {
-            fields.forEach { action ->
-                item(label = action.label, icon = action.icon, selected = action.selected, enabled = action.enabled, onClick = action.onClick)
-            }
-            separator()
-            directions.forEach { action ->
-                item(label = action.label, icon = action.icon, selected = action.selected, enabled = action.enabled, onClick = action.onClick)
-            }
-        })
+        add(sortAction)
         add(AndroidKitPageActionSeparator)
         add(choiceAction(stringResource(R.string.contacts_filter_all), R.drawable.ic_lucide_users, !options.hasFilters, enabled) {
             onChange(options.clearFilters())
