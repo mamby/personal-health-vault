@@ -39,6 +39,7 @@ preserves existing behavior and minimizes scope.
 - Android Keystore and authenticated encryption for persisted health information.
 - Storage Access Framework for user-selected document and backup locations.
 - Use official, non-deprecated Android APIs. Do not use hidden APIs, reflection, device-specific layout fixes, or legacy view layouts.
+- Keep AndroidKit presentation sealed. List-summary adapters supply only typed counts, domain quantity resources and active-filter labels. Kit owns composition, formatting, sort wording and accessibility output; never rebuild those in the host.
 
 ## Architecture
 

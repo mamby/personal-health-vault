@@ -189,7 +189,7 @@ fun ContactsScreen(
             onChange = { optionsState.options = it },
         ),
     ) { padding ->
-        val summary = contactListSummary(options, sort, sortedContacts.size, contacts.size)
+        val summary = contactListSummary(options, sortedContacts.size, contacts.size)
         if (sortedContacts.isEmpty()) {
             Column(
                 modifier = Modifier.fillMaxSize()
@@ -197,7 +197,7 @@ fun ContactsScreen(
                     .padding(padding)
                     .consumeWindowInsets(padding),
             ) {
-                AndroidKitListSummaryText(summary)
+                AndroidKitListSummaryText(summary, sort = sort)
                 EmptyState(
                     title = stringResource(if (contacts.isEmpty()) R.string.no_contacts_title else R.string.contacts_no_matches_title),
                     body = stringResource(if (contacts.isEmpty()) R.string.no_contacts_body else R.string.contacts_no_matches_body),

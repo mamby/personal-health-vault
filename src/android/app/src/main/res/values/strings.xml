@@ -501,12 +501,22 @@
     <string name="contacts_filter_has_phone">Has phone number</string>
     <string name="contacts_filter_has_email">Has email address</string>
     <string name="contacts_filter_has_address">Has address</string>
-    <string name="contacts_clear_filters">Clear filters</string>
-    <string name="contacts_clear_filters_count">Clear filters (%1$s)</string>
+    <string name="contacts_filter_show_all">Show all contacts</string>
+    <string name="contacts_filter_show_with">Show contacts with:</string>
+    <string name="contacts_filter_phone">Phone</string>
+    <string name="contacts_filter_email">Email</string>
+    <string name="contacts_filter_address">Address</string>
     <string name="contacts_no_matches_title">No matching contacts</string>
     <string name="contacts_no_matches_body">Change or clear the filters to see contacts.</string>
-    <string name="contacts_list_result_count">Showing %1$s of %2$s</string>
-    <string name="contacts_list_summary_separator">" · "</string>
+    <!-- The complete matching/overall counts, independent of rendered or loaded rows. -->
+    <plurals name="contacts_list_count">
+        <item quantity="one">%1$s contact</item>
+        <item quantity="other">%1$s contacts</item>
+    </plurals>
+    <!-- Compact summary labels; the full filter names remain in accessibility descriptions. -->
+    <string name="contacts_list_has_phone">Has phone</string>
+    <string name="contacts_list_has_email">Has email</string>
+    <string name="contacts_list_has_address">Has address</string>
     <string name="documents_hub_body">%1$d encrypted documents, including invoices and receipts</string>
     <string name="common_notes">Notes</string>
     <string name="add_health_note">Add health note</string>

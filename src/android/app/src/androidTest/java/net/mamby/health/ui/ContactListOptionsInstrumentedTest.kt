@@ -22,6 +22,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertIsNotSelected
@@ -30,6 +31,7 @@ import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.isDialog
+import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.isPopup
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -50,7 +52,11 @@ import net.mamby.androidkit.compose.presentation.rememberAndroidKitListState
 import net.mamby.health.R
 import net.mamby.androidkit.compose.R as KitR
 import net.mamby.androidkit.compose.presentation.AndroidKitListSortDirection
+import net.mamby.androidkit.compose.presentation.AndroidKitListSummary
+import net.mamby.androidkit.compose.presentation.AndroidKitListSummaryText
 import net.mamby.health.core.model.VaultContact
+import net.mamby.health.feature.contacts.ContactListOptions
+import net.mamby.health.feature.contacts.contactListSummary
 import net.mamby.health.feature.contacts.ContactsScreen
 import net.mamby.health.feature.contacts.rememberContactListOptionsState
 import net.mamby.health.navigation.TopLevelDestination
@@ -78,6 +84,72 @@ class ContactListOptionsInstrumentedTest {
         composeRule.activityRule.scenario.onActivity {
             it.window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
+    }
+
+    @Test
+    fun summarySuppliesCompleteCountsAndActiveDomainFiltersToKit() {
+        lateinit var summaries: List<AndroidKitListSummary>
+        composeRule.setContent {
+            val configuration = Configuration(LocalConfiguration.current).apply {
+                setLocales(LocaleList.forLanguageTags("en"))
+            }
+            val context = LocalContext.current.createConfigurationContext(configuration)
+            CompositionLocalProvider(LocalConfiguration provides configuration, LocalContext provides context) {
+                val options = ContactListOptions(hasPhone = true, hasEmail = true)
+                val sort = options.sort("Name", "Date added", "Last modified")
+                summaries = listOf(
+                    contactListSummary(options, matchingCount = 6, totalCount = 7),
+                    contactListSummary(options, matchingCount = 7, totalCount = 7),
+                    contactListSummary(options.copy(hasAddress = true), matchingCount = 0, totalCount = 7),
+                    contactListSummary(options.copy(hasPhone = false), matchingCount = 1, totalCount = 7),
+                    contactListSummary(ContactListOptions(), matchingCount = 1, totalCount = 1),
+                    contactListSummary(ContactListOptions(), matchingCount = 0, totalCount = 0),
+                )
+                HealthVaultTheme { AndroidKitListSummaryText(summaries.first(), sort = sort) }
+            }
+        }
+        composeRule.runOnIdle {
+            assertEquals(listOf(6, 7, 0, 1, 1, 0), summaries.map { it.matchingCount })
+            assertEquals(listOf(7, 7, 7, 7, 1, 0), summaries.map { it.totalCount })
+            assertTrue(summaries.all { it.itemCountResource == R.plurals.contacts_list_count })
+            assertEquals(listOf("Has phone", "Has email"), summaries[0].activeFilters.map { it.label })
+            assertEquals(listOf("Has phone number", "Has email address"), summaries[0].activeFilters.map { it.contentDescription })
+            assertEquals(listOf("Has phone", "Has email", "Has address"), summaries[2].activeFilters.map { it.label })
+            assertEquals(listOf("Has email"), summaries[3].activeFilters.map { it.label })
+            assertTrue(summaries[4].activeFilters.isEmpty())
+            assertTrue(summaries[5].activeFilters.isEmpty())
+        }
+        composeRule.onNodeWithContentDescription(
+            "Showing 6 of 7 · Has phone number · Has email address · Name, A to Z",
+        ).assertIsDisplayed().assertHasNoClickAction()
+    }
+
+    @Test
+    fun arabicSummaryProvidesDomainLabelsAndUsesKitAccessibility() {
+        lateinit var summary: AndroidKitListSummary
+        composeRule.setContent {
+            val configuration = Configuration(LocalConfiguration.current).apply {
+                setLocales(LocaleList.forLanguageTags("ar-u-nu-arab"))
+            }
+            val context = LocalContext.current.createConfigurationContext(configuration)
+            CompositionLocalProvider(
+                LocalConfiguration provides configuration,
+                LocalContext provides context,
+                LocalLayoutDirection provides LayoutDirection.Rtl,
+            ) {
+                val options = ContactListOptions(hasPhone = true, hasEmail = true)
+                val sort = options.sort("الاسم", "تاريخ الإضافة", "آخر تعديل")
+                summary = contactListSummary(options, matchingCount = 6, totalCount = 7)
+                HealthVaultTheme { AndroidKitListSummaryText(summary, sort = sort) }
+            }
+        }
+        composeRule.runOnIdle {
+            assertEquals(6, summary.matchingCount)
+            assertEquals(7, summary.totalCount)
+            assertEquals(listOf("لديه هاتف", "لديه بريد إلكتروني"), summary.activeFilters.map { it.label })
+        }
+        composeRule.onNode(hasContentDescription("يحتوي على بريد إلكتروني", substring = true))
+            .assertIsDisplayed().assertHasNoClickAction()
     }
 
     @Test
@@ -131,18 +203,23 @@ class ContactListOptionsInstrumentedTest {
         val charlie = contact(3, "Charlie").copy(emailAddresses = listOf("charlie@example.test"), addresses = listOf("Lyon"))
         composeRule.setContent { ContactList(listOf(alice, bob, charlie)) }
         assertInlineSummary(shown = 3, total = 3)
+        openMenu()
+        menuOption(R.string.contacts_filter_show_with).performScrollTo().assertIsDisplayed()
+            .assert(isHeading()).assertHasNoClickAction()
+        menuOption(R.string.contacts_filter_show_all).performScrollTo().assertIsSelected().performClick()
         chooseMenuOption(AndroidKitListSortDirection.Descending)
-        chooseMenuOption(R.string.contacts_filter_has_phone)
-        chooseMenuOption(R.string.contacts_filter_has_email)
-        chooseMenuOption(R.string.contacts_filter_has_address)
+        chooseMenuOption(R.string.contacts_filter_phone)
+        chooseMenuOption(R.string.contacts_filter_email)
+        chooseMenuOption(R.string.contacts_filter_address)
         composeRule.onNodeWithText(composeRule.activity.getString(R.string.contacts_no_matches_title)).assertIsDisplayed()
         composeRule.onNodeWithText("Bob").assertDoesNotExist()
         composeRule.onNodeWithText("Alice").assertDoesNotExist()
         composeRule.onNodeWithText("Charlie").assertDoesNotExist()
         openMenu()
-        menuOption(R.string.contacts_filter_has_email).performScrollTo().assertIsSelected()
-        menuOption(R.string.contacts_filter_has_phone).performScrollTo().assertIsSelected().performClick()
-        chooseMenuOption(R.string.contacts_filter_has_phone)
+        menuOption(R.string.contacts_filter_show_all).performScrollTo().assertIsNotSelected()
+        menuOption(R.string.contacts_filter_email).performScrollTo().assertIsSelected()
+        menuOption(R.string.contacts_filter_phone).performScrollTo().assertIsSelected().performClick()
+        chooseMenuOption(R.string.contacts_filter_phone)
         val fieldFilters = listOf(
             R.string.contacts_filter_has_phone,
             R.string.contacts_filter_has_email,
@@ -151,19 +228,19 @@ class ContactListOptionsInstrumentedTest {
         assertInlineSummary(
             direction = AndroidKitListSortDirection.Descending, filters = fieldFilters, shown = 0, total = 3,
         )
-        chooseMenuOption(R.string.contacts_filter_has_phone)
+        chooseMenuOption(R.string.contacts_filter_phone)
         assertOrder(listOf("Charlie", "Bob"))
-        clearFilters(count = 2)
+        chooseMenuOption(R.string.contacts_filter_show_all)
         assertOrder(listOf("Alice", "Charlie", "Bob"))
         assertInlineSummary(direction = AndroidKitListSortDirection.Descending, shown = 3, total = 3)
         openMenu()
-        composeRule.onNodeWithText(composeRule.activity.getString(R.string.contacts_filter_has_email))
+        composeRule.onNodeWithText(composeRule.activity.getString(R.string.contacts_filter_email))
             .performScrollTo().assertIsDisplayed()
-        menuOption(R.string.contacts_filter_has_email).assertIsNotSelected()
-        menuOption(R.string.contacts_filter_all).performScrollTo().assertIsSelected()
-        menuOption(R.string.contacts_filter_has_email).performScrollTo().performClick()
+        menuOption(R.string.contacts_filter_email).assertIsNotSelected()
+        menuOption(R.string.contacts_filter_show_all).performScrollTo().assertIsSelected()
+        menuOption(R.string.contacts_filter_email).performScrollTo().performClick()
         openMenu()
-        menuOption(R.string.contacts_filter_all).performScrollTo().assertIsNotSelected().performClick()
+        menuOption(R.string.contacts_filter_show_all).performScrollTo().assertIsNotSelected().performClick()
         assertOrder(listOf("Alice", "Charlie", "Bob"))
         assertInlineSummary(direction = AndroidKitListSortDirection.Descending, shown = 3, total = 3)
     }
@@ -178,7 +255,7 @@ class ContactListOptionsInstrumentedTest {
         composeRule.setContent {
             ContactList(listOf(alice, bob, charlie), onShare = { shared += it }, onDelete = { deleted += it })
         }
-        chooseMenuOption(R.string.contacts_filter_has_phone)
+        chooseMenuOption(R.string.contacts_filter_phone)
         fun selectAll() {
             clickTitleAction(R.string.common_select)
             composeRule.onNodeWithContentDescription(composeRule.activity.getString(
@@ -218,7 +295,7 @@ class ContactListOptionsInstrumentedTest {
             }
         }
         chooseMenuOption(AndroidKitListSortDirection.Descending)
-        chooseMenuOption(R.string.contacts_filter_has_phone)
+        chooseMenuOption(R.string.contacts_filter_phone)
         composeRule.onNodeWithText("Alice").assertIsDisplayed()
         composeRule.onNodeWithText("Bob").assertDoesNotExist()
         val summary = assertInlineSummary(
@@ -227,7 +304,7 @@ class ContactListOptionsInstrumentedTest {
         ).fetchSemanticsNode().boundsInRoot
         val row = composeRule.onNodeWithText("Alice", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
         assertTrue(summary.bottom <= row.top)
-        clearFilters(count = 1)
+        chooseMenuOption(R.string.contacts_filter_show_all)
         composeRule.onNodeWithText("Alice").assertIsDisplayed()
         composeRule.onNodeWithText("Bob").assertIsDisplayed()
         assertOrder(listOf("Bob", "Alice"))
@@ -268,7 +345,10 @@ class ContactListOptionsInstrumentedTest {
                 contextState.value = context
             }
             chooseMenuOption(R.string.contacts_sort_date_added)
-            chooseMenuOption(R.string.contacts_filter_has_phone)
+            openMenu()
+            menuOption(R.string.contacts_filter_show_with).performScrollTo().assertIsDisplayed()
+                .assert(isHeading()).assertHasNoClickAction()
+            menuOption(R.string.contacts_filter_phone).performScrollTo().performClick()
             val summary = assertInlineSummary(
                 field = R.string.contacts_sort_date_added, direction = AndroidKitListSortDirection.Descending,
                 filters = listOf(R.string.contacts_filter_has_phone), shown = 3, total = 12,
@@ -276,7 +356,7 @@ class ContactListOptionsInstrumentedTest {
             val row = composeRule.onNodeWithText("Contact 1", useUnmergedTree = true)
                 .assertIsDisplayed().fetchSemanticsNode().boundsInRoot
             assertTrue(summary.bottom <= row.top)
-            clearFilters(count = 1)
+            chooseMenuOption(R.string.contacts_filter_show_all)
             assertInlineSummary(
                 field = R.string.contacts_sort_date_added, direction = AndroidKitListSortDirection.Descending,
                 shown = 12, total = 12,
@@ -335,13 +415,21 @@ class ContactListOptionsInstrumentedTest {
     }
 
     private fun menuOption(direction: AndroidKitListSortDirection): SemanticsNodeInteraction = composeRule.onNode(
-        hasText(directionLabel(direction)) and hasAnyAncestor(isPopup()),
+        hasText(directionLabel(direction, compact = true)) and hasAnyAncestor(isPopup()),
     )
 
-    private fun directionLabel(direction: AndroidKitListSortDirection, field: Int = currentSortField): String {
+    private fun directionLabel(
+        direction: AndroidKitListSortDirection,
+        field: Int = currentSortField,
+        compact: Boolean = false,
+    ): String {
         val ascending = direction == AndroidKitListSortDirection.Ascending
         val resource = if (field == R.string.contact_name) {
-            if (ascending) KitR.string.androidkit_compose_sort_text_ascending else KitR.string.androidkit_compose_sort_text_descending
+            if (compact) {
+                if (ascending) KitR.string.androidkit_compose_sort_text_ascending_compact else KitR.string.androidkit_compose_sort_text_descending_compact
+            } else {
+                if (ascending) KitR.string.androidkit_compose_sort_text_ascending else KitR.string.androidkit_compose_sort_text_descending
+            }
         } else {
             if (ascending) KitR.string.androidkit_compose_sort_date_ascending else KitR.string.androidkit_compose_sort_date_descending
         }
@@ -353,11 +441,6 @@ class ContactListOptionsInstrumentedTest {
         composeRule.onNode(
             hasText(uiContext.getString(KitR.string.androidkit_compose_sort)) and hasAnyAncestor(isPopup()),
         ).performScrollTo().performClick()
-    }
-
-    private fun clearFilters(count: Int) {
-        val numbers = NumberFormat.getIntegerInstance(uiContext.resources.configuration.locales[0])
-        chooseMenuText(uiContext.getString(R.string.contacts_clear_filters_count, numbers.format(count)))
     }
 
     private fun chooseMenuText(label: String) {
@@ -393,16 +476,16 @@ class ContactListOptionsInstrumentedTest {
     private fun assertInlineSummary(
         field: Int = R.string.contact_name,
         direction: AndroidKitListSortDirection = AndroidKitListSortDirection.Ascending,
-        filters: List<Int> = listOf(R.string.contacts_filter_all),
+        filters: List<Int> = emptyList(),
         shown: Int,
         total: Int,
     ): SemanticsNodeInteraction {
         val numbers = NumberFormat.getIntegerInstance(uiContext.resources.configuration.locales[0])
         val description = (listOf(uiContext.getString(
-            KitR.string.androidkit_compose_sort_description, uiContext.getString(field), directionLabel(direction, field),
+            KitR.string.androidkit_compose_list_summary_result_count, numbers.format(shown), numbers.format(total),
         )) + filters.map(uiContext::getString) + uiContext.getString(
-            R.string.contacts_list_result_count, numbers.format(shown), numbers.format(total),
-        )).joinToString(uiContext.getString(R.string.contacts_list_summary_separator))
+            KitR.string.androidkit_compose_sort_description, uiContext.getString(field), directionLabel(direction, field),
+        )).joinToString(uiContext.getString(KitR.string.androidkit_compose_list_summary_separator))
         return composeRule.onNodeWithContentDescription(description).assertIsDisplayed().assertHasNoClickAction()
     }
 
