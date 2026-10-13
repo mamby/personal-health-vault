@@ -112,10 +112,10 @@ class ContactListOptionsInstrumentedTest {
             assertEquals(listOf(6, 7, 0, 1, 1, 0), summaries.map { it.matchingCount })
             assertEquals(listOf(7, 7, 7, 7, 1, 0), summaries.map { it.totalCount })
             assertTrue(summaries.all { it.itemCountResource == R.plurals.contacts_list_count })
-            assertEquals(listOf("Has phone", "Has email"), summaries[0].activeFilters.map { it.label })
+            assertEquals(listOf("Phone", "Email"), summaries[0].activeFilters.map { it.label })
             assertEquals(listOf("Has phone number", "Has email address"), summaries[0].activeFilters.map { it.contentDescription })
-            assertEquals(listOf("Has phone", "Has email", "Has address"), summaries[2].activeFilters.map { it.label })
-            assertEquals(listOf("Has email"), summaries[3].activeFilters.map { it.label })
+            assertEquals(listOf("Phone", "Email", "Address"), summaries[2].activeFilters.map { it.label })
+            assertEquals(listOf("Email"), summaries[3].activeFilters.map { it.label })
             assertTrue(summaries[4].activeFilters.isEmpty())
             assertTrue(summaries[5].activeFilters.isEmpty())
         }
@@ -146,7 +146,7 @@ class ContactListOptionsInstrumentedTest {
         composeRule.runOnIdle {
             assertEquals(6, summary.matchingCount)
             assertEquals(7, summary.totalCount)
-            assertEquals(listOf("لديه هاتف", "لديه بريد إلكتروني"), summary.activeFilters.map { it.label })
+            assertEquals(listOf("هاتف", "بريد إلكتروني"), summary.activeFilters.map { it.label })
         }
         composeRule.onNode(hasContentDescription("يحتوي على بريد إلكتروني", substring = true))
             .assertIsDisplayed().assertHasNoClickAction()
