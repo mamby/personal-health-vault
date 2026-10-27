@@ -122,7 +122,7 @@ androidComponents {
 }
 
 jacoco {
-    toolVersion = "0.8.15"
+    toolVersion = "0.8.16"
 }
 
 dependencies {
@@ -162,7 +162,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.core:core-ktx:1.19.1")
     implementation("androidx.core:core-splashscreen:1.2.0")
-    implementation("androidx.datastore:datastore-preferences:1.2.1")
+    implementation("androidx.datastore:datastore-preferences:1.3.0")
     implementation("androidx.fragment:fragment-ktx:1.9.1")
     implementation("androidx.hilt:hilt-work:1.4.0")
     implementation("androidx.lifecycle:lifecycle-process:$lifecycleVersion")
@@ -175,7 +175,7 @@ dependencies {
     implementation("androidx.work:work-runtime:$workVersion")
     implementation("com.google.dagger:hilt-android:2.60.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.12.0")
 
     ksp("com.google.dagger:hilt-compiler:2.60.1")
     ksp("androidx.hilt:hilt-compiler:1.4.0")
