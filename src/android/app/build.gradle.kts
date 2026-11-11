@@ -4,11 +4,13 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization")
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
-    id("com.android.compose.screenshot")
     jacoco
 }
 
 apply(from = rootProject.file("gradle/validate-androidkit-resources.gradle"))
+
+val composeBom = dependencies.platform("androidx.compose:compose-bom:2026.09.00")
+val screenshotVersion = "0.0.1-alpha17"
 
 android {
     namespace = "net.mamby.health"
@@ -108,9 +110,16 @@ android {
 
     testOptions {
         unitTests.isIncludeAndroidResources = true
+        screenshotTests.create("screenshotTest") {
+            engineVersion = screenshotVersion
+            targetVariants.addAll(listOf("devDebug", "devRelease", "betaRelease", "stageRelease", "prodRelease"))
+            dependencies {
+                implementation(composeBom)
+                implementation("com.android.tools.screenshot:screenshot-validation-api:$screenshotVersion")
+                implementation("androidx.compose.ui:ui-tooling")
+            }
+        }
     }
-
-    experimentalProperties["android.experimental.enableScreenshotTest"] = true
 }
 
 androidComponents {
@@ -127,9 +136,8 @@ jacoco {
 
 dependencies {
     val androidKitVersion = providers.gradleProperty("androidKitVersion").get()
-    val composeBom = platform("androidx.compose:compose-bom:2026.09.00")
     val lifecycleVersion = "2.11.0"
-    val navigation3Version = "1.2.0"
+    val navigation3Version = "1.2.1"
     val adaptiveVersion = "1.3.0"
     val workVersion = "2.12.0"
 
@@ -142,7 +150,6 @@ dependencies {
     implementation(composeBom)
     implementation(platform("net.mamby.androidkit:bom:$androidKitVersion"))
     androidTestImplementation(composeBom)
-    screenshotTestImplementation(composeBom)
 
     implementation("net.mamby.androidkit:compose")
     implementation("net.mamby.androidkit:navigation3")
@@ -195,7 +202,4 @@ dependencies {
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
     androidTestImplementation("androidx.work:work-testing:$workVersion")
     androidTestImplementation("com.google.dagger:hilt-android-testing:2.60.1")
-
-    screenshotTestImplementation("com.android.tools.screenshot:screenshot-validation-api:0.0.1-alpha16")
-    screenshotTestImplementation("androidx.compose.ui:ui-tooling")
 }
