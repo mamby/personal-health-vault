@@ -15,6 +15,7 @@ val screenshotVersion = "0.0.1-alpha17"
 android {
     namespace = "net.mamby.health"
     compileSdk = 37
+    compileSdkMinor = 1
     ndkVersion = "30.0.16248370"
 
     defaultConfig {
