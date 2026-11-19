@@ -138,7 +138,7 @@ jacoco {
 dependencies {
     val androidKitVersion = providers.gradleProperty("androidKitVersion").get()
     val lifecycleVersion = "2.11.0"
-    val navigation3Version = "1.2.1"
+    val navigation3Version = "1.2.2"
     val adaptiveVersion = "1.3.0"
     val workVersion = "2.12.0"
 
@@ -158,8 +158,8 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.8.0")
     implementation("androidx.biometric:biometric:1.1.0")
     implementation("androidx.compose.animation:animation")
-    implementation("androidx.compose.foundation:foundation")
-    implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.foundation:foundation:1.13.0")
+    implementation("androidx.compose.material3:material3:1.5.0")
     implementation("androidx.compose.material3:material3-adaptive-navigation-suite")
     implementation("androidx.compose.material3.adaptive:adaptive:$adaptiveVersion")
     implementation("androidx.compose.material3.adaptive:adaptive-layout:$adaptiveVersion")
