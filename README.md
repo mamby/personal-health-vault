@@ -19,7 +19,9 @@ Personal Health Vault is a privacy-first health app for iOS, Android, Windows, a
 
 This project is in early development.
 
-The current Android application provides a local-first foundation with optional person-owned records, shared notes, schedules and contacts, document import, medication notifications, and user-controlled encrypted backup and restore. A fresh installation opens Home immediately with no required profile and no sample data.
+The current Android application provides a local-first foundation with optional person-owned records, shared notes, schedules and contacts, document import, and medication notifications. A fresh installation opens Home immediately with no required profile and no sample data.
+
+On Android, you can configure an encrypted backup to a destination you choose. Restoring a backup replaces **all current health data** with the saved snapshot after you confirm. See [Backup and recovery](docs/RECOVERY.md) for the steps and [Privacy](docs/PRIVACY.md) for what the destination can see.
 
 Personal Health Vault is not ready for production use with real medical data yet.
 
@@ -78,9 +80,8 @@ Personal Health Vault follows a simple privacy model:
 - The app does not require a backend to work.
 - The app does not send health data to a server.
 - The app does not include ads or tracking.
-- Backup and sync, when added, must be user-controlled.
-- Backup data must be encrypted before leaving the device.
-- Backup providers must never receive plaintext health data.
+- When you enable backup, the app encrypts the snapshot before writing it to your chosen provider.
+- Cross-device sync is outside the current Android feature set.
 
 ## Security Model
 
@@ -98,8 +99,9 @@ Current security boundaries:
 
 ## Android Kit distribution
 
-Android builds resolve Android Kit `0.1.76` from the public
+Android builds resolve Android Kit from the public
 [Maven repository](https://mamby.github.io/android-kit-docs/maven/).
+The `androidKitVersion` property in [gradle.properties](src/android/gradle.properties) pins the release.
 No private Kit checkout, Maven Local publication or GitHub credentials are
 required. See [installation](https://mamby.github.io/android-kit-docs/installation/).
 Private snapshot development can opt in with `-PandroidKitUseMavenLocal=true`
