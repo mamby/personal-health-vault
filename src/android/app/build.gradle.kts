@@ -9,7 +9,7 @@ plugins {
 
 apply(from = rootProject.file("gradle/validate-androidkit-resources.gradle"))
 
-val composeBom = dependencies.platform("androidx.compose:compose-bom:2026.09.00")
+val composeBom = dependencies.platform("androidx.compose:compose-bom:2026.11.01")
 val screenshotVersion = "0.0.1-alpha17"
 
 android {
@@ -137,7 +137,7 @@ jacoco {
 
 dependencies {
     val androidKitVersion = providers.gradleProperty("androidKitVersion").get()
-    val lifecycleVersion = "2.11.0"
+    val lifecycleVersion = "2.11.1"
     val navigation3Version = "1.2.2"
     val adaptiveVersion = "1.3.0"
     val workVersion = "2.12.0"
